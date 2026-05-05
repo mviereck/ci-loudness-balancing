@@ -5,72 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CI Loudness Balancing Tool</title>
 <style>
-:root {
-  --bg: #f8f7f4; --surface: #fff; --border: #d4d0c8; --text: #1a1a1a;
-  --text-muted: #666; --accent: #2563eb; --accent-hover: #1d4ed8;
-  --accent-light: #dbeafe; --danger: #dc2626; --success: #16a34a;
-  --warning: #d97706; --font: 'Segoe UI',system-ui,-apple-system,sans-serif;
-  --mono: 'Consolas','Menlo',monospace;
-}
+:root{--bg:#f8f7f4;--surface:#fff;--border:#d4d0c8;--text:#1a1a1a;--text-muted:#666;--accent:#2563eb;--accent-hover:#1d4ed8;--accent-light:#dbeafe;--danger:#dc2626;--success:#16a34a;--warning:#d97706;--font:'Segoe UI',system-ui,-apple-system,sans-serif;--mono:'Consolas','Menlo',monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
 .container{max-width:1100px;margin:0 auto;padding:20px}
 h1{font-size:1.4em;font-weight:600;margin-bottom:4px}
 .header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px}
-.subtitle{color:var(--text-muted);font-size:0.9em;margin-bottom:20px}
-.tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:2px solid var(--border)}
-.tab{padding:10px 20px;border:none;background:none;cursor:pointer;font-size:0.95em;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font);transition:color .15s}
+.subtitle{color:var(--text-muted);font-size:.9em;margin-bottom:20px}
+.tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.tab{padding:10px 16px;border:none;background:none;cursor:pointer;font-size:.92em;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--font);transition:color .15s}
 .tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .panel{display:none}.panel.active{display:block}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px}
 .card h2{font-size:1.05em;font-weight:600;margin-bottom:12px}
-.freq-table{width:100%;border-collapse:collapse;font-size:.88em}
-.freq-table th,.freq-table td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--border)}
-.freq-table th{background:var(--bg);font-weight:600;font-size:.82em;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted)}
-.freq-table input[type="number"]{width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.9em}
-.freq-table select{padding:2px 4px;border:1px solid var(--border);border-radius:4px;font-size:.8em;font-family:var(--font)}
-.freq-table input[type="text"]{width:110px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:.8em}
-.play-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:.9em;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
-.play-btn:hover{background:var(--accent-light);border-color:var(--accent)}
-.btn{padding:10px 20px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:var(--font);font-size:.95em;transition:all .15s;min-height:44px}
+.card h3{font-size:.95em;font-weight:600;margin-bottom:8px;color:var(--text-muted)}
+.freq-table{width:100%;border-collapse:collapse;font-size:.86em}
+.freq-table th,.freq-table td{padding:4px 5px;text-align:center;border-bottom:1px solid var(--border)}
+.freq-table th{background:var(--bg);font-weight:600;font-size:.8em;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted)}
+.freq-table input[type="number"]{width:70px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em}
+.freq-table select{padding:2px 3px;border:1px solid var(--border);border-radius:4px;font-size:.78em;font-family:var(--font)}
+.freq-table input[type="text"]{width:100px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;font-size:.8em}
+.pbtn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:.85em;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.pbtn:hover{background:var(--accent-light);border-color:var(--accent)}
+.pbtn.active{background:var(--accent-light);border-color:var(--accent)}
+.btn{padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:var(--font);font-size:.92em;transition:all .15s;min-height:40px}
 .btn:hover{background:var(--bg)}.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-primary:hover{background:var(--accent-hover)}
-.btn-large{padding:14px 32px;font-size:1.1em;min-height:52px}.btn:disabled{opacity:.4;cursor:default}
+.btn-large{padding:12px 28px;font-size:1.05em;min-height:48px}.btn:disabled{opacity:.4;cursor:default}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap}
-.controls-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.control-group{display:flex;align-items:center;gap:8px}
+.btn-sm{padding:4px 10px;font-size:.82em;min-height:28px;border-radius:4px}
+.controls-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.control-group{display:flex;align-items:center;gap:6px}
 .control-group label{font-size:.85em;color:var(--text-muted);white-space:nowrap}
-.control-group input[type="range"]{width:120px}
-.control-group input[type="number"]{width:70px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.9em}
-.control-group select{padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:var(--font);font-size:.9em;background:var(--surface)}
-.test-display{text-align:center;padding:30px 20px}
+.control-group input[type="range"]{width:110px}
+.control-group input[type="number"]{width:65px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em}
+.control-group select{padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:var(--font);font-size:.88em;background:var(--surface)}
+.test-display{text-align:center;padding:24px 16px}
 .pair-freq{color:var(--text-muted);margin-bottom:8px}
-.progress-label{color:var(--text-muted);font-size:.9em;margin-bottom:12px}
-.judgment-buttons{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
-.judgment-buttons .btn{min-width:140px;font-size:1.05em}
-.balance-slider-wrap{margin:20px auto;max-width:420px}
-.balance-slider-wrap input[type="range"]{width:100%;margin:10px 0}
-.balance-value{font-family:var(--mono);font-size:1.2em;font-weight:600;text-align:center}
+.progress-label{color:var(--text-muted);font-size:.9em}
+.judgment-buttons{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.judgment-buttons .btn{min-width:130px;font-size:1em}
+.balance-slider-wrap{margin:16px auto;max-width:400px}
+.balance-slider-wrap input[type="range"]{width:100%;margin:8px 0}
+.balance-value{font-family:var(--mono);font-size:1.15em;font-weight:600;text-align:center}
 .chart-container{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px}
 canvas{width:100%;height:auto}
-.results-table{width:100%;border-collapse:collapse;font-size:.88em;font-family:var(--mono)}
-.results-table th,.results-table td{padding:6px 10px;text-align:center;border-bottom:1px solid var(--border)}
-.results-table th{background:var(--bg);font-family:var(--font);font-weight:600;font-size:.82em;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted)}
-.kbd{display:inline-block;padding:2px 6px;border:1px solid var(--border);border-radius:3px;background:var(--bg);font-family:var(--mono);font-size:.8em;line-height:1.4}
+.results-table{width:100%;border-collapse:collapse;font-size:.86em;font-family:var(--mono)}
+.results-table th,.results-table td{padding:5px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.results-table th{background:var(--bg);font-family:var(--font);font-weight:600;font-size:.8em;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted)}
+.kbd{display:inline-block;padding:1px 5px;border:1px solid var(--border);border-radius:3px;background:var(--bg);font-family:var(--mono);font-size:.78em;line-height:1.4}
 .hidden{display:none}
-.pair-indicator{display:inline-flex;gap:20px;font-size:1.6em;font-weight:700;margin:10px 0;align-items:center}
-.pair-indicator .tone-a,.pair-indicator .tone-b{padding:8px 24px;border-radius:8px}
+.pair-indicator{display:inline-flex;gap:16px;font-size:1.5em;font-weight:700;margin:8px 0;align-items:center}
+.pair-indicator .tone-a,.pair-indicator .tone-b{padding:6px 20px;border-radius:8px}
 .pair-indicator .tone-a{background:#dbeafe;color:#1e40af}.pair-indicator .tone-b{background:#fef3c7;color:#92400e}
 .pair-indicator .playing{outline:3px solid var(--accent);outline-offset:2px}
-.info-bar{background:var(--accent-light);color:var(--accent);padding:10px 16px;border-radius:6px;margin-bottom:12px;font-size:.9em}
-.warning-bar{background:#fef3c7;color:var(--warning);padding:10px 16px;border-radius:6px;margin-bottom:12px;font-size:.9em}
-.round-info{background:#f0fdf4;color:var(--success);padding:10px 16px;border-radius:6px;margin-bottom:12px;font-size:.9em}
+.warning-bar{background:#fef3c7;color:var(--warning);padding:8px 14px;border-radius:6px;margin-bottom:10px;font-size:.88em;line-height:1.5}
+.round-info{background:#f0fdf4;color:var(--success);padding:8px 14px;border-radius:6px;margin-bottom:10px;font-size:.88em}
+.info-box{background:var(--accent-light);color:var(--accent);padding:10px 14px;border-radius:6px;margin-bottom:10px;font-size:.85em;line-height:1.5}
 .excluded-row{opacity:.4}
-.aba-label{font-size:.7em;font-weight:400;color:var(--text-muted);display:block}
+.aba-label{font-size:.65em;font-weight:400;color:var(--text-muted);display:block}
 .timer-display{font-family:var(--mono);font-size:.85em;color:var(--text-muted)}
-.el-label-extra{font-size:.7em;color:var(--text-muted);font-weight:400}
+.el-extra{font-size:.7em;color:var(--text-muted);font-weight:400}
 .lang-select{padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:.85em;background:var(--surface);font-family:var(--font)}
+.explain{font-size:.82em;color:var(--text-muted);line-height:1.5;margin-top:8px;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--accent)}
+.explain-warn{border-left-color:var(--warning)}
 @media print{body{background:#fff}.tabs,.btn,.controls-row,.judgment-buttons,.balance-slider-wrap,.no-print{display:none!important}.panel{display:block!important}.card{border:1px solid #ccc;break-inside:avoid}}
-@media(max-width:768px){.container{padding:12px}.freq-table{font-size:.78em}.freq-table input[type="number"]{width:58px}.judgment-buttons .btn{min-width:100px}}
+@media(max-width:768px){.container{padding:12px}.freq-table{font-size:.76em}.freq-table input[type="number"]{width:55px}.judgment-buttons .btn{min-width:90px}.tab{padding:8px 10px;font-size:.84em}}
 </style>
 </head>
 <body>
@@ -78,8 +77,8 @@ canvas{width:100%;height:auto}
   <div class="header-row">
     <h1>CI Loudness Balancing Tool</h1>
     <select class="lang-select" id="langSelect">
-      <option value="de">Deutsch</option><option value="en">English</option>
-      <option value="fr">Français</option><option value="es">Español</option>
+      <option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option>
+      <option value="fr">🇫🇷 Français</option><option value="es">🇪🇸 Español</option>
     </select>
   </div>
   <p class="subtitle" id="subtitleText"></p>
@@ -88,1156 +87,711 @@ canvas{width:100%;height:auto}
     <button class="tab active" data-tab="setup" id="tabSetup"></button>
     <button class="tab" data-tab="test" id="tabTest">Test</button>
     <button class="tab" data-tab="results" id="tabResults"></button>
-    <button class="tab" data-tab="player">Player</button>
+    <button class="tab" data-tab="player" id="tabPlayer">Player</button>
+    <button class="tab" data-tab="file" id="tabFile"></button>
   </div>
 
-  <!-- ============ SETUP ============ -->
+  <!-- ===== SETUP ===== -->
   <div id="panel-setup" class="panel active">
     <div class="card">
       <h2 id="freqTitle"></h2>
-      <div class="controls-row" style="margin-bottom:12px;">
-        <div class="control-group">
-          <label id="lblManufacturer"></label>
-          <select id="manufacturerSelect">
-            <option value="medel">MED-EL (12)</option>
-            <option value="ab">Advanced Bionics (16)</option>
-            <option value="cochlear">Cochlear (22)</option>
-          </select>
+      <div class="controls-row">
+        <div class="control-group"><label id="lblMfr"></label>
+          <select id="mfrSelect"><option value="medel">MED-EL (12)</option><option value="ab">Advanced Bionics (16)</option><option value="cochlear">Cochlear (22)</option></select>
         </div>
       </div>
-      <p style="font-size:.85em;color:var(--text-muted);margin-bottom:12px;" id="freqHint"></p>
-      <div style="overflow-x:auto;">
-        <table class="freq-table" id="freqTable">
-          <thead><tr id="freqTableHead"></tr></thead>
-          <tbody id="freqBody"></tbody>
-        </table>
-      </div>
-      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn" id="resetFreqBtn"></button>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" id="freqHint"></p>
+      <div style="overflow-x:auto"><table class="freq-table" id="freqTable"><thead><tr id="freqTH"></tr></thead><tbody id="freqTB"></tbody></table></div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn" id="resetBtn"></button>
         <button class="btn" id="sweepBtn"></button>
         <button class="btn" id="stopBtn"></button>
-        <label style="margin-left:12px;font-size:.85em;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <input type="checkbox" id="correctionToggle"> <span id="lblCorrection"></span>
+        <label style="margin-left:12px;font-size:.85em;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="corrToggle"> <span id="lblCorr"></span>
         </label>
       </div>
     </div>
     <div class="card">
-      <h2 id="toneParamsTitle"></h2>
+      <h2 id="toneTitle"></h2>
       <div class="controls-row">
-        <div class="control-group"><label id="lblVolume"></label><input type="range" id="volumeSlider" min="0" max="100" value="50"><span id="volumeLabel">50%</span></div>
-        <div class="control-group"><label id="lblDuration"></label><input type="number" id="toneDuration" value="1000" min="100" max="3000" step="50"></div>
-        <div class="control-group"><label id="lblPause"></label><input type="number" id="pauseDuration" value="500" min="100" max="1000" step="50"></div>
+        <div class="control-group"><label id="lblVol"></label><input type="range" id="vol1" min="0" max="100" value="50"><span id="volL1">50%</span></div>
+        <div class="control-group"><label id="lblDur"></label><input type="number" id="dur1" value="1000" min="100" max="3000" step="50"> ms</div>
+        <div class="control-group"><label id="lblPau"></label><input type="number" id="pau1" value="500" min="100" max="1000" step="50"> ms</div>
       </div>
     </div>
   </div>
 
-  <!-- ============ TEST ============ -->
+  <!-- ===== TEST ===== -->
   <div id="panel-test" class="panel">
     <div class="card no-print">
-      <h2 id="testSettingsTitle"></h2>
+      <h2 id="testTitle"></h2>
       <div class="controls-row">
         <div class="control-group"><label id="lblMode"></label>
-          <select id="testMode"><option value="balance" id="optBalance"></option><option value="judgment" id="optJudgment"></option></select>
-        </div>
-        <div class="control-group"><label id="lblPairType"></label>
-          <select id="pairType">
-            <option value="full" id="optFull"></option>
-            <option value="convergence" id="optConvergence"></option>
-            <option value="convergence_fast" id="optConvFast"></option>
-            <option value="adjacent" id="optAdjacent"></option>
-            <option value="jump" id="optJump"></option>
-            <option value="manual" id="optManual"></option>
-          </select>
-        </div>
+          <select id="testMode"><option value="balance" id="optBal"></option><option value="judgment" id="optJdg"></option></select></div>
+        <div class="control-group"><label id="lblRun"></label>
+          <select id="pairType"><option value="full" id="optFull"></option><option value="convergence" id="optConv"></option><option value="conv_fast" id="optCF"></option><option value="manual" id="optMan"></option></select></div>
+      </div>
+      <div id="runExplain" class="info-box"></div>
+      <div class="controls-row">
+        <div class="control-group"><label id="lblRef"></label><select id="refEl"></select></div>
       </div>
       <div class="controls-row">
-        <div class="control-group"><label id="lblRefEl"></label><select id="refElectrode"></select></div>
-        <div class="control-group"><label id="lblParadigm"></label>
-          <select id="paradigm"><option value="aba">ABA</option><option value="ab">AB</option></select>
-        </div>
+        <div class="control-group"><label id="lblVol2"></label><input type="range" id="vol2" min="0" max="100" value="50"><span id="volL2">50%</span></div>
+        <div class="control-group"><label id="lblDur2"></label><input type="number" id="dur2" value="1000" min="100" max="3000" step="50"> ms</div>
+        <div class="control-group"><label id="lblPau2"></label><input type="number" id="pau2" value="500" min="100" max="1000" step="50"> ms</div>
       </div>
-      <div class="controls-row">
-        <div class="control-group"><label id="lblVol2"></label><input type="range" id="volumeSlider2" min="0" max="100" value="50"><span id="volumeLabel2">50%</span></div>
-        <div class="control-group"><label id="lblDur2"></label><input type="number" id="toneDuration2" value="1000" min="100" max="3000" step="50"> ms</div>
-        <div class="control-group"><label id="lblPause2"></label><input type="number" id="pauseDuration2" value="500" min="100" max="1000" step="50"> ms</div>
-        <div class="control-group"><label id="lblFatigue"></label><input type="number" id="fatigueInterval" value="20" min="5" max="99" step="1"></div>
+      <div id="manualSel" class="hidden" style="margin-top:8px">
+        <div class="control-group"><label>A:</label><select id="manA"></select><label style="margin-left:10px">B:</label><select id="manB"></select>
+          <button class="btn" id="manPlayBtn" style="margin-left:10px">&#9654;</button></div>
       </div>
-      <div id="adjacentWarning" class="warning-bar hidden" data-t="warnSkew"></div>
-      <div id="manualSelect" class="hidden" style="margin-top:12px;">
-        <div class="control-group">
-          <label>A:</label><select id="manualA"></select>
-          <label style="margin-left:12px;">B:</label><select id="manualB"></select>
-          <button class="btn" id="manualPlayBtn" style="margin-left:12px;">&#9654;</button>
-        </div>
-      </div>
-      <div style="margin-top:12px;" class="btn-group">
-        <button class="btn btn-primary btn-large" id="startTestBtn"></button>
-        <button class="btn btn-large" id="stopTestBtn" disabled></button>
+      <div style="margin-top:12px" class="btn-group">
+        <button class="btn btn-primary btn-large" id="startBtn"></button>
+        <button class="btn btn-large" id="stopTBtn" disabled></button>
       </div>
     </div>
-    <div class="card" id="testArea" style="display:none;">
+    <div class="card" id="testArea" style="display:none">
       <div id="roundInfo" class="round-info hidden"></div>
-      <div id="fatigueNotice" class="warning-bar hidden"></div>
       <div class="test-display">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span class="progress-label" id="progressLabel"></span>
-          <span class="timer-display" id="timerDisplay">0:00</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="progress-label" id="progLbl"></span><span class="timer-display" id="timerD">0:00</span>
         </div>
-        <div class="pair-indicator" id="pairIndicator">
-          <span class="tone-a" id="toneALabel"><span class="aba-label">A</span>E1</span>
-          <span style="align-self:center;font-weight:400;font-size:.6em;color:var(--text-muted);">vs.</span>
-          <span class="tone-b" id="toneBLabel"><span class="aba-label">B</span>E2</span>
+        <div class="pair-indicator">
+          <span class="tone-a" id="tAL"><span class="aba-label">A (Ref)</span>E1</span>
+          <span style="align-self:center;font-weight:400;font-size:.55em;color:var(--text-muted)">vs.</span>
+          <span class="tone-b" id="tBL"><span class="aba-label">B (Slider)</span>E2</span>
         </div>
-        <div class="pair-freq" id="pairFreq"></div>
-        <div style="margin:16px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center;">
-          <button class="btn btn-large" id="undoBtn" disabled>&#9664; <span data-t="btnBack"></span> <span class="kbd">Z</span></button>
-          <button class="btn btn-large" id="replayBtn">&#9654; <span data-t="btnReplay"></span> <span class="kbd" data-t="kbdSpace"></span></button>
-          <select id="paradigmInline" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:.85em;">
-            <option value="aba">ABA</option><option value="ab">AB</option>
-          </select>
-          <button class="btn" id="excludeBtn" style="color:var(--danger);">&#10005; <span data-t="btnExclude"></span> <span class="kbd">X</span></button>
+        <div class="pair-freq" id="pairF"></div>
+        <div style="margin:12px 0;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-large" id="undoBtn" disabled>&#9664; <span data-t="bBack"></span> <span class="kbd">Z</span></button>
+          <button class="btn btn-large" id="repBtn">&#9654; <span data-t="bReplay"></span> <span class="kbd" data-t="kSpace"></span></button>
+          <select id="paraI" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.84em"><option value="aba">ABA</option><option value="ab">AB</option></select>
+          <button class="btn" id="exclBtn" style="color:var(--danger)">&#10005; <span data-t="bExcl"></span> <span class="kbd">X</span></button>
         </div>
-        <div id="judgmentControls" style="display:none;">
-          <div class="judgment-buttons">
-            <button class="btn btn-large" id="btnALouder">A <span data-t="btnLouder"></span> <span class="kbd">1</span></button>
-            <button class="btn btn-large" id="btnEqual"><span data-t="btnEqual"></span> <span class="kbd">2</span></button>
-            <button class="btn btn-large" id="btnBLouder">B <span data-t="btnLouder2"></span> <span class="kbd">3</span></button>
-          </div>
-        </div>
-        <div id="balanceControls">
+        <div id="jdgC" style="display:none"><div class="judgment-buttons">
+          <button class="btn btn-large" id="bAL">A <span data-t="bLoud"></span> <span class="kbd">1</span></button>
+          <button class="btn btn-large" id="bEq"><span data-t="bEqual"></span> <span class="kbd">2</span></button>
+          <button class="btn btn-large" id="bBL">B <span data-t="bLoud2"></span> <span class="kbd">3</span></button>
+        </div></div>
+        <div id="balC">
           <div class="balance-slider-wrap">
-            <p style="font-size:.85em;color:var(--text-muted);margin-bottom:4px;" data-t="sliderHint"></p>
-            <input type="range" id="balanceSlider" min="-20" max="20" step="0.1" value="0">
-            <div class="balance-value" id="balanceValue">0.0 dB</div>
-            <div id="balanceAbsolute" style="font-size:.82em;color:var(--text-muted);text-align:center;margin-top:2px;display:none;"></div>
-            <div id="extendRangeWrap" style="text-align:center;margin-top:6px;display:none;">
-              <button class="btn" id="extendRangeBtn" style="font-size:.85em;" data-t="btnExtend"></button>
-            </div>
+            <p style="font-size:.84em;color:var(--text-muted);margin-bottom:3px" data-t="slHint"></p>
+            <input type="range" id="balSl" min="-20" max="20" step="0.1" value="0">
+            <div class="balance-value" id="balV">0.0 dB</div>
+            <div id="balAbs" style="font-size:.82em;color:var(--text-muted);text-align:center;margin-top:2px;display:none"></div>
+            <div id="extWrap" style="text-align:center;margin-top:5px;display:none"><button class="btn btn-sm" id="extBtn" data-t="bExtend"></button></div>
           </div>
-          <div style="margin-top:12px;">
-            <button class="btn btn-primary btn-large" id="confirmBalance"><span data-t="btnConfirm"></span> <span class="kbd">Enter</span></button>
-          </div>
+          <div style="margin-top:10px"><button class="btn btn-primary btn-large" id="confBtn"><span data-t="bConf"></span> <span class="kbd">Enter</span></button></div>
         </div>
       </div>
     </div>
-    <div id="excludeDialog" class="card hidden" style="text-align:center;">
-      <h2 data-t="excludeTitle"></h2>
-      <p id="excludeDialogInfo" style="color:var(--text-muted);margin-bottom:16px;"></p>
-      <div class="btn-group" style="justify-content:center;">
-        <button class="btn btn-large" id="excludeA"></button>
-        <button class="btn btn-large" id="excludeB"></button>
-        <button class="btn" id="excludeCancel" data-t="btnCancel"></button>
-      </div>
+    <div id="exclDlg" class="card hidden" style="text-align:center">
+      <h2 data-t="exclTitle"></h2><p id="exclInfo" style="color:var(--text-muted);margin-bottom:14px"></p>
+      <div class="btn-group" style="justify-content:center"><button class="btn btn-large" id="exclA"></button><button class="btn btn-large" id="exclB"></button><button class="btn" id="exclCanc" data-t="bCanc"></button></div>
     </div>
   </div>
 
-  <!-- ============ RESULTS ============ -->
+  <!-- ===== RESULTS ===== -->
   <div id="panel-results" class="panel">
     <div class="card">
-      <h2 id="resultsTitle"></h2>
-      <div id="noResults"><p style="color:var(--text-muted);" data-t="noResults"></p></div>
-      <div id="resultsContent" style="display:none;">
-        <p style="font-size:.85em;color:var(--text-muted);margin-bottom:12px;" id="resultsMeta"></p>
-        <div class="chart-container"><canvas id="resultsChart" width="800" height="320"></canvas>
-          <p id="chartExplanation" style="font-size:.82em;color:var(--text-muted);margin-top:10px;line-height:1.5;"></p>
+      <h2 id="resTitle"></h2>
+      <div id="noRes"><p style="color:var(--text-muted)" data-t="noRes"></p></div>
+      <div id="resC" style="display:none">
+        <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" id="resMeta"></p>
+        <div class="chart-container"><canvas id="resChart" width="800" height="320"></canvas>
+          <p id="chartExpl" style="font-size:.82em;color:var(--text-muted);margin-top:10px;line-height:1.5"></p>
         </div>
-        <div style="overflow-x:auto;margin-top:16px;">
-          <table class="results-table" id="resultsTable"><thead><tr id="resultsTableHead"></tr></thead><tbody id="resultsTableBody"></tbody></table>
-        </div>
-        <div class="btn-group" style="margin-top:16px;">
-          <button class="btn" id="exportBtn">&#128203;</button>
-          <button class="btn" id="saveJsonBtn">&#128190; JSON</button>
-          <button class="btn" id="loadJsonBtn">&#128194; JSON</button>
-          <button class="btn" id="printBtn">&#128424;</button>
-          <button class="btn" id="clearResultsBtn" style="color:var(--danger);">&#128465;</button>
-        </div>
-        <input type="file" id="jsonFileInput" accept=".json" class="hidden">
+        <div style="overflow-x:auto;margin-top:14px"><table class="results-table" id="resT"><thead><tr id="resTH"></tr></thead><tbody id="resTB"></tbody></table></div>
+        <div class="explain" id="resExplain"></div>
       </div>
     </div>
   </div>
 
-  <!-- ============ PLAYER ============ -->
+  <!-- ===== PLAYER ===== -->
   <div id="panel-player" class="panel">
     <div class="card">
-      <h2 data-t="playerTitle"></h2>
-      <p style="font-size:.85em;color:var(--text-muted);margin-bottom:12px;" data-t="playerDesc"></p>
-      <div id="playerNoData" class="hidden" style="color:var(--warning);font-size:.9em;margin-bottom:12px;" data-t="playerNoData"></div>
-      <div style="margin-bottom:16px;">
-        <label style="font-size:.85em;color:var(--text-muted);display:block;margin-bottom:4px;" data-t="playerFileLabel"></label>
-        <input type="file" id="playerAudioFile" accept=".mp3,.wav,.flac,.ogg,.m4a,.mp4,audio/*" style="font-size:.9em;">
-      </div>
-      <div id="playerControls" style="display:none;">
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-          <button class="btn" id="playerPlayBtn" style="width:48px;height:48px;border-radius:50%;font-size:1.2em;display:flex;align-items:center;justify-content:center;padding:0;">&#9654;</button>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
-            <input type="range" id="playerTimeline" min="0" max="1000" value="0" step="1" style="width:100%;">
-            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:.8em;color:var(--text-muted);">
-              <span id="playerCurrentTime">0:00</span><span id="playerTotalTime">0:00</span>
-            </div>
+      <h2 data-t="plTitle"></h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" data-t="plDesc"></p>
+      <div id="plNoD" class="hidden warning-bar" data-t="plNoData"></div>
+      <div style="margin-bottom:14px"><label style="font-size:.84em;color:var(--text-muted);display:block;margin-bottom:4px" data-t="plFile"></label>
+        <input type="file" id="plAudio" accept=".mp3,.wav,.flac,.ogg,.m4a,.mp4,audio/*" style="font-size:.88em"></div>
+      <div id="plCtrl" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <button class="btn" id="plPlay" style="width:44px;height:44px;border-radius:50%;font-size:1.1em;display:flex;align-items:center;justify-content:center;padding:0">&#9654;</button>
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+            <input type="range" id="plTL" min="0" max="1000" value="0" step="1" style="width:100%">
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:.78em;color:var(--text-muted)"><span id="plCur">0:00</span><span id="plTot">0:00</span></div>
           </div>
         </div>
         <div class="controls-row">
-          <div class="control-group"><label data-t="lblVolume"></label><input type="range" id="playerVolume" min="0" max="100" value="80" style="width:80px;"><span id="playerVolumeLabel" style="font-family:var(--mono);font-size:.85em;min-width:36px;">80%</span></div>
-          <div class="control-group"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="playerEqToggle" checked> EQ</label></div>
-          <div class="control-group"><label data-t="lblEqStrength"></label><input type="range" id="playerStrength" min="0" max="150" value="100" step="1" style="width:100px;"><span id="playerStrengthLabel" style="font-family:var(--mono);font-size:.85em;min-width:36px;">100%</span></div>
-          <span style="font-family:var(--mono);font-size:.75em;color:var(--text-muted);background:var(--bg);padding:2px 8px;border-radius:4px;">Mono</span>
+          <div class="control-group"><label data-t="lblVol"></label><input type="range" id="plVol" min="0" max="100" value="80" style="width:80px"><span id="plVolL" style="font-family:var(--mono);font-size:.84em;min-width:34px">80%</span></div>
+          <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plEqOn" checked> EQ</label></div>
+          <div class="control-group"><label data-t="plEqStr"></label><input type="range" id="plStr" min="0" max="150" value="100" step="1" style="width:90px"><span id="plStrL" style="font-family:var(--mono);font-size:.84em;min-width:34px">100%</span></div>
+          <div class="btn-group"><button class="btn btn-sm plStrBtn" data-v="50">50%</button><button class="btn btn-sm plStrBtn" data-v="75">75%</button><button class="btn btn-sm plStrBtn" data-v="100">100%</button><button class="btn btn-sm plStrBtn" data-v="150">150%</button></div>
+          <span style="font-family:var(--mono);font-size:.72em;color:var(--text-muted);background:var(--bg);padding:2px 6px;border-radius:4px">Mono</span>
         </div>
+        <div class="controls-row" style="margin-top:8px">
+          <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plNHSim"> <span data-t="plNHLabel"></span></label></div>
+        </div>
+        <div id="plNHInfo" class="explain explain-warn hidden" data-t="plNHExpl"></div>
+        <div class="controls-row" style="margin-top:8px">
+          <div class="control-group"><label>MAPLAW c:</label><input type="number" id="plMaplaw" value="500" min="0" max="8000" step="50" style="width:80px"><span style="font-size:.8em;color:var(--text-muted);margin-left:4px">(0–8000)</span></div>
+          <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plMapOn"> <span data-t="plMapLabel"></span></label></div>
+        </div>
+        <div id="plMapInfo" class="explain hidden" data-t="plMapExpl"></div>
       </div>
     </div>
-    <div id="playerEqViz" class="card" style="display:none;">
-      <h2 data-t="eqCurveTitle"></h2>
-      <div style="position:relative;width:100%;height:200px;background:var(--bg);border-radius:8px;overflow:hidden;"><canvas id="playerEqCanvas" style="width:100%;height:100%;display:block;"></canvas></div>
-      <div style="margin-top:14px;overflow-x:auto;">
-        <table class="results-table" style="font-size:.8em;"><thead><tr id="playerEqHeader"></tr></thead><tbody><tr id="playerEqLevels"></tr></tbody><tbody><tr id="playerEqGains"></tr></tbody></table>
+    <div id="plEqViz" class="card" style="display:none">
+      <h2 data-t="plEqTitle"></h2>
+      <div style="position:relative;width:100%;height:180px;background:var(--bg);border-radius:8px;overflow:hidden"><canvas id="plEqCv" style="width:100%;height:100%;display:block"></canvas></div>
+      <div style="margin-top:12px;overflow-x:auto"><table class="results-table" style="font-size:.78em"><thead><tr id="plEqH"></tr></thead><tbody><tr id="plEqLv"></tr><tr id="plEqGn"></tr></tbody></table></div>
+      <p class="explain explain-warn" data-t="plNotice"></p>
+    </div>
+  </div>
+
+  <!-- ===== FILE ===== -->
+  <div id="panel-file" class="panel">
+    <div class="card">
+      <h2 data-t="fileTitle"></h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:14px" data-t="fileDesc"></p>
+      <div class="btn-group" style="margin-bottom:16px">
+        <button class="btn" id="fLoadBtn">&#128194; <span data-t="fLoad"></span></button>
+        <button class="btn" id="fSaveBtn">&#128190; <span data-t="fSave"></span></button>
+        <button class="btn" id="fPrintBtn">&#128424; <span data-t="fPrint"></span></button>
+        <button class="btn" id="fCopyBtn">&#128203; <span data-t="fCopy"></span></button>
+        <button class="btn" id="fClearBtn" style="color:var(--danger)">&#128465; <span data-t="fClear"></span></button>
       </div>
-      <p style="font-size:.78em;color:var(--text-muted);margin-top:12px;line-height:1.5;padding:10px;background:var(--bg);border-radius:6px;border-left:3px solid var(--warning);" data-t="playerNotice"></p>
+      <input type="file" id="fInput" accept=".json" class="hidden">
+      <div class="explain" data-t="fExplain"></div>
+    </div>
+    <div class="card">
+      <h2>EasyEffects Export</h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" data-t="eeDesc"></p>
+      <button class="btn" id="eeExportBtn">&#128190; <span data-t="eeExport"></span></button>
+      <div class="explain" style="margin-top:10px" data-t="eeHowTo"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ===========================================
+// ============================================================
 // I18N
-// ===========================================
-const LANG = {
-de: {
-  subtitle: 'Wahrgenommene Lautstärke über CI-Elektroden vergleichen',
-  tabFreq: 'Frequenzen', tabResults: 'Ergebnisse',
-  freqTitle: 'Elektrodenfrequenzen & Status', lblManufacturer: 'Hersteller:',
-  freqHint: 'Standardwerte nach bicial. Eigene FAT-Werte direkt eintragen. ▶ spielt Einzelton.',
-  thEl: 'El.', thHz: 'Hz', thPlay: '▶', thStatus: 'Status', thNote: 'Notiz',
-  resetFreq: 'Zurücksetzen', sweep: '▶ Sweep', stop: '■ Stopp', lblCorrection: 'Korrektur anwenden',
-  toneParams: 'Tonparameter', lblVolume: 'Lautstärke:', lblDuration: 'Tondauer (ms):', lblPause: 'Pause (ms):',
-  testSettings: 'Testeinstellungen', lblMode: 'Modus:', optBalance: 'Ausgleichsmodus (dB-Offset)',
-  optJudgment: 'Urteilsmodus', lblPairType: 'Durchgang:', optFull: 'Vollständig (alle Paare)',
-  optConvergence: 'Konvergenz (bis stabil)', optConvFast: 'Konvergenz schnell',
-  optAdjacent: 'Benachbarte Paare', optJump: 'Sprungpaare', optManual: 'Manuell',
-  lblRefEl: 'Referenzelektrode:', lblParadigm: 'Paradigma:', lblFatigue: 'Pause nach:',
-  warnSkew: 'Hinweis: Benachbarte/Sprungpaare sind anfällig für Schiefmessung. Für präzise Ergebnisse „Vollständig" oder „Konvergenz" verwenden.',
-  startTest: '▶ Test starten', stopTest: '■ Test beenden',
-  btnBack: 'Zurück', btnReplay: 'Nochmal', kbdSpace: 'Leertaste', btnExclude: 'Ausschließen',
-  btnLouder: 'lauter', btnLouder2: 'lauter', btnEqual: 'Gleich',
-  sliderHint: 'Mittleren Ton (B) anpassen. ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
-  btnExtend: 'Bereich erweitern (±40 dB)', btnConfirm: 'Offset bestätigen', btnCancel: 'Abbrechen',
-  excludeTitle: 'Welche Elektrode ausschließen?',
-  resultsTitle: 'Ergebnisse', noResults: 'Noch keine Messungen. Starte einen Test.',
-  comparison: 'Vergleich', of: 'von', round: 'Runde',
-  chartExplBalance: 'Wahrgenommene Lautstärke relativ zu Referenz (0 dB). Positiv = lauter, negativ = leiser. Fehlerbalken = mittleres Residuum. Berechnung: Gewichtete Least Squares.',
-  chartExplJudgment: 'Score = „lauter" minus „leiser". Hohe positive Werte = wird als zu laut empfunden.',
-  thOffset: 'Offset (dB)', thMeasurements: 'Messungen', thResidual: '∅ Residuum', thWeight: 'Gewicht', thStatusR: 'Status',
-  thScore: 'Score', thComparisons: 'Vergleiche',
-  fatigueMsg: 'Vergleiche absolviert. Pause empfohlen.',
-  playerTitle: 'Audioplayer mit Korrektur-EQ',
-  playerDesc: 'Audiodatei laden und mit der gemessenen Korrekturkurve abspielen.',
-  playerNoData: 'Noch keine Meßdaten. Erst einen Test durchführen.',
-  playerFileLabel: 'Audiodatei (MP3, WAV, FLAC, OGG, M4A, MP4)',
-  lblEqStrength: 'EQ-Stärke:', eqCurveTitle: 'EQ-Kurve (angewandt)',
-  playerNotice: 'Dieser Player simuliert, wie Musik klingen könnte, wenn die CI-Lautstärkekurve korrigiert würde. Er verändert das Signal vor der CI-Verarbeitung – nicht identisch mit einer MCL-Anpassung, aber ein Anhaltspunkt.',
-  apikal: 'apikal', basal: 'basal',
-  statusNoisy: 'verrauscht', statusAlmostMute: 'fast stumm', statusMute: 'stumm', statusExcluded: 'ausschließen',
-  total: 'Gesamt', previous: 'vorher', excluded: 'ausgeschl.',
-  copyDone: 'Kopiert.', deleteConfirm: 'Alle Ergebnisse löschen?', manualComp: 'Manueller Vergleich',
-  pairsRemaining: 'Vergleiche verbleiben', excludedDuring: 'ausgeschlossen',
+// ============================================================
+const L={
+de:{
+subtitle:'Wahrgenommene Lautstärke über CI-Elektroden vergleichen · v4',
+tabFreq:'Frequenzen',tabResults:'Ergebnisse',tabFile:'Laden/Speichern',
+freqTitle:'Elektrodenfrequenzen & Status',lblMfr:'Hersteller:',
+freqHint:'Standardwerte nach bicial. Eigene FAT-Werte direkt eintragen. ▶ = Einzelton, ◼ = Dauerton (Klick beendet).',
+thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Notiz',
+resetFreq:'Zurücksetzen',sweep:'▶ Sweep',stop:'■ Stopp',lblCorr:'Korrektur anwenden',
+toneTitle:'Tonparameter',lblVol:'Lautstärke:',lblDur:'Tondauer:',lblPau:'Pause:',
+testTitle:'Testeinstellungen',lblMode:'Modus:',optBal:'Ausgleichsmodus (dB-Offset)',optJdg:'Urteilsmodus (A/gleich/B)',
+lblRun:'Testverfahren:',optFull:'Vollständig (alle Paare)',optConv:'Konvergenz (bis stabil)',optCF:'Konvergenz schnell',optMan:'Manuell',
+lblRef:'Referenzelektrode:',lblVol2:'Lautstärke:',lblDur2:'Tondauer:',lblPau2:'Pause:',
+runExplFull:'Alle möglichen Paare werden in zufälliger Reihenfolge verglichen. A und B werden pro Paar zufällig zugewiesen. Genauestes Verfahren, dauert am längsten. Empfohlen als erster Durchlauf.',
+runExplConv:'Wie „Vollständig", aber nach der ersten Runde werden nur noch die unsichersten Paare nachgemessen. Stoppt automatisch, wenn alle Werte stabil sind (Residuum < 1 dB). Empfohlen nach einem ersten Durchlauf.',
+runExplCF:'Nur die Paare mit den größten Abweichungen (aus vorhandenen Ergebnissen) werden erneut getestet, plus einige Zufallspaare. Erfordert vorhandene Ergebnisse. Schnelle Validierung.',
+runExplMan:'Zwei Elektroden frei wählen und vergleichen.',
+recommend:'Empfohlenes Vorgehen: Erst „Vollständig", danach „Konvergenz schnell" oder „Konvergenz" zur Verfeinerung.',
+startTest:'▶ Test starten',stopTest:'■ Test beenden',
+bBack:'Zurück',bReplay:'Nochmal',kSpace:'Leertaste',bExcl:'Ausschließen',
+bLoud:'lauter',bLoud2:'lauter',bEqual:'Gleich',
+slHint:'Mittleren Ton (B) anpassen. ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
+bExtend:'Bereich erweitern (±40 dB)',bConf:'Offset bestätigen',bCanc:'Abbrechen',
+exclTitle:'Welche Elektrode ausschließen?',
+resTitle:'Ergebnisse',noRes:'Noch keine Messungen. Starte einen Test im Tab „Test".',
+comp:'Vergleich',of:'von',round:'Runde',
+chartExplB:'Wahrgenommene Lautstärke relativ zur Referenz (0 dB). Positiv = lauter, negativ = leiser. Fehlerbalken = mittleres Residuum. Berechnung: Gewichtete Least Squares.',
+chartExplJ:'Score = „lauter" minus „leiser". Hohe positive Werte = wird als zu laut empfunden.',
+thOff:'Offset (dB)',thMes:'Messungen',thRes:'∅ Residuum',thWgt:'Gewicht',thStR:'Status',thSc:'Score',thComp:'Vergl.',
+resExplain:'Residuum: Die mittlere Abweichung der Einzelmessungen einer Elektrode vom Gesamtergebnis. Hohe Werte = unsichere Messung, z.B. durch verrauschte Elektrode oder schwieriges Urteil. Least Squares: Mathematisches Verfahren, das aus allen Paarvergleichen gleichzeitig die bestmöglichen Offset-Werte berechnet. Einzelne Meßfehler haben wenig Einfluß, weil sie sich gegen viele andere Messungen behaupten müssen. Gewichtung: Verrauschte Elektroden (0.5) und fast stumme (0.1) fließen mit reduziertem Gewicht ein.',
+apikal:'apikal',basal:'basal',
+stNoisy:'verrauscht',stAlmMute:'fast stumm',stMute:'stumm',stExcl:'ausschließen',
+total:'Gesamt',prev:'vorher',excluded:'ausgeschl.',
+copyDone:'Kopiert.',delConfirm:'Alle Ergebnisse löschen?',manComp:'Manueller Vergleich',
+pairsRem:'Vergleiche verbleiben',exclDuring:'ausgeschlossen',
+plTitle:'Audioplayer mit Korrektur-EQ',plDesc:'Audiodatei laden und mit der gemessenen Korrekturkurve abspielen.',
+plNoData:'Noch keine Meßdaten. Erst einen Test durchführen.',plFile:'Audiodatei (MP3, WAV, FLAC, OGG, M4A, MP4)',
+plEqStr:'EQ-Stärke:',plEqTitle:'EQ-Kurve (angewandt)',
+plNotice:'Dieser Player simuliert, wie Musik klingen könnte, wenn die CI-Lautstärkekurve korrigiert würde. Er verändert das Signal vor der CI-Verarbeitung – nicht identisch mit einer MCL-Anpassung, aber ein Anhaltspunkt.',
+plNHLabel:'Simulation für Normalhörende',
+plNHExpl:'Macht die Verzerrung der unkorrigierten Einstellung für Normalhörende hörbar: die gemessenen Lautstärkeunterschiede werden auf das Originalsignal angewandt (nicht invertiert). Einschränkung: Dies zeigt nur die Lautstärkebalance, nicht die CI-typischen Artefakte (Rauschen, reduzierte Spektralauflösung, fehlende Feinstruktur).',
+plMapLabel:'MAPLAW-Simulation',
+plMapExpl:'Simuliert die MED-EL MAPLAW-Kompression (logarithmisch). Der Kompressionskoeffizient c bestimmt, wie stark leise Töne angehoben werden. Dein aktueller Wert steht im MAESTRO Fitting-Report. Höhere Werte = stärkere Kompression. c=0 = linear. Die S-förmige Variante ist derzeit nicht implementiert. Diese Konfiguration existiert in dieser Form nur bei MED-EL. Cochlear und Advanced Bionics verwenden andere Kompressionsverfahren.',
+fileTitle:'Laden / Speichern',fileDesc:'Alle Einstellungen und Ergebnisse werden als JSON-Datei gespeichert: Hersteller, Frequenzen, Elektrodenstatus, Notizen, Referenzelektrode, Tonparameter, Paradigma und alle Meßergebnisse.',
+fLoad:'Ergebnisse laden',fSave:'Ergebnisse speichern',fPrint:'Ergebnisse drucken',fCopy:'Tabelle kopieren',fClear:'Ergebnisse löschen',
+fExplain:'JSON-Dateien können jederzeit geladen werden – auch ohne vorherige Messungen. Beim Laden werden alle Einstellungen und Ergebnisse aus der Datei übernommen.',
+eeDesc:'Exportiert die Korrekturkurve als EasyEffects-Preset für PipeWire/PulseAudio. Damit wird alle Audiowiedergabe auf dem Rechner korrigiert.',
+eeExport:'EasyEffects-Preset exportieren',
+eeHowTo:'Anleitung: 1) EasyEffects installieren (Flatpak oder Paketmanager). 2) Exportierte Datei nach ~/.config/easyeffects/output/ kopieren. 3) In EasyEffects das Preset laden und aktivieren. Der parametrische EQ wird automatisch auf alle Audiowiedergabe angewandt.',
 },
-en: {
-  subtitle: 'Compare perceived loudness across CI electrodes',
-  tabFreq: 'Frequencies', tabResults: 'Results',
-  freqTitle: 'Electrode frequencies & status', lblManufacturer: 'Manufacturer:',
-  freqHint: 'Default values from bicial. Enter your own FAT values directly. ▶ plays single tone.',
-  thEl: 'El.', thHz: 'Hz', thPlay: '▶', thStatus: 'Status', thNote: 'Note',
-  resetFreq: 'Reset', sweep: '▶ Sweep', stop: '■ Stop', lblCorrection: 'Apply correction',
-  toneParams: 'Tone parameters', lblVolume: 'Volume:', lblDuration: 'Duration (ms):', lblPause: 'Pause (ms):',
-  testSettings: 'Test settings', lblMode: 'Mode:', optBalance: 'Balance mode (dB offset)',
-  optJudgment: 'Judgment mode', lblPairType: 'Run type:', optFull: 'Complete (all pairs)',
-  optConvergence: 'Convergence (until stable)', optConvFast: 'Convergence fast',
-  optAdjacent: 'Adjacent pairs', optJump: 'Jump pairs', optManual: 'Manual',
-  lblRefEl: 'Reference electrode:', lblParadigm: 'Paradigm:', lblFatigue: 'Break after:',
-  warnSkew: 'Note: Adjacent/jump pairs are prone to measurement skew. Use "Complete" or "Convergence" for precise results.',
-  startTest: '▶ Start test', stopTest: '■ End test',
-  btnBack: 'Back', btnReplay: 'Replay', kbdSpace: 'Space', btnExclude: 'Exclude',
-  btnLouder: 'louder', btnLouder2: 'louder', btnEqual: 'Equal',
-  sliderHint: 'Adjust middle tone (B). ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
-  btnExtend: 'Extend range (±40 dB)', btnConfirm: 'Confirm offset', btnCancel: 'Cancel',
-  excludeTitle: 'Which electrode to exclude?',
-  resultsTitle: 'Results', noResults: 'No measurements yet. Start a test.',
-  comparison: 'Comparison', of: 'of', round: 'Round',
-  chartExplBalance: 'Perceived loudness relative to reference (0 dB). Positive = louder, negative = quieter. Error bars = mean residual. Calculation: Weighted least squares.',
-  chartExplJudgment: 'Score = "louder" minus "quieter" judgments. High positive = perceived too loud.',
-  thOffset: 'Offset (dB)', thMeasurements: 'Measurements', thResidual: '∅ Residual', thWeight: 'Weight', thStatusR: 'Status',
-  thScore: 'Score', thComparisons: 'Comparisons',
-  fatigueMsg: 'comparisons done. Break recommended.',
-  playerTitle: 'Audio player with correction EQ',
-  playerDesc: 'Load audio file and play with measured correction curve.',
-  playerNoData: 'No measurement data yet. Run a test first.',
-  playerFileLabel: 'Audio file (MP3, WAV, FLAC, OGG, M4A, MP4)',
-  lblEqStrength: 'EQ strength:', eqCurveTitle: 'EQ curve (applied)',
-  playerNotice: 'This player simulates how music might sound if the CI loudness curve were corrected. It modifies the signal before CI processing – not identical to MCL adjustment, but an indication.',
-  apikal: 'apical', basal: 'basal',
-  statusNoisy: 'noisy', statusAlmostMute: 'almost mute', statusMute: 'mute', statusExcluded: 'exclude',
-  total: 'Total', previous: 'previous', excluded: 'excluded',
-  copyDone: 'Copied.', deleteConfirm: 'Delete all results?', manualComp: 'Manual comparison',
-  pairsRemaining: 'pairs remaining', excludedDuring: 'excluded',
+en:{
+subtitle:'Compare perceived loudness across CI electrodes · v4',
+tabFreq:'Frequencies',tabResults:'Results',tabFile:'Load/Save',
+freqTitle:'Electrode frequencies & status',lblMfr:'Manufacturer:',
+freqHint:'Default values from bicial. Enter your own FAT values. ▶ = single tone, ◼ = sustained tone (click to stop).',
+thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Note',
+resetFreq:'Reset',sweep:'▶ Sweep',stop:'■ Stop',lblCorr:'Apply correction',
+toneTitle:'Tone parameters',lblVol:'Volume:',lblDur:'Duration:',lblPau:'Pause:',
+testTitle:'Test settings',lblMode:'Mode:',optBal:'Balance mode (dB offset)',optJdg:'Judgment mode (A/equal/B)',
+lblRun:'Test method:',optFull:'Complete (all pairs)',optConv:'Convergence (until stable)',optCF:'Convergence fast',optMan:'Manual',
+lblRef:'Reference electrode:',lblVol2:'Volume:',lblDur2:'Duration:',lblPau2:'Pause:',
+runExplFull:'All possible pairs compared in random order. A and B randomly assigned per pair. Most accurate method, takes longest. Recommended as first run.',
+runExplConv:'Like "Complete", but after the first round only the most uncertain pairs are re-tested. Stops when all values are stable (residual < 1 dB). Recommended after a first run.',
+runExplCF:'Only pairs with the largest deviations (from existing results) are re-tested, plus some random pairs. Requires existing results. Quick validation.',
+runExplMan:'Freely choose two electrodes and compare them.',
+recommend:'Recommended: Start with "Complete", then "Convergence fast" or "Convergence" to refine.',
+startTest:'▶ Start test',stopTest:'■ End test',
+bBack:'Back',bReplay:'Replay',kSpace:'Space',bExcl:'Exclude',bLoud:'louder',bLoud2:'louder',bEqual:'Equal',
+slHint:'Adjust middle tone (B). ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
+bExtend:'Extend range (±40 dB)',bConf:'Confirm offset',bCanc:'Cancel',exclTitle:'Which electrode to exclude?',
+resTitle:'Results',noRes:'No measurements yet. Start a test.',
+comp:'Comparison',of:'of',round:'Round',
+chartExplB:'Perceived loudness relative to reference (0 dB). Positive = louder, negative = quieter. Error bars = mean residual. Weighted least squares.',
+chartExplJ:'Score = "louder" minus "quieter" judgments.',
+thOff:'Offset (dB)',thMes:'Measurements',thRes:'∅ Residual',thWgt:'Weight',thStR:'Status',thSc:'Score',thComp:'Comp.',
+resExplain:'Residual: mean deviation of individual measurements from the overall result. High values = uncertain measurement. Least Squares: mathematical method that calculates the best offset values from all pair comparisons simultaneously. Weighting: noisy (0.5) and almost mute (0.1) electrodes contribute with reduced weight.',
+apikal:'apical',basal:'basal',
+stNoisy:'noisy',stAlmMute:'almost mute',stMute:'mute',stExcl:'exclude',
+total:'Total',prev:'previous',excluded:'excluded',copyDone:'Copied.',delConfirm:'Delete all results?',manComp:'Manual comparison',pairsRem:'pairs remaining',exclDuring:'excluded',
+plTitle:'Audio player with correction EQ',plDesc:'Load audio and play with measured correction curve.',
+plNoData:'No measurement data yet. Run a test first.',plFile:'Audio file (MP3, WAV, FLAC, OGG, M4A, MP4)',
+plEqStr:'EQ strength:',plEqTitle:'EQ curve (applied)',
+plNotice:'This player simulates corrected sound. It modifies the signal before CI processing – not identical to MCL adjustment, but an indication.',
+plNHLabel:'Normal hearing simulation',plNHExpl:'Makes the uncorrected distortion audible for normal hearing: measured loudness differences are applied (not inverted). Limitation: shows only loudness balance, not CI-typical artifacts.',
+plMapLabel:'MAPLAW simulation',plMapExpl:'Simulates MED-EL MAPLAW compression (logarithmic). The coefficient c determines compression strength. Your value is in the MAESTRO fitting report. Higher = more compression. c=0 = linear. S-shaped variant not implemented. This configuration only exists for MED-EL.',
+fileTitle:'Load / Save',fileDesc:'All settings and results saved as JSON: manufacturer, frequencies, electrode status, notes, reference, tone parameters, paradigm, and all measurements.',
+fLoad:'Load results',fSave:'Save results',fPrint:'Print results',fCopy:'Copy table',fClear:'Delete results',
+fExplain:'JSON files can be loaded at any time, even without prior measurements.',
+eeDesc:'Exports the correction curve as EasyEffects preset for PipeWire/PulseAudio.',
+eeExport:'Export EasyEffects preset',
+eeHowTo:'Instructions: 1) Install EasyEffects. 2) Copy exported file to ~/.config/easyeffects/output/. 3) Load and activate the preset in EasyEffects.',
 },
-fr: {
-  subtitle: 'Comparer le volume perçu des électrodes CI',
-  tabFreq: 'Fréquences', tabResults: 'Résultats',
-  freqTitle: 'Fréquences & statut des électrodes', lblManufacturer: 'Fabricant:',
-  freqHint: 'Valeurs par défaut de bicial. Entrez vos propres valeurs FAT. ▶ joue un son.',
-  thEl: 'Él.', thHz: 'Hz', thPlay: '▶', thStatus: 'Statut', thNote: 'Note',
-  resetFreq: 'Réinitialiser', sweep: '▶ Balayage', stop: '■ Stop', lblCorrection: 'Appliquer correction',
-  toneParams: 'Paramètres de ton', lblVolume: 'Volume:', lblDuration: 'Durée (ms):', lblPause: 'Pause (ms):',
-  testSettings: 'Paramètres de test', lblMode: 'Mode:', optBalance: 'Mode équilibrage (dB)',
-  optJudgment: 'Mode jugement', lblPairType: 'Type:', optFull: 'Complet (toutes les paires)',
-  optConvergence: 'Convergence (jusqu\'à stable)', optConvFast: 'Convergence rapide',
-  optAdjacent: 'Paires adjacentes', optJump: 'Paires espacées', optManual: 'Manuel',
-  lblRefEl: 'Électrode de référence:', lblParadigm: 'Paradigme:', lblFatigue: 'Pause après:',
-  warnSkew: 'Les paires adjacentes sont sujettes au biais. Utilisez « Complet » ou « Convergence » pour des résultats précis.',
-  startTest: '▶ Démarrer', stopTest: '■ Arrêter',
-  btnBack: 'Retour', btnReplay: 'Rejouer', kbdSpace: 'Espace', btnExclude: 'Exclure',
-  btnLouder: 'plus fort', btnLouder2: 'plus fort', btnEqual: 'Égal',
-  sliderHint: 'Ajuster le ton B. ◀▶ ±0,5 dB · Shift+◀▶ ±0,1 dB',
-  btnExtend: 'Étendre (±40 dB)', btnConfirm: 'Confirmer', btnCancel: 'Annuler',
-  excludeTitle: 'Quelle électrode exclure?',
-  resultsTitle: 'Résultats', noResults: 'Pas encore de mesures. Lancez un test.',
-  comparison: 'Comparaison', of: 'de', round: 'Tour',
-  chartExplBalance: 'Volume perçu par rapport à la référence (0 dB). Positif = plus fort. Barres d\'erreur = résidu moyen.',
-  chartExplJudgment: 'Score = jugements « plus fort » moins « plus faible ».',
-  thOffset: 'Offset (dB)', thMeasurements: 'Mesures', thResidual: '∅ Résidu', thWeight: 'Poids', thStatusR: 'Statut',
-  thScore: 'Score', thComparisons: 'Comparaisons',
-  fatigueMsg: 'comparaisons. Pause recommandée.',
-  playerTitle: 'Lecteur audio avec EQ correctif', playerDesc: 'Charger un fichier audio et le lire avec la courbe de correction.',
-  playerNoData: 'Pas de données. Effectuez un test d\'abord.',
-  playerFileLabel: 'Fichier audio (MP3, WAV, FLAC, OGG, M4A, MP4)',
-  lblEqStrength: 'Force EQ:', eqCurveTitle: 'Courbe EQ (appliquée)',
-  playerNotice: 'Ce lecteur simule le son après correction. Il modifie le signal avant le traitement CI.',
-  apikal: 'apical', basal: 'basal',
-  statusNoisy: 'bruité', statusAlmostMute: 'presque muet', statusMute: 'muet', statusExcluded: 'exclure',
-  total: 'Total', previous: 'précédent', excluded: 'exclu',
-  copyDone: 'Copié.', deleteConfirm: 'Supprimer tous les résultats?', manualComp: 'Comparaison manuelle',
-  pairsRemaining: 'paires restantes', excludedDuring: 'exclu',
-},
-es: {
-  subtitle: 'Comparar el volumen percibido en los electrodos del IC',
-  tabFreq: 'Frecuencias', tabResults: 'Resultados',
-  freqTitle: 'Frecuencias y estado de electrodos', lblManufacturer: 'Fabricante:',
-  freqHint: 'Valores predeterminados de bicial. Introduzca sus propios valores FAT. ▶ reproduce un tono.',
-  thEl: 'El.', thHz: 'Hz', thPlay: '▶', thStatus: 'Estado', thNote: 'Nota',
-  resetFreq: 'Restablecer', sweep: '▶ Barrido', stop: '■ Parar', lblCorrection: 'Aplicar corrección',
-  toneParams: 'Parámetros de tono', lblVolume: 'Volumen:', lblDuration: 'Duración (ms):', lblPause: 'Pausa (ms):',
-  testSettings: 'Configuración de test', lblMode: 'Modo:', optBalance: 'Modo equilibrio (dB)',
-  optJudgment: 'Modo juicio', lblPairType: 'Tipo:', optFull: 'Completo (todos los pares)',
-  optConvergence: 'Convergencia (hasta estable)', optConvFast: 'Convergencia rápida',
-  optAdjacent: 'Pares adyacentes', optJump: 'Pares salto', optManual: 'Manual',
-  lblRefEl: 'Electrodo de referencia:', lblParadigm: 'Paradigma:', lblFatigue: 'Pausa tras:',
-  warnSkew: 'Los pares adyacentes son propensos a sesgo. Use « Completo » o « Convergencia » para resultados precisos.',
-  startTest: '▶ Iniciar test', stopTest: '■ Finalizar',
-  btnBack: 'Atrás', btnReplay: 'Repetir', kbdSpace: 'Espacio', btnExclude: 'Excluir',
-  btnLouder: 'más alto', btnLouder2: 'más alto', btnEqual: 'Igual',
-  sliderHint: 'Ajustar tono B. ◀▶ ±0,5 dB · Shift+◀▶ ±0,1 dB',
-  btnExtend: 'Ampliar (±40 dB)', btnConfirm: 'Confirmar', btnCancel: 'Cancelar',
-  excludeTitle: '¿Qué electrodo excluir?',
-  resultsTitle: 'Resultados', noResults: 'Sin mediciones. Inicie un test.',
-  comparison: 'Comparación', of: 'de', round: 'Ronda',
-  chartExplBalance: 'Volumen percibido relativo a referencia (0 dB). Positivo = más alto. Barras de error = residuo medio.',
-  chartExplJudgment: 'Puntuación = juicios « más alto » menos « más bajo ».',
-  thOffset: 'Offset (dB)', thMeasurements: 'Mediciones', thResidual: '∅ Residuo', thWeight: 'Peso', thStatusR: 'Estado',
-  thScore: 'Punt.', thComparisons: 'Comparaciones',
-  fatigueMsg: 'comparaciones. Pausa recomendada.',
-  playerTitle: 'Reproductor con EQ correctivo', playerDesc: 'Cargar archivo de audio y reproducir con curva de corrección.',
-  playerNoData: 'Sin datos. Realice un test primero.',
-  playerFileLabel: 'Archivo de audio (MP3, WAV, FLAC, OGG, M4A, MP4)',
-  lblEqStrength: 'Fuerza EQ:', eqCurveTitle: 'Curva EQ (aplicada)',
-  playerNotice: 'Este reproductor simula el sonido tras corrección. Modifica la señal antes del procesamiento CI.',
-  apikal: 'apical', basal: 'basal',
-  statusNoisy: 'ruidoso', statusAlmostMute: 'casi mudo', statusMute: 'mudo', statusExcluded: 'excluir',
-  total: 'Total', previous: 'anterior', excluded: 'excluido',
-  copyDone: 'Copiado.', deleteConfirm: '¿Eliminar todos los resultados?', manualComp: 'Comparación manual',
-  pairsRemaining: 'pares restantes', excludedDuring: 'excluido',
-}
+fr:{subtitle:'Comparer le volume perçu des électrodes CI · v4',tabFreq:'Fréquences',tabResults:'Résultats',tabFile:'Charger/Sauver',freqTitle:'Fréquences & statut',lblMfr:'Fabricant:',freqHint:'Valeurs de bicial. ▶ = son, ◼ = son continu.',thEl:'Él.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optConv:'Convergence',optCF:'Conv. rapide',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',runExplFull:'Toutes les paires comparées aléatoirement. Recommandé.',runExplConv:'Comme Complet, puis re-test des paires incertaines.',runExplCF:'Re-test rapide des paires incertaines. Nécessite des résultats.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: Complet d\'abord, puis Convergence.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'Résidu: écart moyen. Least Squares: calcul optimal à partir de toutes les paires.',apikal:'apical',basal:'basal',stNoisy:'bruité',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',delConfirm:'Supprimer?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio',plDesc:'Charger et lire avec correction.',plNoData:'Pas de données.',plFile:'Fichier audio',plEqStr:'Force EQ:',plEqTitle:'Courbe EQ',plNotice:'Simulation de correction, pas identique à l\'ajustement MCL.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL MAPLAW logarithmique. Uniquement MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fClear:'Supprimer',fExplain:'Fichiers JSON chargeables à tout moment.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.'},
+es:{subtitle:'Comparar volumen percibido en electrodos IC · v4',tabFreq:'Frecuencias',tabResults:'Resultados',tabFile:'Cargar/Guardar',freqTitle:'Frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Valores de bicial. ▶ = tono, ◼ = tono continuo.',thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optConv:'Convergencia',optCF:'Conv. rápida',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',runExplFull:'Todos los pares comparados aleatoriamente. Recomendado.',runExplConv:'Como Completo, luego re-test de pares inciertos.',runExplCF:'Re-test rápido. Requiere resultados previos.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: Completo primero, luego Convergencia.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo. Barras de error = residuo medio.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'Residuo: desviación media. Least Squares: cálculo óptimo de todas las parejas.',apikal:'apical',basal:'basal',stNoisy:'ruidoso',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',delConfirm:'¿Eliminar?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor',plDesc:'Cargar y reproducir con corrección.',plNoData:'Sin datos.',plFile:'Archivo de audio',plEqStr:'Fuerza EQ:',plEqTitle:'Curva EQ',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión para normo-oyentes.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL MAPLAW. Solo MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fClear:'Eliminar',fExplain:'JSON cargable en cualquier momento.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.'}
 };
-
-let lang = 'de';
-function t(key) { return (LANG[lang] && LANG[lang][key]) || (LANG.de[key]) || key; }
-
-function applyLang() {
-  lang = document.getElementById('langSelect').value;
-  // Static elements with data-t attribute
-  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
-  // Named elements
-  const m = {
-    subtitleText: 'subtitle', tabSetup: 'tabFreq', tabResults: 'tabResults',
-    freqTitle: 'freqTitle', lblManufacturer: 'lblManufacturer', freqHint: 'freqHint',
-    resetFreqBtn: 'resetFreq', sweepBtn: 'sweep', stopBtn: 'stop', lblCorrection: 'lblCorrection',
-    toneParamsTitle: 'toneParams', testSettingsTitle: 'testSettings',
-    resultsTitle: 'resultsTitle',
-  };
-  for (const [id, key] of Object.entries(m)) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = t(key);
-  }
-  // Options and labels
-  const setT = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
-  setT('optBalance', 'optBalance'); setT('optJudgment', 'optJudgment');
-  setT('optFull', 'optFull'); setT('optConvergence', 'optConvergence');
-  setT('optConvFast', 'optConvFast'); setT('optAdjacent', 'optAdjacent');
-  setT('optJump', 'optJump'); setT('optManual', 'optManual');
-  setT('startTestBtn', 'startTest'); setT('stopTestBtn', 'stopTest');
-  // Labels by ID
-  ['lblMode','lblPairType','lblRefEl','lblParadigm','lblFatigue','lblVol2','lblDur2','lblPause2',
-   'lblVolume','lblDuration','lblPause'].forEach(id => setT(id, id));
-  // Rebuild freq table headers
-  buildFreqTable();
-  if (document.getElementById('resultsContent').style.display !== 'none') renderResults();
-  try { localStorage.setItem('ci-lb-lang', lang); } catch(e) {}
+let lang='de';
+function t(k){return(L[lang]&&L[lang][k])||(L.de[k])||k;}
+function applyLang(){lang=document.getElementById('langSelect').value;
+  document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});
+  const s=(id,k)=>{const e=document.getElementById(id);if(e)e.textContent=t(k);};
+  s('subtitleText','subtitle');s('tabSetup','tabFreq');s('tabResults','tabResults');s('tabFile','tabFile');
+  s('freqTitle','freqTitle');s('lblMfr','lblMfr');s('freqHint','freqHint');
+  s('resetBtn','resetFreq');s('sweepBtn','sweep');s('stopBtn','stop');s('lblCorr','lblCorr');
+  s('toneTitle','toneTitle');s('lblVol','lblVol');s('lblDur','lblDur');s('lblPau','lblPau');
+  s('testTitle','testTitle');s('lblMode','lblMode');s('optBal','optBal');s('optJdg','optJdg');
+  s('lblRun','lblRun');s('optFull','optFull');s('optConv','optConv');s('optCF','optCF');s('optMan','optMan');
+  s('lblRef','lblRef');s('lblVol2','lblVol2');s('lblDur2','lblDur2');s('lblPau2','lblPau2');
+  s('startBtn','startTest');s('stopTBtn','stopTest');s('resTitle','resTitle');
+  updateRunExplain();buildFreqTable();
+  if(document.getElementById('resC').style.display!=='none')renderResults();
+  try{localStorage.setItem('ci-lb-lang',lang);}catch(e){}
+}
+function updateRunExplain(){
+  const v=document.getElementById('pairType').value;
+  const m={full:'runExplFull',convergence:'runExplConv',conv_fast:'runExplCF',manual:'runExplMan'};
+  document.getElementById('runExplain').innerHTML=t(m[v]||'runExplFull')+'<br><br><em>'+t('recommend')+'</em>';
 }
 
-// ===========================================
-// MANUFACTURER CONFIGS
-// ===========================================
-const MANUFACTURERS = {
-  medel: { name: 'MED-EL', count: 12, apicalFirst: true,
-    freqs: [120,235,384,579,836,1175,1624,2222,3019,4084,5507,7410] },
-  ab: { name: 'Advanced Bionics', count: 16, apicalFirst: true,
-    freqs: [333,455,540,642,762,906,1076,1278,1518,1803,2142,2544,3022,3590,4264,6665] },
-  cochlear: { name: 'Cochlear', count: 22, apicalFirst: false,
-    freqs: [250,375,500,625,750,875,1000,1125,1250,1500,1750,2000,2250,2625,3000,3500,4000,4625,5250,6000,6875,8000] }
-};
+// ============================================================
+// MANUFACTURERS
+// ============================================================
+const MFR={medel:{name:'MED-EL',n:12,apFirst:true,freqs:[120,235,384,579,836,1175,1624,2222,3019,4084,5507,7410]},ab:{name:'Advanced Bionics',n:16,apFirst:true,freqs:[333,455,540,642,762,906,1076,1278,1518,1803,2142,2544,3022,3590,4264,6665]},cochlear:{name:'Cochlear',n:22,apFirst:false,freqs:[250,375,500,625,750,875,1000,1125,1250,1500,1750,2000,2250,2625,3000,3500,4000,4625,5250,6000,6875,8000]}};
+let mfr='medel',nEl=12,freqs=[...MFR.medel.freqs];
+let elSt=[],elNt=[],elExDur=[];
+function initEl(){elSt=new Array(nEl).fill(null);elNt=new Array(nEl).fill('');elExDur=new Array(nEl).fill(null);}
+initEl();
+function dEN(i){return MFR[mfr].apFirst?i+1:nEl-i;}
 
-let manufacturer = 'medel';
-let numElectrodes = 12;
-let freqs = [...MANUFACTURERS.medel.freqs];
-let electrodeStatus = [];
-let electrodeNotes = [];
-let electrodeExcludedDuring = [];
+let audioCtx=null,curOsc=null,playTO=null,sweepAct=false,isPlay=false,holdIdx=-1;
+let testAct=false,testPairs=[],testIdx=0,testMode='balance',curPlayed=false,curBase=0,slExt=false;
+let curA=-1,curB=-1,undoSt=[],tStart=0,tInt=null,compCnt=0,convRnd=0,refEl=5;
+let jRes=[],bRes=[];
 
-function initElectrodeArrays() {
-  const n = numElectrodes;
-  electrodeStatus = new Array(n).fill(null);
-  electrodeNotes = new Array(n).fill('');
-  electrodeExcludedDuring = new Array(n).fill(null);
-}
-initElectrodeArrays();
-
-// Electrode display number: Cochlear counts basal=1, so we reverse
-function displayElNum(idx) {
-  const m = MANUFACTURERS[manufacturer];
-  if (m.apicalFirst) return idx + 1; // MED-EL, AB: apikal=1
-  return m.count - idx; // Cochlear: basal=1, so apikal=count
-}
-
-let audioCtx = null, currentOsc = null, playTimeout = null, loopActive = false, sweepActive = false, isPlaying = false;
-let testActive = false, testPairs = [], testIndex = 0, testMode = 'balance';
-let currentPairPlayed = false, currentBaseOffset = 0, sliderExtended = false;
-let currentPairA = -1, currentPairB = -1;
-let undoStack = [], testStartTime = 0, timerInterval = null, comparisonCount = 0, convergenceRound = 0;
-let referenceElectrode = 5;
-let judgmentResults = [], balanceResults = [];
-
-// ===========================================
+// ============================================================
 // AUDIO
-// ===========================================
-function getAudioCtx() {
-  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function getVolume() { const s = document.getElementById(testActive ? 'volumeSlider2' : 'volumeSlider'); return Math.pow(s.value/100, 2); }
-function getToneDuration() { return parseInt(document.getElementById(testActive ? 'toneDuration2' : 'toneDuration').value) || 1000; }
-function getPauseDuration() { return parseInt(document.getElementById(testActive ? 'pauseDuration2' : 'pauseDuration').value) || 500; }
-function dbToGain(db) { return Math.pow(10, db/20); }
+// ============================================================
+function gAC(){if(!audioCtx||audioCtx.state==='closed')audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}
+function gVol(){return Math.pow((testAct?document.getElementById('vol2'):document.getElementById('vol1')).value/100,2);}
+function gDur(){return parseInt((testAct?document.getElementById('dur2'):document.getElementById('dur1')).value)||1000;}
+function gPau(){return parseInt((testAct?document.getElementById('pau2'):document.getElementById('pau1')).value)||500;}
+function dB2G(d){return Math.pow(10,d/20);}
+function stopAll(){if(curOsc){try{curOsc.stop();}catch(e){}curOsc=null;}if(playTO){clearTimeout(playTO);playTO=null;}sweepAct=false;isPlay=false;holdIdx=-1;updInd(-1);}
+function playTone(hz,vol,ms,ramp=20){return new Promise(r=>{const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+ramp/1000);g.gain.setValueAtTime(Math.max(0,vol),c.currentTime+(ms-ramp)/1000);g.gain.linearRampToValueAtTime(0,c.currentTime+ms/1000);o.connect(g);g.connect(c.destination);curOsc=o;o.start();o.stop(c.currentTime+ms/1000+.01);o.onended=()=>{curOsc=null;r();};});}
+function playHold(hz,vol){stopAll();const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+.02);o.connect(g);g.connect(c.destination);curOsc=o;o.start();}
+function corrG(i){if(!document.getElementById('corrToggle').checked||bRes.length===0)return 1;const{levels}=compWLS();return dB2G(-levels[i]);}
+async function playSingle(i){stopAll();isPlay=true;updInd(i);await playTone(freqs[i],gVol()*corrG(i),gDur());isPlay=false;updInd(-1);}
+function toggleHold(i){if(holdIdx===i){stopAll();return;}stopAll();holdIdx=i;updInd(i);playHold(freqs[i],gVol()*corrG(i));}
+async function playSweep(){stopAll();sweepAct=true;isPlay=true;for(let i=0;i<nEl;i++){if(!sweepAct)break;if(elSt[i]==='excluded'||elSt[i]==='mute')continue;updInd(i);await playTone(freqs[i],gVol()*corrG(i),gDur());if(!sweepAct)break;await new Promise(r=>playTO=setTimeout(r,50+gPau()));}isPlay=false;sweepAct=false;updInd(-1);}
+async function playSeq(eA,eB,off){const v=gVol(),d=gDur(),p=gPau(),vB=Math.max(Math.min(v*dB2G(off),1),0);
+  updInd(eA,'a');await playTone(freqs[eA],v,d);if(!isPlay)return;updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;
+  updInd(eB,'b');await playTone(freqs[eB],vB,d);if(!isPlay)return;
+  if(document.getElementById('paraI').value==='aba'){updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;updInd(eA,'a');await playTone(freqs[eA],v,d);}
+  isPlay=false;updInd(-1);}
+function updInd(i,w){document.querySelectorAll('.freq-table .pbtn[data-a="play"]').forEach((b,j)=>{b.style.background=(j===i)?'var(--accent-light)':'';});
+  const a=document.getElementById('tAL'),b=document.getElementById('tBL');if(a)a.classList.toggle('playing',w==='a');if(b)b.classList.toggle('playing',w==='b');}
 
-function stopAllSound() {
-  if (currentOsc) { try { currentOsc.stop(); } catch(e) {} currentOsc = null; }
-  if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-  loopActive = false; sweepActive = false; isPlaying = false; updateToneIndicators(-1);
-}
-
-function playTone(freqHz, volume, durationMs, rampMs=20) {
-  return new Promise(resolve => {
-    const ctx = getAudioCtx(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
-    osc.type = 'sine'; osc.frequency.value = freqHz;
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(Math.max(0,volume), ctx.currentTime + rampMs/1000);
-    gain.gain.setValueAtTime(Math.max(0,volume), ctx.currentTime + (durationMs-rampMs)/1000);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + durationMs/1000);
-    osc.connect(gain); gain.connect(ctx.destination); currentOsc = osc;
-    osc.start(); osc.stop(ctx.currentTime + durationMs/1000 + 0.01);
-    osc.onended = () => { currentOsc = null; resolve(); };
-  });
-}
-
-function getCorrectionGain(elIdx) {
-  if (!document.getElementById('correctionToggle').checked) return 1.0;
-  if (balanceResults.length === 0) return 1.0;
-  const { levels } = computeWeightedLS();
-  return dbToGain(-levels[elIdx]);
-}
-
-async function playSingleTone(idx) {
-  stopAllSound(); isPlaying = true; updateToneIndicators(idx);
-  await playTone(freqs[idx], getVolume() * getCorrectionGain(idx), getToneDuration());
-  isPlaying = false; updateToneIndicators(-1);
-}
-
-async function playSweep() {
-  stopAllSound(); sweepActive = true; isPlaying = true;
-  for (let i = 0; i < numElectrodes; i++) {
-    if (!sweepActive) break;
-    if (electrodeStatus[i] === 'excluded' || electrodeStatus[i] === 'mute') continue;
-    updateToneIndicators(i);
-    await playTone(freqs[i], getVolume() * getCorrectionGain(i), getToneDuration());
-    if (!sweepActive) break;
-    await new Promise(r => playTimeout = setTimeout(r, 50 + getPauseDuration()));
-  }
-  isPlaying = false; sweepActive = false; updateToneIndicators(-1);
-}
-
-async function playSequence(elA, elB, offsetDb) {
-  const vol = getVolume(), dur = getToneDuration(), pause = getPauseDuration();
-  const volB = Math.max(Math.min(vol * dbToGain(offsetDb), 1.0), 0);
-  updateToneIndicators(elA, 'a'); await playTone(freqs[elA], vol, dur);
-  if (!isPlaying) return; updateToneIndicators(-1);
-  await new Promise(r => playTimeout = setTimeout(r, 50 + pause));
-  if (!isPlaying) return;
-  updateToneIndicators(elB, 'b'); await playTone(freqs[elB], volB, dur);
-  if (!isPlaying) return;
-  if (document.getElementById('paradigm').value === 'aba') {
-    updateToneIndicators(-1); await new Promise(r => playTimeout = setTimeout(r, 50 + pause));
-    if (!isPlaying) return; updateToneIndicators(elA, 'a'); await playTone(freqs[elA], vol, dur);
-  }
-  isPlaying = false; updateToneIndicators(-1);
-}
-
-function updateToneIndicators(elIdx, which) {
-  document.querySelectorAll('.freq-table .play-btn').forEach((b,i) => { b.style.background = (i===elIdx) ? 'var(--accent-light)' : ''; });
-  const a = document.getElementById('toneALabel'), b = document.getElementById('toneBLabel');
-  if (a) a.classList.toggle('playing', which==='a');
-  if (b) b.classList.toggle('playing', which==='b');
-}
-
-// ===========================================
+// ============================================================
 // FREQUENCY TABLE
-// ===========================================
-function buildFreqTable() {
-  const thead = document.getElementById('freqTableHead');
-  thead.innerHTML = `<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thPlay')}</th><th>${t('thStatus')}</th><th>${t('thNote')}</th>`;
-  const tbody = document.getElementById('freqBody');
-  tbody.innerHTML = '';
-  const statusOpts = `<option value="">—</option><option value="noisy">${t('statusNoisy')}</option><option value="almostMute">${t('statusAlmostMute')}</option><option value="mute">${t('statusMute')}</option><option value="excluded">${t('statusExcluded')}</option>`;
-  for (let i = 0; i < numElectrodes; i++) {
-    const tr = document.createElement('tr');
-    if (electrodeStatus[i] === 'excluded') tr.classList.add('excluded-row');
-    let elLabel = displayElNum(i);
-    let extra = '';
-    if (i === 0) extra = ` <span class="el-label-extra">(${t('apikal')})</span>`;
-    if (i === numElectrodes - 1) extra = ` <span class="el-label-extra">(${t('basal')})</span>`;
-    tr.innerHTML = `<td style="font-weight:600;">${elLabel}${extra}</td>
-      <td><input type="number" class="freq-input" data-idx="${i}" value="${Math.round(freqs[i])}" min="20" max="20000"></td>
-      <td><button class="play-btn" data-idx="${i}">&#9654;</button></td>
-      <td><select class="status-select" data-idx="${i}">${statusOpts}</select></td>
-      <td><input type="text" class="note-input" data-idx="${i}" value="${electrodeNotes[i]||''}" placeholder="${t('thNote')}"></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('.status-select').value = electrodeStatus[i] || '';
-  }
-  tbody.querySelectorAll('.freq-input').forEach(inp => inp.addEventListener('change', e => {
-    const idx=+e.target.dataset.idx, val=parseFloat(e.target.value);
-    if (val>=20&&val<=20000) freqs[idx]=val; else e.target.value=Math.round(freqs[idx]);
-  }));
-  tbody.querySelectorAll('.play-btn').forEach(b => b.addEventListener('click', () => playSingleTone(+b.dataset.idx)));
-  tbody.querySelectorAll('.status-select').forEach(s => s.addEventListener('change', e => { electrodeStatus[+e.target.dataset.idx]=e.target.value||null; buildFreqTable(); updateRefSelect(); }));
-  tbody.querySelectorAll('.note-input').forEach(n => n.addEventListener('change', e => { electrodeNotes[+e.target.dataset.idx]=e.target.value; }));
-  updateRefSelect(); updateManualSelects();
-}
+// ============================================================
+function buildFreqTable(){
+  document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th>${t('thNote')}</th>`;
+  const tb=document.getElementById('freqTB');tb.innerHTML='';
+  const so=`<option value="">—</option><option value="noisy">${t('stNoisy')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="excluded">${t('stExcl')}</option>`;
+  for(let i=0;i<nEl;i++){const tr=document.createElement('tr');if(elSt[i]==='excluded')tr.classList.add('excluded-row');
+    let ex='';if(i===0)ex=` <span class="el-extra">(${t('apikal')})</span>`;if(i===nEl-1)ex=` <span class="el-extra">(${t('basal')})</span>`;
+    tr.innerHTML=`<td style="font-weight:600">${dEN(i)}${ex}</td><td><input type="number" class="fi" data-i="${i}" value="${Math.round(freqs[i])}" min="20" max="20000"></td><td><button class="pbtn" data-a="play" data-i="${i}">&#9654;</button></td><td><button class="pbtn" data-a="hold" data-i="${i}">&#9724;</button></td><td><select class="ss" data-i="${i}">${so}</select></td><td><input type="text" class="ni" data-i="${i}" value="${elNt[i]||''}" placeholder="${t('thNote')}"></td>`;
+    tb.appendChild(tr);tr.querySelector('.ss').value=elSt[i]||'';}
+  tb.querySelectorAll('.fi').forEach(inp=>inp.addEventListener('change',e=>{const i=+e.target.dataset.i,v=parseFloat(e.target.value);if(v>=20&&v<=20000)freqs[i]=v;else e.target.value=Math.round(freqs[i]);}));
+  tb.querySelectorAll('.pbtn[data-a="play"]').forEach(b=>b.addEventListener('click',()=>playSingle(+b.dataset.i)));
+  tb.querySelectorAll('.pbtn[data-a="hold"]').forEach(b=>b.addEventListener('click',()=>toggleHold(+b.dataset.i)));
+  tb.querySelectorAll('.ss').forEach(s=>s.addEventListener('change',e=>{elSt[+e.target.dataset.i]=e.target.value||null;buildFreqTable();updRef();}));
+  tb.querySelectorAll('.ni').forEach(n=>n.addEventListener('change',e=>{elNt[+e.target.dataset.i]=e.target.value;}));
+  updRef();updManSel();}
+function updRef(){const s=document.getElementById('refEl'),p=s.value;s.innerHTML='';
+  for(let i=0;i<nEl;i++){if(elSt[i]==='excluded'||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`;}
+  if(p&&s.querySelector(`option[value="${p}"]`))s.value=p;else s.value=String(Math.floor(nEl/2));refEl=+s.value;}
+function updManSel(){['manA','manB'].forEach(id=>{const s=document.getElementById(id);s.innerHTML='';for(let i=0;i<nEl;i++){if(elSt[i]==='excluded'||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`;}});const b=document.getElementById('manB');if(b.options.length>1)b.selectedIndex=1;}
+function switchMfr(m){mfr=m;nEl=MFR[m].n;freqs=[...MFR[m].freqs];initEl();jRes=[];bRes=[];refEl=Math.floor(nEl/2);buildFreqTable();}
+function resetFreqs(){freqs=[...MFR[mfr].freqs];initEl();buildFreqTable();}
 
-function updateRefSelect() {
-  const sel = document.getElementById('refElectrode'); const prev = sel.value; sel.innerHTML = '';
-  for (let i = 0; i < numElectrodes; i++) {
-    if (electrodeStatus[i]==='excluded'||electrodeStatus[i]==='mute') continue;
-    const mid = Math.floor(numElectrodes/2);
-    sel.innerHTML += `<option value="${i}">E${displayElNum(i)} (${Math.round(freqs[i])} Hz)${i===mid?' – ≈'+t('apikal')+'/'+t('basal'):''}</option>`;
-  }
-  if (prev && sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
-  else { const mid = Math.floor(numElectrodes/2); sel.value = String(mid); }
-  referenceElectrode = +sel.value;
-}
+// ============================================================
+// PAIRS & WEIGHTED LEAST SQUARES
+// ============================================================
+function actEl(){return[...Array(nEl).keys()].filter(i=>elSt[i]!=='excluded'&&elSt[i]!=='mute');}
+function allPairs(){const a=actEl(),p=[];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)p.push([a[i],a[j]]);return p;}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function randAB(p){return p.map(([x,y])=>Math.random()<.5?[x,y]:[y,x]);}
+function gWt(i){const s=elSt[i];if(s==='excluded'||s==='mute')return 0;if(s==='almostMute')return .1;if(s==='noisy')return .5;return 1;}
+function compWLS(){const n=nEl,lv=new Array(n).fill(0);
+  const valid=bRes.filter(r=>r.a>=0&&r.a<n&&r.b>=0&&r.b<n&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+  if(!valid.length)return{levels:lv,residuals:[],elRes:new Array(n).fill(0),elWt:new Array(n).fill(1)};
+  for(let it=0;it<80;it++){const su=new Array(n).fill(0),wt=new Array(n).fill(0);
+    for(const r of valid){const w=Math.min(gWt(r.a),gWt(r.b));su[r.b]+=(lv[r.a]-r.offset)*w;wt[r.b]+=w;su[r.a]+=(lv[r.b]+r.offset)*w;wt[r.a]+=w;}
+    for(let i=0;i<n;i++){if(i===refEl){lv[i]=0;continue;}if(wt[i]>0)lv[i]=su[i]/wt[i];}}
+  const res=valid.map(r=>({...r,residual:Math.abs(r.offset-(lv[r.a]-lv[r.b]))}));
+  const ea=new Array(n).fill(null).map(()=>[]);for(const r of res){ea[r.a].push(r.residual);ea[r.b].push(r.residual);}
+  const elRes=ea.map(a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0);
+  return{levels:lv,residuals:res,elRes,elWt:new Array(n).fill(0).map((_,i)=>gWt(i))};}
 
-function updateManualSelects() {
-  ['manualA','manualB'].forEach(id => {
-    const s = document.getElementById(id); s.innerHTML = '';
-    for (let i = 0; i < numElectrodes; i++) {
-      if (electrodeStatus[i]==='excluded'||electrodeStatus[i]==='mute') continue;
-      s.innerHTML += `<option value="${i}">E${displayElNum(i)} (${Math.round(freqs[i])} Hz)</option>`;
-    }
-  });
-  const b = document.getElementById('manualB'); if (b.options.length > 1) b.selectedIndex = 1;
-}
+function getConvPairs(fast){
+  if(fast&&bRes.length>0){const{residuals}=compWLS();const act=new Set(actEl());
+    const vr=residuals.filter(r=>act.has(r.a)&&act.has(r.b)).sort((a,b)=>b.residual-a.residual);
+    const tp=vr.slice(0,Math.max(5,Math.ceil(vr.length*.2))).map(r=>[r.a,r.b]);
+    const ap=allPairs(),ex=shuffle(ap).slice(0,Math.min(5,ap.length));
+    const seen=new Set(),mg=[];[...tp,...ex].forEach(p=>{const k=Math.min(p[0],p[1])+'-'+Math.max(p[0],p[1]);if(!seen.has(k)){seen.add(k);mg.push(p);}});return mg;}
+  return allPairs();}
 
-function switchManufacturer(mfr) {
-  manufacturer = mfr;
-  const cfg = MANUFACTURERS[mfr];
-  numElectrodes = cfg.count;
-  freqs = [...cfg.freqs];
-  initElectrodeArrays();
-  judgmentResults = []; balanceResults = [];
-  referenceElectrode = Math.floor(numElectrodes / 2);
-  buildFreqTable();
-}
-
-function resetFreqs() {
-  const cfg = MANUFACTURERS[manufacturer];
-  freqs = [...cfg.freqs]; initElectrodeArrays();
-  buildFreqTable();
-}
-
-// ===========================================
-// PAIRS
-// ===========================================
-function getActiveElectrodes() { return [...Array(numElectrodes).keys()].filter(i => electrodeStatus[i]!=='excluded' && electrodeStatus[i]!=='mute'); }
-
-function getAllPairs() {
-  const a = getActiveElectrodes(), p = [];
-  for (let i=0;i<a.length;i++) for (let j=i+1;j<a.length;j++) p.push([a[i],a[j]]);
-  return p;
-}
-function getAdjacentPairs() { const a=getActiveElectrodes(),p=[]; for(let i=0;i<a.length-1;i++) p.push([a[i],a[i+1]]); return p; }
-function getJumpPairs() {
-  const a=getActiveElectrodes(); if(a.length<4) return getAllPairs();
-  const n=a.length, step=Math.max(2,Math.floor(n/4)), p=[], seen=new Set();
-  const add=(x,y)=>{ if(x!==y){const k=Math.min(x,y)+'-'+Math.max(x,y); if(!seen.has(k)){seen.add(k);p.push([x,y]);}} };
-  for(let i=0;i<n-step;i+=step) add(a[i],a[i+step]);
-  add(a[0],a[n-1]); add(a[0],a[Math.floor(n/2)]); add(a[Math.floor(n/2)],a[n-1]);
-  return p;
-}
-function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function randomizeAB(pairs) { return pairs.map(([x,y])=>Math.random()<0.5?[x,y]:[y,x]); }
-
-// ===========================================
-// WEIGHTED LEAST SQUARES
-// ===========================================
-function getWeight(elIdx) {
-  const s = electrodeStatus[elIdx];
-  if (s === 'excluded' || s === 'mute') return 0;
-  if (s === 'almostMute') return 0.1;
-  if (s === 'noisy') return 0.5;
-  return 1.0;
-}
-
-function computeWeightedLS() {
-  const n = numElectrodes;
-  const levels = new Array(n).fill(0);
-  // Filter out results involving excluded/mute electrodes
-  const valid = balanceResults.filter(r => {
-    if (r.a<0||r.a>=n||r.b<0||r.b>=n) return false;
-    const sa=electrodeStatus[r.a], sb=electrodeStatus[r.b];
-    return sa!=='excluded'&&sa!=='mute'&&sb!=='excluded'&&sb!=='mute';
-  });
-  if (valid.length === 0) return { levels, residuals: [], elResiduals: new Array(n).fill(0), elWeights: new Array(n).fill(1) };
-
-  for (let iter = 0; iter < 80; iter++) {
-    const sums = new Array(n).fill(0), weights = new Array(n).fill(0);
-    for (const r of valid) {
-      const w = Math.min(getWeight(r.a), getWeight(r.b));
-      const estB = levels[r.a] - r.offset;
-      sums[r.b] += estB * w; weights[r.b] += w;
-      const estA = levels[r.b] + r.offset;
-      sums[r.a] += estA * w; weights[r.a] += w;
-    }
-    for (let i = 0; i < n; i++) {
-      if (i === referenceElectrode) { levels[i] = 0; continue; }
-      if (weights[i] > 0) levels[i] = sums[i] / weights[i];
-    }
-  }
-
-  // Residuals
-  const residuals = valid.map(r => {
-    const expected = levels[r.a] - levels[r.b];
-    return { ...r, residual: Math.abs(r.offset - expected) };
-  });
-  // Per-electrode average residual
-  const elResArr = new Array(n).fill(null).map(()=>[]);
-  for (const r of residuals) { elResArr[r.a].push(r.residual); elResArr[r.b].push(r.residual); }
-  const elResiduals = elResArr.map(arr => arr.length>0 ? arr.reduce((a,b)=>a+b,0)/arr.length : 0);
-  const elWeights = new Array(n).fill(0).map((_,i)=>getWeight(i));
-
-  return { levels, residuals, elResiduals, elWeights };
-}
-
-// ===========================================
-// CONVERGENCE
-// ===========================================
-function getConvergencePairs(fast) {
-  if (fast && balanceResults.length > 0) {
-    const { residuals } = computeWeightedLS();
-    // Filter residuals to only include active electrodes
-    const active = new Set(getActiveElectrodes());
-    const validRes = residuals.filter(r => active.has(r.a) && active.has(r.b));
-    validRes.sort((a,b) => b.residual - a.residual);
-    const topCount = Math.max(5, Math.ceil(validRes.length * 0.2));
-    const topPairs = validRes.slice(0, topCount).map(r => [r.a, r.b]);
-    const allP = getAllPairs();
-    const extra = shuffle(allP).slice(0, Math.min(5, allP.length));
-    const seen = new Set(), merged = [];
-    [...topPairs, ...extra].forEach(p => { const k=Math.min(p[0],p[1])+'-'+Math.max(p[0],p[1]); if(!seen.has(k)){seen.add(k);merged.push(p);} });
-    return merged;
-  }
-  return getAllPairs();
-}
-
-// ===========================================
+// ============================================================
 // TEST
-// ===========================================
-function startTest() {
-  const pt = document.getElementById('pairType').value;
-  testMode = document.getElementById('testMode').value;
-  referenceElectrode = +document.getElementById('refElectrode').value;
-  if (pt === 'manual') return;
-  let pairs;
-  if (pt==='adjacent') pairs=getAdjacentPairs();
-  else if (pt==='jump') pairs=getJumpPairs();
-  else if (pt==='full') pairs=getAllPairs();
-  else if (pt==='convergence') pairs=getConvergencePairs(false);
-  else if (pt==='convergence_fast') pairs=getConvergencePairs(true);
-  else pairs=getAllPairs();
-  testPairs = randomizeAB(shuffle(pairs));
-  testIndex=0; undoStack=[]; testActive=true; currentPairPlayed=false; comparisonCount=0;
-  convergenceRound=(pt==='convergence'||pt==='convergence_fast')?1:0;
-  testStartTime=Date.now();
-  document.getElementById('startTestBtn').disabled=true;
-  document.getElementById('stopTestBtn').disabled=false;
-  document.getElementById('testArea').style.display='block';
-  document.getElementById('excludeDialog').classList.add('hidden');
-  document.getElementById('fatigueNotice').classList.add('hidden');
-  if (convergenceRound>0) { const ri=document.getElementById('roundInfo'); ri.textContent=`${t('round')} ${convergenceRound} – ${testPairs.length} ${t('comparison')}`;ri.classList.remove('hidden'); }
+// ============================================================
+function startTest(){const pt=document.getElementById('pairType').value;testMode=document.getElementById('testMode').value;refEl=+document.getElementById('refEl').value;
+  if(pt==='manual')return;let p;
+  if(pt==='full')p=allPairs();else if(pt==='convergence')p=getConvPairs(false);else if(pt==='conv_fast')p=getConvPairs(true);else p=allPairs();
+  testPairs=randAB(shuffle(p));testIdx=0;undoSt=[];testAct=true;curPlayed=false;compCnt=0;
+  convRnd=(pt==='convergence'||pt==='conv_fast')?1:0;tStart=Date.now();
+  document.getElementById('startBtn').disabled=true;document.getElementById('stopTBtn').disabled=false;
+  document.getElementById('testArea').style.display='block';document.getElementById('exclDlg').classList.add('hidden');
+  if(convRnd>0){const ri=document.getElementById('roundInfo');ri.textContent=`${t('round')} ${convRnd} – ${testPairs.length} ${t('comp')}`;ri.classList.remove('hidden');}
   else document.getElementById('roundInfo').classList.add('hidden');
-  startTimer(); showModeControls(); showCurrentPair();
-}
-function endTest() { stopAllSound(); testActive=false; document.getElementById('startTestBtn').disabled=false; document.getElementById('stopTestBtn').disabled=true; document.getElementById('testArea').style.display='none'; document.getElementById('excludeDialog').classList.add('hidden'); stopTimer(); }
-function showModeControls() { const j=testMode==='judgment'; document.getElementById('judgmentControls').style.display=j?'':'none'; document.getElementById('balanceControls').style.display=j?'none':''; }
+  startTmr();showMode();showCurPair();}
+function endTest(){stopAll();testAct=false;document.getElementById('startBtn').disabled=false;document.getElementById('stopTBtn').disabled=true;document.getElementById('testArea').style.display='none';document.getElementById('exclDlg').classList.add('hidden');stopTmr();}
+function showMode(){const j=testMode==='judgment';document.getElementById('jdgC').style.display=j?'':'none';document.getElementById('balC').style.display=j?'none':'';}
+function showCurPair(){
+  if(testIdx>=testPairs.length){if(convRnd>0)return nextConvRnd();endTest();switchTab('results');renderResults();return;}
+  const[a,b]=testPairs[testIdx];curA=a;curB=b;
+  document.getElementById('progLbl').textContent=`${t('comp')} ${testIdx+1} ${t('of')} ${testPairs.length}${convRnd>0?` (${t('round')} ${convRnd})`:''}`;
+  document.getElementById('tAL').innerHTML=`<span class="aba-label">A (Ref)</span>E${dEN(a)}`;
+  document.getElementById('tBL').innerHTML=`<span class="aba-label">B (Slider)</span>E${dEN(b)}`;
+  document.getElementById('pairF').textContent=`${Math.round(freqs[a])} Hz vs. ${Math.round(freqs[b])} Hz`;
+  if(testMode==='balance'){const ex=bRes.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));curBase=ex?((ex.a===a)?ex.offset:-ex.offset):0;
+    rstSlR();document.getElementById('balSl').value=0;document.getElementById('balV').textContent='0.0 dB';updBalAbs(0);}
+  curPlayed=false;updUndo();playCur();}
+function playCur(){if(testIdx>=testPairs.length)return;stopAll();isPlay=true;
+  if(testMode==='balance')playSeq(curA,curB,curBase+parseFloat(document.getElementById('balSl').value));
+  else playSeq(curA,curB,0);curPlayed=true;}
+function recJdg(r){if(!testAct||testIdx>=testPairs.length||!curPlayed)return;const a=curA,b=curB,ne={a,b,result:r,timestamp:Date.now()};
+  const ei=jRes.findIndex(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));
+  if(ei>=0){undoSt.push({t:'j',a:'r',e:ne,p:{...jRes[ei]}});jRes[ei]=ne;}else{undoSt.push({t:'j',a:'a',e:ne});jRes.push(ne);}
+  testIdx++;compCnt++;updUndo();showCurPair();}
+function recBal(){if(!testAct||testIdx>=testPairs.length)return;const a=curA,b=curB,tot=curBase+parseFloat(document.getElementById('balSl').value);
+  const ne={a,b,offset:tot,timestamp:Date.now()};
+  const ei=bRes.findIndex(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));
+  if(ei>=0){undoSt.push({t:'b',a:'r',e:ne,p:{...bRes[ei]}});bRes[ei]=ne;}else{undoSt.push({t:'b',a:'a',e:ne});bRes.push(ne);}
+  testIdx++;compCnt++;updUndo();showCurPair();}
+function undoL(){if(!testAct||!undoSt.length||testIdx<=0)return;stopAll();testIdx--;compCnt=Math.max(0,compCnt-1);
+  const u=undoSt.pop();if(u.t==='j'){if(u.a==='a'){const i=jRes.findIndex(x=>x.timestamp===u.e.timestamp);if(i>=0)jRes.splice(i,1);}else{const i=jRes.findIndex(x=>x.a===u.e.a&&x.b===u.e.b);if(i>=0)jRes[i]=u.p;}}
+  else{if(u.a==='a'){const i=bRes.findIndex(x=>x.timestamp===u.e.timestamp);if(i>=0)bRes.splice(i,1);}else{const i=bRes.findIndex(x=>x.a===u.e.a&&x.b===u.e.b);if(i>=0)bRes[i]=u.p;}}
+  updUndo();showCurPair();}
+function updUndo(){document.getElementById('undoBtn').disabled=(testIdx<=0||!undoSt.length);}
+function nextConvRnd(){const{residuals}=compWLS();const act=new Set(actEl());
+  const vr=residuals.filter(r=>act.has(r.a)&&act.has(r.b));const mx=vr.length?Math.max(...vr.map(r=>r.residual)):0;
+  if(mx<1){endTest();switchTab('results');renderResults();return;}convRnd++;
+  const sr=[...vr].sort((a,b)=>b.residual-a.residual);const tp=sr.slice(0,Math.max(5,Math.ceil(sr.length*.2))).map(r=>[r.a,r.b]);
+  const ap=allPairs(),ex=shuffle(ap).slice(0,Math.min(Math.max(3,Math.floor(ap.length*.1)),8));
+  const seen=new Set(),mg=[];[...tp,...ex].forEach(p=>{const k=Math.min(p[0],p[1])+'-'+Math.max(p[0],p[1]);if(!seen.has(k)){seen.add(k);mg.push(p);}});
+  testPairs=randAB(shuffle(mg));testIdx=0;undoSt=[];
+  document.getElementById('roundInfo').textContent=`${t('round')} ${convRnd} – ${mg.length} (max res: ${mx.toFixed(1)} dB)`;document.getElementById('roundInfo').classList.remove('hidden');showCurPair();}
+function showExclDlg(){if(!testAct||testIdx>=testPairs.length)return;stopAll();
+  document.getElementById('exclInfo').textContent=`E${dEN(curA)} (${Math.round(freqs[curA])} Hz) vs. E${dEN(curB)} (${Math.round(freqs[curB])} Hz)`;
+  document.getElementById('exclA').textContent=`E${dEN(curA)} ${t('bExcl')}`;document.getElementById('exclB').textContent=`E${dEN(curB)} ${t('bExcl')}`;
+  document.getElementById('exclA').onclick=()=>doExcl(curA);document.getElementById('exclB').onclick=()=>doExcl(curB);
+  document.getElementById('exclDlg').classList.remove('hidden');}
+function doExcl(i){elSt[i]='excluded';elExDur[i]=Date.now();const rem=testPairs.slice(testIdx).filter(([a,b])=>a!==i&&b!==i);
+  testPairs=[...testPairs.slice(0,testIdx),...rem];document.getElementById('exclDlg').classList.add('hidden');buildFreqTable();
+  document.getElementById('roundInfo').textContent=`E${dEN(i)} ${t('exclDuring')}. ${testPairs.length-testIdx} ${t('pairsRem')}.`;document.getElementById('roundInfo').classList.remove('hidden');
+  if(testIdx>=testPairs.length){endTest();switchTab('results');renderResults();}else showCurPair();}
+function updBalAbs(sv){const ae=document.getElementById('balAbs'),ew=document.getElementById('extWrap');
+  if(curBase!==0){const tot=curBase+sv;ae.textContent=`${t('total')}: ${tot>=0?'+':''}${tot.toFixed(1)} dB (${t('prev')}: ${curBase>=0?'+':''}${curBase.toFixed(1)} dB)`;ae.style.display='';}else ae.style.display='none';
+  const s=document.getElementById('balSl');ew.style.display=(!slExt&&Math.abs(parseFloat(s.value))>=parseFloat(s.max)-.5)?'':'none';}
+function rstSlR(){const s=document.getElementById('balSl');slExt=false;s.min='-20';s.max='20';s.step='0.1';document.getElementById('extWrap').style.display='none';}
+function extSlR(){document.getElementById('balSl').min='-40';document.getElementById('balSl').max='40';slExt=true;document.getElementById('extWrap').style.display='none';}
+function startTmr(){tStart=Date.now();tInt=setInterval(updTmr,1000);updTmr();}
+function stopTmr(){if(tInt){clearInterval(tInt);tInt=null;}}
+function updTmr(){const e=Math.floor((Date.now()-tStart)/1000);document.getElementById('timerD').textContent=`${Math.floor(e/60)}:${String(e%60).padStart(2,'0')}`;}
+function playManPair(){const a=parseInt(document.getElementById('manA').value),b=parseInt(document.getElementById('manB').value);if(a===b)return;
+  const[pa,pb]=Math.random()<.5?[a,b]:[b,a];testAct=true;testPairs=[[pa,pb]];testIdx=0;undoSt=[];testMode=document.getElementById('testMode').value;convRnd=0;
+  document.getElementById('testArea').style.display='block';document.getElementById('stopTBtn').disabled=false;document.getElementById('roundInfo').classList.add('hidden');showMode();
+  document.getElementById('progLbl').textContent=t('manComp');curA=pa;curB=pb;
+  document.getElementById('tAL').innerHTML=`<span class="aba-label">A</span>E${dEN(pa)}`;document.getElementById('tBL').innerHTML=`<span class="aba-label">B</span>E${dEN(pb)}`;
+  document.getElementById('pairF').textContent=`${Math.round(freqs[pa])} Hz vs. ${Math.round(freqs[pb])} Hz`;
+  if(testMode==='balance'){const ex=bRes.find(r=>(r.a===pa&&r.b===pb)||(r.a===pb&&r.b===pa));curBase=ex?((ex.a===pa)?ex.offset:-ex.offset):0;rstSlR();document.getElementById('balSl').value=0;document.getElementById('balV').textContent='0.0 dB';updBalAbs(0);}
+  curPlayed=false;startTmr();playCur();}
+function afterManRes(){stopTmr();document.getElementById('testArea').style.display='none';testAct=false;renderResults();}
 
-function showCurrentPair() {
-  if (testIndex >= testPairs.length) {
-    if (convergenceRound>0) return startNextConvergenceRound();
-    endTest(); switchTab('results'); renderResults(); return;
-  }
-  const fi = parseInt(document.getElementById('fatigueInterval').value)||20;
-  if (comparisonCount>0 && comparisonCount%fi===0) {
-    const el=Math.floor((Date.now()-testStartTime)/1000); const m=Math.floor(el/60),s=el%60;
-    document.getElementById('fatigueNotice').innerHTML=`${comparisonCount} ${t('fatigueMsg')} (${m}:${String(s).padStart(2,'0')})`;
-    document.getElementById('fatigueNotice').classList.remove('hidden');
-  } else document.getElementById('fatigueNotice').classList.add('hidden');
-  const [a,b]=testPairs[testIndex]; currentPairA=a; currentPairB=b;
-  document.getElementById('progressLabel').textContent=`${t('comparison')} ${testIndex+1} ${t('of')} ${testPairs.length}${convergenceRound>0?` (${t('round')} ${convergenceRound})`:''}`;
-  document.getElementById('toneALabel').innerHTML=`<span class="aba-label">A (Ref)</span>E${displayElNum(a)}`;
-  document.getElementById('toneBLabel').innerHTML=`<span class="aba-label">B (Slider)</span>E${displayElNum(b)}`;
-  document.getElementById('pairFreq').textContent=`${Math.round(freqs[a])} Hz vs. ${Math.round(freqs[b])} Hz`;
-  if (testMode==='balance') {
-    const existing=balanceResults.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
-    currentBaseOffset=existing?((existing.a===a)?existing.offset:-existing.offset):0;
-    resetSliderRange(); document.getElementById('balanceSlider').value=0;
-    document.getElementById('balanceValue').textContent='0.0 dB'; updateBalanceAbsolute(0);
-  }
-  currentPairPlayed=false; updateUndoBtn(); playCurrentPair();
-}
-
-function playCurrentPair() {
-  if (testIndex>=testPairs.length) return; stopAllSound(); isPlaying=true;
-  if (testMode==='balance') { playSequence(currentPairA,currentPairB,currentBaseOffset+parseFloat(document.getElementById('balanceSlider').value)); }
-  else playSequence(currentPairA,currentPairB,0);
-  currentPairPlayed=true;
-}
-
-function recordJudgment(result) {
-  if (!testActive||testIndex>=testPairs.length||!currentPairPlayed) return;
-  const a=currentPairA,b=currentPairB,ne={a,b,result,timestamp:Date.now()};
-  const ei=judgmentResults.findIndex(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
-  if (ei>=0) { undoStack.push({type:'j',action:'r',entry:ne,prev:{...judgmentResults[ei]}}); judgmentResults[ei]=ne; }
-  else { undoStack.push({type:'j',action:'a',entry:ne}); judgmentResults.push(ne); }
-  testIndex++; comparisonCount++; updateUndoBtn(); showCurrentPair();
-}
-
-function recordBalance() {
-  if (!testActive||testIndex>=testPairs.length) return;
-  const a=currentPairA,b=currentPairB,total=currentBaseOffset+parseFloat(document.getElementById('balanceSlider').value);
-  const ne={a,b,offset:total,timestamp:Date.now()};
-  const ei=balanceResults.findIndex(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
-  if (ei>=0) { undoStack.push({type:'b',action:'r',entry:ne,prev:{...balanceResults[ei]}}); balanceResults[ei]=ne; }
-  else { undoStack.push({type:'b',action:'a',entry:ne}); balanceResults.push(ne); }
-  testIndex++; comparisonCount++; updateUndoBtn(); showCurrentPair();
-}
-
-function undoLast() {
-  if (!testActive||undoStack.length===0||testIndex<=0) return;
-  stopAllSound(); testIndex--; comparisonCount=Math.max(0,comparisonCount-1);
-  const u=undoStack.pop();
-  if (u.type==='j') { if(u.action==='a'){const i=judgmentResults.findIndex(r=>r.timestamp===u.entry.timestamp);if(i>=0)judgmentResults.splice(i,1);}else{const i=judgmentResults.findIndex(r=>r.a===u.entry.a&&r.b===u.entry.b);if(i>=0)judgmentResults[i]=u.prev;} }
-  else { if(u.action==='a'){const i=balanceResults.findIndex(r=>r.timestamp===u.entry.timestamp);if(i>=0)balanceResults.splice(i,1);}else{const i=balanceResults.findIndex(r=>r.a===u.entry.a&&r.b===u.entry.b);if(i>=0)balanceResults[i]=u.prev;} }
-  updateUndoBtn(); document.getElementById('fatigueNotice').classList.add('hidden'); showCurrentPair();
-}
-function updateUndoBtn() { document.getElementById('undoBtn').disabled=(testIndex<=0||undoStack.length===0); }
-
-function startNextConvergenceRound() {
-  const {residuals}=computeWeightedLS();
-  const active=new Set(getActiveElectrodes());
-  const validRes=residuals.filter(r=>active.has(r.a)&&active.has(r.b));
-  const maxR=validRes.length>0?Math.max(...validRes.map(r=>r.residual)):0;
-  if (maxR<1.0) { endTest(); switchTab('results'); renderResults(); return; }
-  convergenceRound++;
-  const sorted=[...validRes].sort((a,b)=>b.residual-a.residual);
-  const topPairs=sorted.slice(0,Math.max(5,Math.ceil(sorted.length*0.2))).map(r=>[r.a,r.b]);
-  const allP=getAllPairs(), extra=shuffle(allP).slice(0,Math.min(Math.max(3,Math.floor(allP.length*0.1)),8));
-  const seen=new Set(),merged=[];
-  [...topPairs,...extra].forEach(p=>{const k=Math.min(p[0],p[1])+'-'+Math.max(p[0],p[1]);if(!seen.has(k)){seen.add(k);merged.push(p);}});
-  testPairs=randomizeAB(shuffle(merged)); testIndex=0; undoStack=[];
-  const ri=document.getElementById('roundInfo');
-  ri.textContent=`${t('round')} ${convergenceRound} – ${merged.length} (max residuum: ${maxR.toFixed(1)} dB)`;
-  ri.classList.remove('hidden'); showCurrentPair();
-}
-
-// Exclude during test
-function showExcludeDialog() {
-  if (!testActive||testIndex>=testPairs.length) return; stopAllSound();
-  const a=currentPairA,b=currentPairB;
-  document.getElementById('excludeDialogInfo').textContent=`E${displayElNum(a)} (${Math.round(freqs[a])} Hz) vs. E${displayElNum(b)} (${Math.round(freqs[b])} Hz)`;
-  document.getElementById('excludeA').textContent=`E${displayElNum(a)} ${t('btnExclude')}`;
-  document.getElementById('excludeB').textContent=`E${displayElNum(b)} ${t('btnExclude')}`;
-  document.getElementById('excludeA').onclick=()=>doExclude(a);
-  document.getElementById('excludeB').onclick=()=>doExclude(b);
-  document.getElementById('excludeDialog').classList.remove('hidden');
-}
-function doExclude(idx) {
-  electrodeStatus[idx]='excluded'; electrodeExcludedDuring[idx]=Date.now();
-  const rem=testPairs.slice(testIndex).filter(([a,b])=>a!==idx&&b!==idx);
-  testPairs=[...testPairs.slice(0,testIndex),...rem];
-  document.getElementById('excludeDialog').classList.add('hidden'); buildFreqTable();
-  const ri=document.getElementById('roundInfo');
-  ri.textContent=`E${displayElNum(idx)} ${t('excludedDuring')}. ${testPairs.length-testIndex} ${t('pairsRemaining')}.`;
-  ri.classList.remove('hidden');
-  if (testIndex>=testPairs.length) { endTest(); switchTab('results'); renderResults(); } else showCurrentPair();
-}
-
-// Slider helpers
-function updateBalanceAbsolute(sv) {
-  const ae=document.getElementById('balanceAbsolute'),ew=document.getElementById('extendRangeWrap');
-  if (currentBaseOffset!==0) { const tot=currentBaseOffset+sv; ae.textContent=`${t('total')}: ${tot>=0?'+':''}${tot.toFixed(1)} dB (${t('previous')}: ${currentBaseOffset>=0?'+':''}${currentBaseOffset.toFixed(1)} dB)`; ae.style.display=''; }
-  else ae.style.display='none';
-  const s=document.getElementById('balanceSlider');
-  ew.style.display=(!sliderExtended&&Math.abs(parseFloat(s.value))>=parseFloat(s.max)-0.5)?'':'none';
-}
-function resetSliderRange() { const s=document.getElementById('balanceSlider'); sliderExtended=false;s.min='-20';s.max='20';s.step='0.1'; document.getElementById('extendRangeWrap').style.display='none'; }
-function extendSliderRange() { const s=document.getElementById('balanceSlider'); sliderExtended=true;s.min='-40';s.max='40'; document.getElementById('extendRangeWrap').style.display='none'; }
-
-// Timer
-function startTimer() { testStartTime=Date.now(); timerInterval=setInterval(updateTimer,1000); updateTimer(); }
-function stopTimer() { if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
-function updateTimer() { const e=Math.floor((Date.now()-testStartTime)/1000); document.getElementById('timerDisplay').textContent=`${Math.floor(e/60)}:${String(e%60).padStart(2,'0')}`; }
-
-// Manual
-function playManualPair() {
-  const a=parseInt(document.getElementById('manualA').value),b=parseInt(document.getElementById('manualB').value);
-  if(a===b) return; const [pa,pb]=Math.random()<0.5?[a,b]:[b,a];
-  testActive=true; testPairs=[[pa,pb]]; testIndex=0; undoStack=[]; testMode=document.getElementById('testMode').value; convergenceRound=0;
-  document.getElementById('testArea').style.display='block'; document.getElementById('stopTestBtn').disabled=false;
-  document.getElementById('roundInfo').classList.add('hidden'); showModeControls();
-  document.getElementById('progressLabel').textContent=t('manualComp');
-  currentPairA=pa; currentPairB=pb;
-  document.getElementById('toneALabel').innerHTML=`<span class="aba-label">A</span>E${displayElNum(pa)}`;
-  document.getElementById('toneBLabel').innerHTML=`<span class="aba-label">B</span>E${displayElNum(pb)}`;
-  document.getElementById('pairFreq').textContent=`${Math.round(freqs[pa])} Hz vs. ${Math.round(freqs[pb])} Hz`;
-  if (testMode==='balance') {
-    const ex=balanceResults.find(r=>(r.a===pa&&r.b===pb)||(r.a===pb&&r.b===pa));
-    currentBaseOffset=ex?((ex.a===pa)?ex.offset:-ex.offset):0;
-    resetSliderRange(); document.getElementById('balanceSlider').value=0;
-    document.getElementById('balanceValue').textContent='0.0 dB'; updateBalanceAbsolute(0);
-  }
-  currentPairPlayed=false; startTimer(); playCurrentPair();
-}
-function afterManualResult() { stopTimer(); document.getElementById('testArea').style.display='none'; testActive=false; renderResults(); }
-
-// ===========================================
+// ============================================================
 // RESULTS
-// ===========================================
-function renderResults() {
-  const hJ=judgmentResults.length>0, hB=balanceResults.length>0;
-  if (!hJ&&!hB) { document.getElementById('noResults').style.display=''; document.getElementById('resultsContent').style.display='none'; return; }
-  document.getElementById('noResults').style.display='none'; document.getElementById('resultsContent').style.display='';
-  const vol=document.getElementById('volumeSlider2').value;
+// ============================================================
+function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
+  if(!hJ&&!hB){document.getElementById('noRes').style.display='';document.getElementById('resC').style.display='none';return;}
+  document.getElementById('noRes').style.display='none';document.getElementById('resC').style.display='';
+  const vol=document.getElementById('vol2').value;
   let meta=`${new Date().toLocaleString(lang==='de'?'de-DE':lang==='fr'?'fr-FR':lang==='es'?'es-ES':'en-US')}`;
-  if (hB) meta+=` · ${balanceResults.length} bal.`; if(hJ) meta+=` · ${judgmentResults.length} judg.`;
-  meta+=` · ${t('lblVolume')} ${vol}% · Ref: E${displayElNum(referenceElectrode)} · ${MANUFACTURERS[manufacturer].name}`;
-  document.getElementById('resultsMeta').innerHTML=meta;
-  const thead=document.getElementById('resultsTableHead'),tbody=document.getElementById('resultsTableBody');
-  thead.innerHTML=''; tbody.innerHTML='';
-  if (hB) {
-    const {levels,elResiduals,elWeights}=computeWeightedLS();
-    const pairCounts=new Array(numElectrodes).fill(0);
-    const valid=balanceResults.filter(r=>electrodeStatus[r.a]!=='excluded'&&electrodeStatus[r.a]!=='mute'&&electrodeStatus[r.b]!=='excluded'&&electrodeStatus[r.b]!=='mute');
-    for(const r of valid){pairCounts[r.a]++;pairCounts[r.b]++;}
-    thead.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thOffset')}</th><th>${t('thMeasurements')}</th><th>${t('thResidual')}</th><th>${t('thWeight')}</th><th>${t('thStatusR')}</th>`;
-    for (let i=0;i<numElectrodes;i++) {
-      const tr=document.createElement('tr'),v=levels[i];
-      const isExcl=electrodeStatus[i]==='excluded'||electrodeStatus[i]==='mute';
-      if(isExcl)tr.classList.add('excluded-row');
-      let stH='';
-      if(electrodeStatus[i]){const lb={noisy:t('statusNoisy'),almostMute:t('statusAlmostMute'),mute:t('statusMute'),excluded:t('excluded')};stH=lb[electrodeStatus[i]]||'';}
-      if(electrodeNotes[i])stH+=(stH?' · ':'')+electrodeNotes[i];
-      tr.innerHTML=`<td style="font-weight:600;">${displayElNum(i)}</td><td>${Math.round(freqs[i])}</td>
-        <td style="color:${isExcl?'#999':v>0.05?'#2563eb':v<-0.05?'#dc2626':'#666'}">${isExcl?'—':(v>=0?'+':'')+v.toFixed(1)}</td>
-        <td>${pairCounts[i]||'—'}</td><td>${elResiduals[i]>0?elResiduals[i].toFixed(1):'—'}</td>
-        <td>${isExcl?'—':elWeights[i].toFixed(1)}</td><td style="font-size:.8em;">${stH}</td>`;
-      tbody.appendChild(tr);
-    }
-    drawChart(document.getElementById('resultsChart'),levels,elResiduals,true);
-    document.getElementById('chartExplanation').textContent=t('chartExplBalance');
-  } else if (hJ) {
-    const scores=new Array(numElectrodes).fill(0),counts=new Array(numElectrodes).fill(0);
-    for(const r of judgmentResults){counts[r.a]++;counts[r.b]++;if(r.result==='a'){scores[r.a]++;scores[r.b]--;}else if(r.result==='b'){scores[r.b]++;scores[r.a]--;}}
-    thead.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thScore')}</th><th>${t('thComparisons')}</th>`;
-    for(let i=0;i<numElectrodes;i++){const tr=document.createElement('tr'),s=scores[i];tr.innerHTML=`<td style="font-weight:600;">${displayElNum(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${s>0?'#2563eb':s<0?'#dc2626':'#666'}">${s>0?'+':''}${s}</td><td>${counts[i]||'—'}</td>`;tbody.appendChild(tr);}
-    drawChart(document.getElementById('resultsChart'),scores,null,false);
-    document.getElementById('chartExplanation').textContent=t('chartExplJudgment');
-  }
-}
+  if(hB)meta+=` · ${bRes.length} bal.`;if(hJ)meta+=` · ${jRes.length} jdg.`;
+  meta+=` · ${t('lblVol')} ${vol}% · Ref: E${dEN(refEl)} · ${MFR[mfr].name}`;
+  document.getElementById('resMeta').innerHTML=meta;
+  const th=document.getElementById('resTH'),tb=document.getElementById('resTB');th.innerHTML='';tb.innerHTML='';
+  if(hB){const{levels,elRes,elWt}=compWLS();const pc=new Array(nEl).fill(0);
+    const valid=bRes.filter(r=>elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    for(const r of valid){pc[r.a]++;pc[r.b]++;}
+    th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thOff')}</th><th>${t('thMes')}</th><th>${t('thRes')}</th><th>${t('thWgt')}</th><th>${t('thStR')}</th>`;
+    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),v=levels[i],ex=elSt[i]==='excluded'||elSt[i]==='mute';if(ex)tr.classList.add('excluded-row');
+      let st='';if(elSt[i]){const lb={noisy:t('stNoisy'),almostMute:t('stAlmMute'),mute:t('stMute'),excluded:t('excluded')};st=lb[elSt[i]]||'';}if(elNt[i])st+=(st?' · ':'')+elNt[i];
+      tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${ex?'#999':v>.05?'#2563eb':v<-.05?'#dc2626':'#666'}">${ex?'—':(v>=0?'+':'')+v.toFixed(1)}</td><td>${pc[i]||'—'}</td><td>${elRes[i]>0?elRes[i].toFixed(1):'—'}</td><td>${ex?'—':elWt[i].toFixed(1)}</td><td style="font-size:.78em">${st}</td>`;tb.appendChild(tr);}
+    drawChart(document.getElementById('resChart'),levels,elRes,true);document.getElementById('chartExpl').textContent=t('chartExplB');
+  }else if(hJ){const sc=new Array(nEl).fill(0),cc=new Array(nEl).fill(0);
+    for(const r of jRes){cc[r.a]++;cc[r.b]++;if(r.result==='a'){sc[r.a]++;sc[r.b]--;}else if(r.result==='b'){sc[r.b]++;sc[r.a]--;}}
+    th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thSc')}</th><th>${t('thComp')}</th>`;
+    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),s=sc[i];tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${s>0?'#2563eb':s<0?'#dc2626':'#666'}">${s>0?'+':''}${s}</td><td>${cc[i]||'—'}</td>`;tb.appendChild(tr);}
+    drawChart(document.getElementById('resChart'),sc,null,false);document.getElementById('chartExpl').textContent=t('chartExplJ');}
+  document.getElementById('resExplain').textContent=t('resExplain');}
 
-// ===========================================
-// CHART with error bars
-// ===========================================
-function drawChart(canvas,values,residuals,isOffset) {
-  const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;
-  const w=canvas.parentElement.clientWidth-32,h=320;
-  canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.scale(dpr,dpr);
-  const pad={top:30,right:20,bottom:50,left:60};
-  const plotW=w-pad.left-pad.right,plotH=h-pad.top-pad.bottom;
-  ctx.clearRect(0,0,w,h);
-  const active=getActiveElectrodes(), aVals=active.map(i=>values[i]);
-  const aRes=residuals?active.map(i=>residuals[i]):null;
-  let yMin,yMax;
-  if(isOffset){let am=Math.max(Math.ceil(Math.max(...aVals.map(Math.abs),1)),5);if(aRes){am=Math.max(am,Math.ceil(Math.max(...active.map(i=>Math.abs(values[i])+residuals[i]))));}yMin=-am;yMax=am;}
-  else{yMin=Math.min(0,...aVals);yMax=Math.max(0,...aVals);const r=yMax-yMin||1;yMin-=r*0.1;yMax+=r*0.1;}
-  const xS=plotW/(active.length-1||1),toX=i=>pad.left+i*xS,toY=v=>pad.top+(yMax-v)*(plotH/(yMax-yMin||1));
-  // Grid
-  ctx.strokeStyle='#e5e5e5';ctx.lineWidth=1;
-  for(let i=0;i<=5;i++){const v=yMin+(yMax-yMin)*i/5,y=toY(v);ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(w-pad.right,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='11px Consolas,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.left-8,y+4);}
-  if(yMin<0&&yMax>0){ctx.strokeStyle='#aaa';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(pad.left,toY(0));ctx.lineTo(w-pad.right,toY(0));ctx.stroke();ctx.setLineDash([]);}
-  // Bars
-  const barW=Math.min(xS*0.6,36);
-  for(let i=0;i<active.length;i++){const v=aVals[i],x=toX(i)-barW/2,yZ=toY(0),yV=toY(v);
-    ctx.fillStyle=v>0.05?'#2563eb':v<-0.05?'#dc2626':'#9ca3af';
-    ctx.fillRect(x,Math.min(yZ,yV),barW,Math.abs(yV-yZ)||2);
-    // Error bars
-    if(aRes&&aRes[i]>0){const r=aRes[i],yTop=toY(v+r),yBot=toY(v-r);
-      ctx.strokeStyle='#00000044';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(toX(i),yTop);ctx.lineTo(toX(i),yBot);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(toX(i)-4,yTop);ctx.lineTo(toX(i)+4,yTop);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(toX(i)-4,yBot);ctx.lineTo(toX(i)+4,yBot);ctx.stroke();
-    }
-    // X labels
-    ctx.fillStyle=active[i]===referenceElectrode?'#2563eb':'#555';
-    ctx.font=(active[i]===referenceElectrode?'bold ':'')+'11px Segoe UI,sans-serif';ctx.textAlign='center';
-    ctx.fillText('E'+displayElNum(active[i]),toX(i),h-pad.bottom+16);
-    ctx.font='9px Consolas,monospace';ctx.fillStyle='#999';
-    ctx.fillText(Math.round(freqs[active[i]]),toX(i),h-pad.bottom+28);
-    // apikal/basal labels
-    if(i===0){ctx.font='9px Segoe UI,sans-serif';ctx.fillStyle='#999';ctx.fillText(t('apikal'),toX(i),h-pad.bottom+39);}
-    if(i===active.length-1){ctx.font='9px Segoe UI,sans-serif';ctx.fillStyle='#999';ctx.fillText(t('basal'),toX(i),h-pad.bottom+39);}
-  }
-  // Line
-  ctx.strokeStyle='#2563eb55';ctx.lineWidth=2;ctx.beginPath();
-  for(let i=0;i<active.length;i++){if(i===0)ctx.moveTo(toX(i),toY(aVals[i]));else ctx.lineTo(toX(i),toY(aVals[i]));}ctx.stroke();
-  // Dots
-  for(let i=0;i<active.length;i++){ctx.beginPath();ctx.arc(toX(i),toY(aVals[i]),4,0,Math.PI*2);ctx.fillStyle='#2563eb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
-  // Y label
-  ctx.save();ctx.translate(14,pad.top+plotH/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#666';ctx.font='11px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('dB',0,0);ctx.restore();
-}
+// ============================================================
+// CHART
+// ============================================================
+function drawChart(cv,vals,res,isOff){const ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,w=cv.parentElement.clientWidth-32,h=320;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';ctx.scale(dpr,dpr);
+  const pad={top:30,right:20,bottom:55,left:55},pW=w-pad.left-pad.right,pH=h-pad.top-pad.bottom;ctx.clearRect(0,0,w,h);
+  const act=actEl(),aV=act.map(i=>vals[i]),aR=res?act.map(i=>res[i]):null;
+  let yMn,yMx;if(isOff){let am=Math.max(Math.ceil(Math.max(...aV.map(Math.abs),1)),5);if(aR)am=Math.max(am,Math.ceil(Math.max(...act.map(i=>Math.abs(vals[i])+res[i]))));yMn=-am;yMx=am;}
+  else{yMn=Math.min(0,...aV);yMx=Math.max(0,...aV);const r=yMx-yMn||1;yMn-=r*.1;yMx+=r*.1;}
+  const xS=pW/(act.length-1||1),tX=i=>pad.left+i*xS,tY=v=>pad.top+(yMx-v)*(pH/(yMx-yMn||1));
+  ctx.strokeStyle='#e5e5e5';ctx.lineWidth=1;for(let i=0;i<=5;i++){const v=yMn+(yMx-yMn)*i/5,y=tY(v);ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(w-pad.right,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px Consolas,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.left-8,y+4);}
+  if(yMn<0&&yMx>0){ctx.strokeStyle='#aaa';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(pad.left,tY(0));ctx.lineTo(w-pad.right,tY(0));ctx.stroke();ctx.setLineDash([]);}
+  const bW=Math.min(xS*.6,34);
+  for(let i=0;i<act.length;i++){const v=aV[i],x=tX(i)-bW/2,yZ=tY(0),yV=tY(v);ctx.fillStyle=v>.05?'#2563eb':v<-.05?'#dc2626':'#9ca3af';ctx.fillRect(x,Math.min(yZ,yV),bW,Math.abs(yV-yZ)||2);
+    if(aR&&aR[i]>0){const r=aR[i],yt=tY(v+r),yb=tY(v-r);ctx.strokeStyle='#00000044';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tX(i),yt);ctx.lineTo(tX(i),yb);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(i)-4,yt);ctx.lineTo(tX(i)+4,yt);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(i)-4,yb);ctx.lineTo(tX(i)+4,yb);ctx.stroke();}
+    ctx.fillStyle=act[i]===refEl?'#2563eb':'#555';ctx.font=(act[i]===refEl?'bold ':'')+'10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(act[i]),tX(i),h-pad.bottom+14);
+    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(Math.round(freqs[act[i]]),tX(i),h-pad.bottom+25);
+    if(i===0){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('apikal'),tX(i),h-pad.bottom+36);}
+    if(i===act.length-1){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('basal'),tX(i),h-pad.bottom+36);}}
+  ctx.strokeStyle='#2563eb44';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<act.length;i++){if(i===0)ctx.moveTo(tX(i),tY(aV[i]));else ctx.lineTo(tX(i),tY(aV[i]));}ctx.stroke();
+  for(let i=0;i<act.length;i++){ctx.beginPath();ctx.arc(tX(i),tY(aV[i]),3.5,0,Math.PI*2);ctx.fillStyle='#2563eb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+  ctx.save();ctx.translate(12,pad.top+pH/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#666';ctx.font='10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('dB',0,0);ctx.restore();}
 
-// ===========================================
-// EXPORT
-// ===========================================
-function exportText() {
-  const L=[],now=new Date().toLocaleString(lang==='de'?'de-DE':'en-US'),vol=document.getElementById('volumeSlider2').value;
-  L.push(`CI Loudness Balancing – ${now}`);
-  L.push(`${MANUFACTURERS[manufacturer].name} (${numElectrodes}) | ${t('lblVolume')} ${vol}% | Ref: E${displayElNum(referenceElectrode)}`);L.push('');
-  if(balanceResults.length>0){const{levels,elResiduals}=computeWeightedLS();
-    L.push(`${t('thEl')}  ${t('thHz')}      ${t('thOffset')}    ${t('thResidual')}  ${t('thStatusR')}`);
-    L.push('───  ────────  ─────────  ────────  ──────');
-    for(let i=0;i<numElectrodes;i++){const st=electrodeStatus[i]||'',n=electrodeNotes[i]?` (${electrodeNotes[i]})`:'',excl=st==='excluded'||st==='mute';
-      L.push(`${String(displayElNum(i)).padStart(3)}  ${String(Math.round(freqs[i])).padStart(5)} Hz  ${excl?'    —    ':((levels[i]>=0?'+':'')+levels[i].toFixed(1)+' dB').padStart(9)}  ${excl?'  —   ':(elResiduals[i].toFixed(1)+' dB').padStart(8)}  ${st}${n}`);}}
-  return L.join('\n');
-}
-function copyResults(){navigator.clipboard.writeText(exportText()).then(()=>alert(t('copyDone'))).catch(()=>{const ta=document.createElement('textarea');ta.value=exportText();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert(t('copyDone'));});}
-function saveJson(){
-  const d={version:3,date:new Date().toISOString(),manufacturer,frequencies:freqs,electrodeStatus,electrodeNotes,electrodeExcludedDuring,referenceElectrode,judgmentResults,balanceResults,volume:document.getElementById('volumeSlider2').value};
+// ============================================================
+// FILE OPERATIONS
+// ============================================================
+function expText(){const ls=[],now=new Date().toLocaleString(lang==='de'?'de-DE':'en-US'),vol=document.getElementById('vol2').value;
+  ls.push(`CI Loudness Balancing – ${now}`);ls.push(`${MFR[mfr].name} (${nEl}) | ${t('lblVol')} ${vol}% | Ref: E${dEN(refEl)}`);ls.push('');
+  if(bRes.length>0){const{levels,elRes}=compWLS();ls.push(`${t('thEl')}  ${t('thHz')}      ${t('thOff')}     ${t('thRes')}   ${t('thStR')}`);ls.push('───  ────────  ─────────  ────────  ──────');
+    for(let i=0;i<nEl;i++){const st=elSt[i]||'',n=elNt[i]?` (${elNt[i]})`:'',ex=st==='excluded'||st==='mute';ls.push(`${String(dEN(i)).padStart(3)}  ${String(Math.round(freqs[i])).padStart(5)} Hz  ${ex?'    —    ':((levels[i]>=0?'+':'')+levels[i].toFixed(1)+' dB').padStart(9)}  ${ex?'  —   ':(elRes[i].toFixed(1)+' dB').padStart(8)}  ${st}${n}`);}}return ls.join('\n');}
+function copyRes(){navigator.clipboard.writeText(expText()).then(()=>alert(t('copyDone'))).catch(()=>{const ta=document.createElement('textarea');ta.value=expText();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert(t('copyDone'));});}
+function saveJson(){const d={version:4,date:new Date().toISOString(),manufacturer:mfr,frequencies:freqs,electrodeStatus:elSt,electrodeNotes:elNt,electrodeExcludedDuring:elExDur,referenceElectrode:refEl,paradigm:document.getElementById('paraI').value,toneDuration:parseInt(document.getElementById('dur1').value),pauseDuration:parseInt(document.getElementById('pau1').value),judgmentResults:jRes,balanceResults:bRes,volume:document.getElementById('vol2').value};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');
-  const now=new Date(),ds=now.toISOString().slice(0,10),ts=String(now.getHours()).padStart(2,'0')+'-'+String(now.getMinutes()).padStart(2,'0');
-  a.href=URL.createObjectURL(blob);a.download=`loudness-balancing-${ds}-${ts}.json`;a.click();
-}
+  const now=new Date(),ds=now.toISOString().slice(0,10),hm=String(now.getHours()).padStart(2,'0')+'-'+String(now.getMinutes()).padStart(2,'0');
+  a.href=URL.createObjectURL(blob);a.download=`loudness-balancing-${ds}-${hm}.json`;a.click();}
 function loadJson(file){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);
-  if(d.manufacturer&&MANUFACTURERS[d.manufacturer]){manufacturer=d.manufacturer;numElectrodes=MANUFACTURERS[manufacturer].count;}
-  if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)electrodeStatus=d.electrodeStatus;if(d.electrodeNotes)electrodeNotes=d.electrodeNotes;
-  if(d.electrodeExcludedDuring)electrodeExcludedDuring=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)referenceElectrode=d.referenceElectrode;
-  if(d.judgmentResults)judgmentResults=d.judgmentResults;if(d.balanceResults)balanceResults=d.balanceResults;
-  document.getElementById('manufacturerSelect').value=manufacturer;buildFreqTable();renderResults();switchTab('results');
+  if(d.manufacturer&&MFR[d.manufacturer]){mfr=d.manufacturer;nEl=MFR[mfr].n;document.getElementById('mfrSelect').value=mfr;}
+  if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)elSt=d.electrodeStatus;if(d.electrodeNotes)elNt=d.electrodeNotes;
+  if(d.electrodeExcludedDuring)elExDur=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)refEl=d.referenceElectrode;
+  if(d.paradigm)document.getElementById('paraI').value=d.paradigm;
+  if(d.toneDuration){document.getElementById('dur1').value=d.toneDuration;document.getElementById('dur2').value=d.toneDuration;}
+  if(d.pauseDuration){document.getElementById('pau1').value=d.pauseDuration;document.getElementById('pau2').value=d.pauseDuration;}
+  if(d.judgmentResults)jRes=d.judgmentResults;if(d.balanceResults)bRes=d.balanceResults;
+  buildFreqTable();renderResults();switchTab('results');
 }catch(err){alert('Error: '+err.message);}};r.readAsText(file);}
-function clearResults(){if(!confirm(t('deleteConfirm')))return;judgmentResults=[];balanceResults=[];renderResults();}
+function clearRes(){if(!confirm(t('delConfirm')))return;jRes=[];bRes=[];renderResults();}
 
-// ===========================================
+function exportEasyEffects(){if(bRes.length===0){alert(t('plNoData'));return;}
+  const{levels}=compWLS();const bands=[];
+  for(let i=0;i<nEl;i++){const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    if(!hd)continue;const f=freqs[i],g=-levels[i];
+    let fL,fH;if(i===0){fL=f*f/(freqs[1]||f);fH=freqs[1]||f;}else if(i===nEl-1){fL=freqs[i-1];fH=f*f/freqs[i-1];}else{fL=freqs[i-1];fH=freqs[i+1];}
+    const bwOct=Math.log2(Math.sqrt(f*fH))-Math.log2(Math.sqrt(fL*f));const q=f/(f*(Math.pow(2,bwOct/2)-Math.pow(2,-bwOct/2)));
+    bands.push({frequency:f,gain:parseFloat(g.toFixed(1)),q:parseFloat(q.toFixed(2)),type:'Bell'});}
+  const preset={output:{'equalizer#0':{bypass:false,input_gain:0,output_gain:0,num_bands:bands.length}},};
+  bands.forEach((b,i)=>{preset.output['equalizer#0'][`band${i}`]={frequency:b.frequency,gain:b.gain,mode:'APO (DR)',q:b.q,type:b.type};});
+  const blob=new Blob([JSON.stringify(preset,null,2)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='ci-correction-easyeffects.json';a.click();}
+
+// ============================================================
 // TABS
-// ===========================================
-function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));if(name==='results')renderResults();if(name==='player')playerCheckData();}
+// ============================================================
+function switchTab(n){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===n));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+n));if(n==='results')renderResults();if(n==='player')plCheck();}
 
-// ===========================================
+// ============================================================
 // INIT
-// ===========================================
-document.addEventListener('DOMContentLoaded', () => {
-  // Load saved language
-  try { const sl=localStorage.getItem('ci-lb-lang'); if(sl&&LANG[sl]){document.getElementById('langSelect').value=sl;lang=sl;} } catch(e){}
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  try{const sl=localStorage.getItem('ci-lb-lang');if(sl&&L[sl]){document.getElementById('langSelect').value=sl;lang=sl;}}catch(e){}
   applyLang();
-
-  document.getElementById('langSelect').addEventListener('change', applyLang);
+  document.getElementById('langSelect').addEventListener('change',applyLang);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
-  document.getElementById('resetFreqBtn').addEventListener('click',resetFreqs);
+  document.getElementById('resetBtn').addEventListener('click',resetFreqs);
   document.getElementById('sweepBtn').addEventListener('click',playSweep);
-  document.getElementById('stopBtn').addEventListener('click',stopAllSound);
-  document.getElementById('manufacturerSelect').addEventListener('change',e=>switchManufacturer(e.target.value));
-
-  // Volume sync
-  document.getElementById('volumeSlider').addEventListener('input',e=>{document.getElementById('volumeLabel').textContent=e.target.value+'%';document.getElementById('volumeSlider2').value=e.target.value;document.getElementById('volumeLabel2').textContent=e.target.value+'%';});
-  document.getElementById('volumeSlider2').addEventListener('input',e=>{document.getElementById('volumeLabel2').textContent=e.target.value+'%';document.getElementById('volumeSlider').value=e.target.value;document.getElementById('volumeLabel').textContent=e.target.value+'%';});
-
-  document.getElementById('pairType').addEventListener('change',e=>{const v=e.target.value;document.getElementById('adjacentWarning').classList.toggle('hidden',v!=='adjacent'&&v!=='jump');document.getElementById('manualSelect').classList.toggle('hidden',v!=='manual');});
-  document.getElementById('refElectrode').addEventListener('change',e=>{referenceElectrode=+e.target.value;});
-  document.getElementById('paradigm').addEventListener('change',e=>{document.getElementById('paradigmInline').value=e.target.value;});
-  document.getElementById('paradigmInline').addEventListener('change',e=>{document.getElementById('paradigm').value=e.target.value;});
-
-  document.getElementById('startTestBtn').addEventListener('click',startTest);
-  document.getElementById('stopTestBtn').addEventListener('click',()=>{endTest();renderResults();});
-  document.getElementById('replayBtn').addEventListener('click',playCurrentPair);
-  document.getElementById('undoBtn').addEventListener('click',undoLast);
-  document.getElementById('manualPlayBtn').addEventListener('click',playManualPair);
-  document.getElementById('excludeBtn').addEventListener('click',showExcludeDialog);
-  document.getElementById('excludeCancel').addEventListener('click',()=>{document.getElementById('excludeDialog').classList.add('hidden');playCurrentPair();});
-
-  const jH=r=>()=>{if(document.getElementById('pairType').value==='manual'){recordJudgment(r);afterManualResult();}else recordJudgment(r);};
-  document.getElementById('btnALouder').addEventListener('click',jH('a'));
-  document.getElementById('btnEqual').addEventListener('click',jH('equal'));
-  document.getElementById('btnBLouder').addEventListener('click',jH('b'));
-
-  document.getElementById('balanceSlider').addEventListener('input',e=>{const v=parseFloat(e.target.value);document.getElementById('balanceValue').textContent=v.toFixed(1)+' dB';updateBalanceAbsolute(v);});
-  document.getElementById('balanceSlider').addEventListener('change',e=>e.target.blur());
-  document.getElementById('balanceSlider').addEventListener('mouseup',e=>e.target.blur());
-  document.getElementById('balanceSlider').addEventListener('touchend',e=>e.target.blur());
-  document.getElementById('extendRangeBtn').addEventListener('click',extendSliderRange);
-  document.getElementById('confirmBalance').addEventListener('click',()=>{if(document.getElementById('pairType').value==='manual'){recordBalance();afterManualResult();}else recordBalance();});
-
-  document.getElementById('exportBtn').addEventListener('click',copyResults);
-  document.getElementById('saveJsonBtn').addEventListener('click',saveJson);
-  document.getElementById('loadJsonBtn').addEventListener('click',()=>document.getElementById('jsonFileInput').click());
-  document.getElementById('jsonFileInput').addEventListener('change',e=>{if(e.target.files[0])loadJson(e.target.files[0]);});
-  document.getElementById('printBtn').addEventListener('click',()=>window.print());
-  document.getElementById('clearResultsBtn').addEventListener('click',clearResults);
-
+  document.getElementById('stopBtn').addEventListener('click',stopAll);
+  document.getElementById('mfrSelect').addEventListener('change',e=>switchMfr(e.target.value));
+  document.getElementById('vol1').addEventListener('input',e=>{document.getElementById('volL1').textContent=e.target.value+'%';document.getElementById('vol2').value=e.target.value;document.getElementById('volL2').textContent=e.target.value+'%';});
+  document.getElementById('vol2').addEventListener('input',e=>{document.getElementById('volL2').textContent=e.target.value+'%';document.getElementById('vol1').value=e.target.value;document.getElementById('volL1').textContent=e.target.value+'%';});
+  document.getElementById('pairType').addEventListener('change',e=>{document.getElementById('manualSel').classList.toggle('hidden',e.target.value!=='manual');updateRunExplain();});
+  document.getElementById('refEl').addEventListener('change',e=>{refEl=+e.target.value;});
+  document.getElementById('startBtn').addEventListener('click',startTest);
+  document.getElementById('stopTBtn').addEventListener('click',()=>{endTest();renderResults();});
+  document.getElementById('repBtn').addEventListener('click',playCur);
+  document.getElementById('undoBtn').addEventListener('click',undoL);
+  document.getElementById('manPlayBtn').addEventListener('click',playManPair);
+  document.getElementById('exclBtn').addEventListener('click',showExclDlg);
+  document.getElementById('exclCanc').addEventListener('click',()=>{document.getElementById('exclDlg').classList.add('hidden');playCur();});
+  const jH=r=>()=>{if(document.getElementById('pairType').value==='manual'){recJdg(r);afterManRes();}else recJdg(r);};
+  document.getElementById('bAL').addEventListener('click',jH('a'));document.getElementById('bEq').addEventListener('click',jH('equal'));document.getElementById('bBL').addEventListener('click',jH('b'));
+  document.getElementById('balSl').addEventListener('input',e=>{const v=parseFloat(e.target.value);document.getElementById('balV').textContent=v.toFixed(1)+' dB';updBalAbs(v);});
+  document.getElementById('balSl').addEventListener('change',e=>e.target.blur());document.getElementById('balSl').addEventListener('mouseup',e=>e.target.blur());document.getElementById('balSl').addEventListener('touchend',e=>e.target.blur());
+  document.getElementById('extBtn').addEventListener('click',extSlR);
+  document.getElementById('confBtn').addEventListener('click',()=>{if(document.getElementById('pairType').value==='manual'){recBal();afterManRes();}else recBal();});
+  // File
+  document.getElementById('fLoadBtn').addEventListener('click',()=>document.getElementById('fInput').click());
+  document.getElementById('fInput').addEventListener('change',e=>{if(e.target.files[0])loadJson(e.target.files[0]);});
+  document.getElementById('fSaveBtn').addEventListener('click',saveJson);
+  document.getElementById('fPrintBtn').addEventListener('click',()=>window.print());
+  document.getElementById('fCopyBtn').addEventListener('click',copyRes);
+  document.getElementById('fClearBtn').addEventListener('click',clearRes);
+  document.getElementById('eeExportBtn').addEventListener('click',exportEasyEffects);
   // Keyboard
-  document.addEventListener('keydown',e=>{
-    if(!testActive) return; if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-    if(e.code==='Space'){e.preventDefault();playCurrentPair();}
-    if(e.key==='z'||e.key==='Z'){e.preventDefault();undoLast();}
-    if(e.key==='x'||e.key==='X'){e.preventDefault();showExcludeDialog();}
-    if(testMode==='judgment'){if(e.key==='1'){e.preventDefault();document.getElementById('btnALouder').click();}if(e.key==='2'){e.preventDefault();document.getElementById('btnEqual').click();}if(e.key==='3'){e.preventDefault();document.getElementById('btnBLouder').click();}}
-    if(testMode==='balance'&&e.key==='Enter'){e.preventDefault();document.getElementById('confirmBalance').click();}
-    if(testMode==='balance'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();const s=document.getElementById('balanceSlider'),step=e.shiftKey?0.1:0.5;let v=parseFloat(s.value);if(e.key==='ArrowLeft')v=Math.max(parseFloat(s.min),+(v-step).toFixed(1));if(e.key==='ArrowRight')v=Math.min(parseFloat(s.max),+(v+step).toFixed(1));s.value=v;document.getElementById('balanceValue').textContent=v.toFixed(1)+' dB';updateBalanceAbsolute(v);}
-  });
-
-  // Load from localStorage
-  try{const saved=localStorage.getItem('ci-loudness-data-v3');if(saved){const d=JSON.parse(saved);
-    if(d.manufacturer&&MANUFACTURERS[d.manufacturer]){manufacturer=d.manufacturer;numElectrodes=MANUFACTURERS[manufacturer].count;document.getElementById('manufacturerSelect').value=manufacturer;}
-    if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)electrodeStatus=d.electrodeStatus;if(d.electrodeNotes)electrodeNotes=d.electrodeNotes;
-    if(d.electrodeExcludedDuring)electrodeExcludedDuring=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)referenceElectrode=d.referenceElectrode;
-    if(d.judgmentResults)judgmentResults=d.judgmentResults;if(d.balanceResults)balanceResults=d.balanceResults;
-    buildFreqTable();}}catch(e){}
-
-  setInterval(()=>{try{localStorage.setItem('ci-loudness-data-v3',JSON.stringify({manufacturer,frequencies:freqs,electrodeStatus,electrodeNotes,electrodeExcludedDuring,referenceElectrode,judgmentResults,balanceResults}));}catch(e){}},5000);
+  document.addEventListener('keydown',e=>{if(!testAct||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+    if(e.code==='Space'){e.preventDefault();playCur();}if(e.key==='z'||e.key==='Z'){e.preventDefault();undoL();}if(e.key==='x'||e.key==='X'){e.preventDefault();showExclDlg();}
+    if(testMode==='judgment'){if(e.key==='1'){e.preventDefault();document.getElementById('bAL').click();}if(e.key==='2'){e.preventDefault();document.getElementById('bEq').click();}if(e.key==='3'){e.preventDefault();document.getElementById('bBL').click();}}
+    if(testMode==='balance'&&e.key==='Enter'){e.preventDefault();document.getElementById('confBtn').click();}
+    if(testMode==='balance'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();const s=document.getElementById('balSl'),st=e.shiftKey?.1:.5;let v=parseFloat(s.value);if(e.key==='ArrowLeft')v=Math.max(parseFloat(s.min),+(v-st).toFixed(1));if(e.key==='ArrowRight')v=Math.min(parseFloat(s.max),+(v+st).toFixed(1));s.value=v;document.getElementById('balV').textContent=v.toFixed(1)+' dB';updBalAbs(v);}});
+  // Load
+  try{const sv=localStorage.getItem('ci-lb-v4');if(sv){const d=JSON.parse(sv);
+    if(d.manufacturer&&MFR[d.manufacturer]){mfr=d.manufacturer;nEl=MFR[mfr].n;document.getElementById('mfrSelect').value=mfr;}
+    if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)elSt=d.electrodeStatus;if(d.electrodeNotes)elNt=d.electrodeNotes;
+    if(d.electrodeExcludedDuring)elExDur=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)refEl=d.referenceElectrode;
+    if(d.judgmentResults)jRes=d.judgmentResults;if(d.balanceResults)bRes=d.balanceResults;buildFreqTable();}}catch(e){}
+  setInterval(()=>{try{localStorage.setItem('ci-lb-v4',JSON.stringify({manufacturer:mfr,frequencies:freqs,electrodeStatus:elSt,electrodeNotes:elNt,electrodeExcludedDuring:elExDur,referenceElectrode:refEl,judgmentResults:jRes,balanceResults:bRes}));}catch(e){}},5000);
 });
 
-// ===========================================
+// ============================================================
 // PLAYER
-// ===========================================
-let playerCtx=null,playerBuffer=null,playerSource=null,playerGain=null,playerEqFilters=[],playerPlaying=false,playerStartOffset=0,playerStartTime2=0;
+// ============================================================
+let pCtx=null,pBuf=null,pSrc=null,pGain=null,pEqF=[],pMapNode=null,pPlaying=false,pOff=0,pT0=0;
+function gPC(){if(!pCtx)pCtx=new(window.AudioContext||window.webkitAudioContext)();if(pCtx.state==='suspended')pCtx.resume();return pCtx;}
+document.getElementById('plAudio').addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;
+  try{const c=gPC(),buf=await f.arrayBuffer();pBuf=await c.decodeAudioData(buf);
+    if(pBuf.numberOfChannels>1){const m=c.createBuffer(1,pBuf.length,pBuf.sampleRate),md=m.getChannelData(0);for(let s=0;s<pBuf.length;s++){let sm=0;for(let ch=0;ch<pBuf.numberOfChannels;ch++)sm+=pBuf.getChannelData(ch)[s];md[s]=sm/pBuf.numberOfChannels;}pBuf=m;}
+    document.getElementById('plTot').textContent=pFmt(pBuf.duration);document.getElementById('plCtrl').style.display='';
+    pBuildEQ();pDrawEQ();pBuildTbl();document.getElementById('plEqViz').style.display='';
+  }catch(err){alert('Error: '+err.message);}});
+function pCompQ(i){let fL,fH;if(i===0){fL=freqs[0]*freqs[0]/(freqs[1]||freqs[0]);fH=freqs[1]||freqs[0];}else if(i===nEl-1){fL=freqs[i-1];fH=freqs[i]*freqs[i]/freqs[i-1];}else{fL=freqs[i-1];fH=freqs[i+1];}const bw=Math.log2(Math.sqrt(freqs[i]*fH))-Math.log2(Math.sqrt(fL*freqs[i]));return freqs[i]/(freqs[i]*(Math.pow(2,bw/2)-Math.pow(2,-bw/2)));}
+function pBuildEQ(){const c=gPC();pEqF.forEach(f=>f.disconnect());pEqF=[];
+  if(!pGain){pGain=c.createGain();pGain.gain.value=parseInt(document.getElementById('plVol').value)/100;pGain.connect(c.destination);}
+  const{levels}=compWLS();const eqOn=document.getElementById('plEqOn').checked,str=parseInt(document.getElementById('plStr').value)/100;
+  const nhSim=document.getElementById('plNHSim').checked;
+  for(let i=0;i<nEl;i++){const f=c.createBiquadFilter();f.type='peaking';f.frequency.value=freqs[i];f.Q.value=pCompQ(i);
+    const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    if(hd&&eqOn){f.gain.value=nhSim?levels[i]*str:-levels[i]*str;}else{f.gain.value=0;}pEqF.push(f);}
+  for(let i=0;i<pEqF.length-1;i++)pEqF[i].connect(pEqF[i+1]);
+  pBuildMapNode();}
+function pBuildMapNode(){const c=gPC();if(pMapNode){pMapNode.disconnect();pMapNode=null;}
+  if(!document.getElementById('plMapOn').checked)return;
+  const cv=parseInt(document.getElementById('plMaplaw').value)||500;if(cv<=0)return;
+  const ws=c.createWaveShaper();const n=4096,curve=new Float32Array(n);
+  for(let i=0;i<n;i++){const x=(i/(n-1))*2-1;// input -1 to 1
+    const xn=(x+1)/2;// 0 to 1
+    const yn=Math.log(1+cv*xn)/Math.log(1+cv);
+    curve[i]=yn*2-1;}
+  ws.curve=curve;ws.oversample='4x';pMapNode=ws;}
+function pUpdEQ(){const{levels}=compWLS();const eqOn=document.getElementById('plEqOn').checked,str=parseInt(document.getElementById('plStr').value)/100;
+  const nhSim=document.getElementById('plNHSim').checked;
+  for(let i=0;i<pEqF.length;i++){const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    if(hd&&eqOn){pEqF[i].gain.value=nhSim?levels[i]*str:-levels[i]*str;}else{pEqF[i].gain.value=0;}}
+  pBuildMapNode();pDrawEQ();pBuildTbl();}
+function pToggle(){if(!pBuf)return;if(pCtx.state==='suspended')pCtx.resume();if(pPlaying)pPause();else pPlay();}
+function pPlay(){if(pSrc){try{pSrc.stop();}catch(e){}}const c=gPC();pSrc=c.createBufferSource();pSrc.buffer=pBuf;
+  // Chain: source -> [maplaw] -> eq filters -> gain -> destination
+  let firstNode=pEqF.length>0?pEqF[0]:pGain;
+  let lastEq=pEqF.length>0?pEqF[pEqF.length-1]:null;
+  if(pMapNode){pSrc.connect(pMapNode);pMapNode.connect(firstNode);}else{pSrc.connect(firstNode);}
+  if(lastEq)lastEq.connect(pGain);
+  pSrc.onended=function(){if(pPlaying){pPlaying=false;pOff=0;pUpdBtn();pUpdTL();}};
+  pSrc.start(0,pOff);pT0=c.currentTime-pOff;pPlaying=true;pUpdBtn();requestAnimationFrame(pTick);}
+function pPause(){if(pSrc){pSrc.onended=null;try{pSrc.stop();}catch(e){}}pOff=pCtx.currentTime-pT0;if(pOff>pBuf.duration)pOff=0;pPlaying=false;pUpdBtn();}
+function pTick(){if(!pPlaying)return;pUpdTL();requestAnimationFrame(pTick);}
+function pUpdTL(){if(!pBuf)return;const c=pPlaying?pCtx.currentTime-pT0:pOff,cl=Math.min(c,pBuf.duration);document.getElementById('plCur').textContent=pFmt(cl);document.getElementById('plTL').value=(cl/pBuf.duration)*1000;}
+function pUpdBtn(){document.getElementById('plPlay').textContent=pPlaying?'\u23F8':'\u25B6';}
+function pFmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+function plCheck(){const h=bRes.length>0;document.getElementById('plNoD').classList.toggle('hidden',h);
+  if(h){if(pEqF.length>0)pUpdEQ();else{pDrawEQ();pBuildTbl();}document.getElementById('plEqViz').style.display=bRes.length>0?'':'none';}
+  document.getElementById('plMapInfo').classList.toggle('hidden',!document.getElementById('plMapOn').checked);
+  document.getElementById('plNHInfo').classList.toggle('hidden',!document.getElementById('plNHSim').checked);}
+document.getElementById('plPlay').addEventListener('click',pToggle);
+document.getElementById('plTL').addEventListener('input',function(){if(!pBuf)return;pOff=(this.value/1000)*pBuf.duration;document.getElementById('plCur').textContent=pFmt(pOff);if(pPlaying){pPause();pPlay();}});
+document.getElementById('plVol').addEventListener('input',function(){if(pGain)pGain.gain.value=this.value/100;document.getElementById('plVolL').textContent=this.value+'%';});
+document.getElementById('plEqOn').addEventListener('change',pUpdEQ);
+document.getElementById('plStr').addEventListener('input',function(){document.getElementById('plStrL').textContent=this.value+'%';pUpdEQ();});
+document.querySelectorAll('.plStrBtn').forEach(b=>b.addEventListener('click',function(){const v=this.dataset.v;document.getElementById('plStr').value=v;document.getElementById('plStrL').textContent=v+'%';pUpdEQ();}));
+document.getElementById('plNHSim').addEventListener('change',function(){document.getElementById('plNHInfo').classList.toggle('hidden',!this.checked);pUpdEQ();});
+document.getElementById('plMapOn').addEventListener('change',function(){document.getElementById('plMapInfo').classList.toggle('hidden',!this.checked);if(pBuf){pBuildEQ();if(pPlaying){pPause();pPlay();}}});
+document.getElementById('plMaplaw').addEventListener('change',function(){if(pBuf&&document.getElementById('plMapOn').checked){pBuildMapNode();if(pPlaying){pPause();pPlay();}}});
 
-function getPlayerCtx(){if(!playerCtx)playerCtx=new(window.AudioContext||window.webkitAudioContext)();if(playerCtx.state==='suspended')playerCtx.resume();return playerCtx;}
-
-document.getElementById('playerAudioFile').addEventListener('change',async function(e){
-  const file=e.target.files[0];if(!file)return;
-  try{const ctx=getPlayerCtx(),buf=await file.arrayBuffer();playerBuffer=await ctx.decodeAudioData(buf);
-    if(playerBuffer.numberOfChannels>1){const m=ctx.createBuffer(1,playerBuffer.length,playerBuffer.sampleRate),md=m.getChannelData(0);for(let s=0;s<playerBuffer.length;s++){let sum=0;for(let c=0;c<playerBuffer.numberOfChannels;c++)sum+=playerBuffer.getChannelData(c)[s];md[s]=sum/playerBuffer.numberOfChannels;}playerBuffer=m;}
-    document.getElementById('playerTotalTime').textContent=playerFmt(playerBuffer.duration);
-    document.getElementById('playerControls').style.display=''; playerBuildEQ(); playerDrawEQ(); playerBuildTable();
-    document.getElementById('playerEqViz').style.display='';
-  }catch(err){alert('Error: '+err.message);}
-});
-
-function playerComputeQ(idx){let fL,fH;if(idx===0){fL=freqs[0]*freqs[0]/freqs[1];fH=freqs[1];}else if(idx===numElectrodes-1){fL=freqs[idx-1];fH=freqs[idx]*freqs[idx]/freqs[idx-1];}else{fL=freqs[idx-1];fH=freqs[idx+1];}const bw=Math.log2(Math.sqrt(freqs[idx]*fH))-Math.log2(Math.sqrt(fL*freqs[idx]));return freqs[idx]/(freqs[idx]*(Math.pow(2,bw/2)-Math.pow(2,-bw/2)));}
-
-function playerBuildEQ(){const ctx=getPlayerCtx();playerEqFilters.forEach(f=>f.disconnect());playerEqFilters=[];
-  if(!playerGain){playerGain=ctx.createGain();playerGain.gain.value=parseInt(document.getElementById('playerVolume').value)/100;playerGain.connect(ctx.destination);}
-  const{levels}=computeWeightedLS();const eqOn=document.getElementById('playerEqToggle').checked,str=parseInt(document.getElementById('playerStrength').value)/100;
-  for(let i=0;i<numElectrodes;i++){const f=ctx.createBiquadFilter();f.type='peaking';f.frequency.value=freqs[i];f.Q.value=playerComputeQ(i);
-    const excl=electrodeStatus[i]==='excluded'||electrodeStatus[i]==='mute';
-    // Check if electrode has usable data
-    const hasData=balanceResults.some(r=>(r.a===i||r.b===i)&&electrodeStatus[r.a]!=='excluded'&&electrodeStatus[r.a]!=='mute'&&electrodeStatus[r.b]!=='excluded'&&electrodeStatus[r.b]!=='mute');
-    f.gain.value=(hasData&&eqOn)?-levels[i]*str:0;
-    playerEqFilters.push(f);}
-  for(let i=0;i<playerEqFilters.length-1;i++)playerEqFilters[i].connect(playerEqFilters[i+1]);
-}
-
-function playerUpdateEQ(){const{levels}=computeWeightedLS();const eqOn=document.getElementById('playerEqToggle').checked,str=parseInt(document.getElementById('playerStrength').value)/100;
-  for(let i=0;i<playerEqFilters.length;i++){const hasData=balanceResults.some(r=>(r.a===i||r.b===i)&&electrodeStatus[r.a]!=='excluded'&&electrodeStatus[r.a]!=='mute'&&electrodeStatus[r.b]!=='excluded'&&electrodeStatus[r.b]!=='mute');playerEqFilters[i].gain.value=(hasData&&eqOn)?-levels[i]*str:0;}
-  playerDrawEQ();playerBuildTable();}
-
-function playerTogglePlay(){if(!playerBuffer)return;if(playerCtx.state==='suspended')playerCtx.resume();if(playerPlaying)playerPause();else playerPlay();}
-function playerPlay(){if(playerSource){try{playerSource.stop();}catch(e){}}const ctx=getPlayerCtx();playerSource=ctx.createBufferSource();playerSource.buffer=playerBuffer;
-  if(playerEqFilters.length>0){playerSource.connect(playerEqFilters[0]);playerEqFilters[playerEqFilters.length-1].connect(playerGain);}else playerSource.connect(playerGain);
-  playerSource.onended=function(){if(playerPlaying){playerPlaying=false;playerStartOffset=0;playerUpdateBtn();playerUpdateTL();}};
-  playerSource.start(0,playerStartOffset);playerStartTime2=ctx.currentTime-playerStartOffset;playerPlaying=true;playerUpdateBtn();requestAnimationFrame(playerTick);}
-function playerPause(){if(playerSource){playerSource.onended=null;try{playerSource.stop();}catch(e){}}playerStartOffset=playerCtx.currentTime-playerStartTime2;if(playerStartOffset>playerBuffer.duration)playerStartOffset=0;playerPlaying=false;playerUpdateBtn();}
-function playerTick(){if(!playerPlaying)return;playerUpdateTL();requestAnimationFrame(playerTick);}
-function playerUpdateTL(){if(!playerBuffer)return;const c=playerPlaying?playerCtx.currentTime-playerStartTime2:playerStartOffset;const cl=Math.min(c,playerBuffer.duration);document.getElementById('playerCurrentTime').textContent=playerFmt(cl);document.getElementById('playerTimeline').value=(cl/playerBuffer.duration)*1000;}
-function playerUpdateBtn(){document.getElementById('playerPlayBtn').textContent=playerPlaying?'\u23F8':'\u25B6';}
-function playerFmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
-function playerCheckData(){const h=balanceResults.length>0;document.getElementById('playerNoData').classList.toggle('hidden',h);if(h&&playerEqFilters.length>0)playerUpdateEQ();}
-
-document.getElementById('playerPlayBtn').addEventListener('click',playerTogglePlay);
-document.getElementById('playerTimeline').addEventListener('input',function(){if(!playerBuffer)return;playerStartOffset=(this.value/1000)*playerBuffer.duration;document.getElementById('playerCurrentTime').textContent=playerFmt(playerStartOffset);if(playerPlaying){playerPause();playerPlay();}});
-document.getElementById('playerVolume').addEventListener('input',function(){if(playerGain)playerGain.gain.value=this.value/100;document.getElementById('playerVolumeLabel').textContent=this.value+'%';});
-document.getElementById('playerEqToggle').addEventListener('change',playerUpdateEQ);
-document.getElementById('playerStrength').addEventListener('input',function(){document.getElementById('playerStrengthLabel').textContent=this.value+'%';playerUpdateEQ();});
-
-function playerDrawEQ(){const canvas=document.getElementById('playerEqCanvas');if(!canvas)return;const wrap=canvas.parentElement,dpr=window.devicePixelRatio||1,W=wrap.clientWidth,H=wrap.clientHeight;
-  canvas.width=W*dpr;canvas.height=H*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
-  const{levels}=computeWeightedLS();const eqOn=document.getElementById('playerEqToggle').checked,str=parseInt(document.getElementById('playerStrength').value)/100;
-  const active=getActiveElectrodes();let maxAbs=1;for(const i of active){const g=Math.abs(levels[i])*str;if(g>maxAbs)maxAbs=g;}maxAbs=Math.ceil(maxAbs/2)*2+2;
-  const pad={left:44,right:16,top:16,bottom:28},plotW=W-pad.left-pad.right,plotH=H-pad.top-pad.bottom,zeroY=pad.top+plotH/2;
-  const barW=Math.max(6,(plotW/active.length)*0.6),gapW=plotW/active.length;
-  ctx.strokeStyle='#ddd';ctx.lineWidth=1;ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(pad.left,zeroY);ctx.lineTo(W-pad.right,zeroY);ctx.stroke();
-  const steps=Math.min(4,Math.floor(maxAbs/2));
-  for(let s=1;s<=steps;s++){const dB=s*(maxAbs/steps),yOff=(dB/maxAbs)*(plotH/2);ctx.beginPath();ctx.moveTo(pad.left,zeroY-yOff);ctx.lineTo(W-pad.right,zeroY-yOff);ctx.stroke();ctx.beginPath();ctx.moveTo(pad.left,zeroY+yOff);ctx.lineTo(W-pad.right,zeroY+yOff);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='10px Consolas,monospace';ctx.textAlign='right';ctx.fillText('+'+dB.toFixed(0),pad.left-4,zeroY-yOff+3);ctx.fillText('-'+dB.toFixed(0),pad.left-4,zeroY+yOff+3);ctx.setLineDash([2,4]);}
-  ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='10px Consolas,monospace';ctx.textAlign='right';ctx.fillText('0',pad.left-4,zeroY+3);
-  for(let j=0;j<active.length;j++){const i=active[j],x=pad.left+j*gapW+(gapW-barW)/2;
-    const hasData=balanceResults.some(r=>(r.a===i||r.b===i)&&electrodeStatus[r.a]!=='excluded'&&electrodeStatus[r.a]!=='mute'&&electrodeStatus[r.b]!=='excluded'&&electrodeStatus[r.b]!=='mute');
-    let ag=hasData&&eqOn?-levels[i]*str:0;const bH=(Math.abs(ag)/maxAbs)*(plotH/2),y=ag>=0?zeroY-bH:zeroY;
-    ctx.fillStyle=!hasData?'#ccc':ag>=0?'#16a34a':'#dc2626';if(bH>0.5)ctx.fillRect(x,y,barW,bH);else{ctx.fillStyle='#ccc';ctx.fillRect(x,zeroY-0.5,barW,1);}
-    ctx.fillStyle='#666';ctx.font='9px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+displayElNum(i),pad.left+j*gapW+gapW/2,H-pad.bottom+12);
-    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(freqs[i]>=1000?(freqs[i]/1000).toFixed(1)+'k':freqs[i],pad.left+j*gapW+gapW/2,H-pad.bottom+22);}
-}
-
-function playerBuildTable(){const{levels}=computeWeightedLS();const eqOn=document.getElementById('playerEqToggle').checked,str=parseInt(document.getElementById('playerStrength').value)/100;
-  const hdr=document.getElementById('playerEqHeader'),lv=document.getElementById('playerEqLevels'),gn=document.getElementById('playerEqGains');
-  hdr.innerHTML='<th></th>';lv.innerHTML='<td style="color:var(--text-muted);font-size:.8em;">Pegel</td>';gn.innerHTML='<td style="color:var(--text-muted);font-size:.8em;">Gain</td>';
-  for(let i=0;i<numElectrodes;i++){hdr.innerHTML+=`<th>E${displayElNum(i)}</th>`;
-    const hasData=balanceResults.some(r=>(r.a===i||r.b===i)&&electrodeStatus[r.a]!=='excluded'&&electrodeStatus[r.a]!=='mute'&&electrodeStatus[r.b]!=='excluded'&&electrodeStatus[r.b]!=='mute');
-    if(!hasData){lv.innerHTML+='<td style="opacity:.4;">—</td>';gn.innerHTML+='<td style="opacity:.4;">—</td>';continue;}
-    const v=levels[i];lv.innerHTML+=`<td style="color:${v>0.05?'#2563eb':v<-0.05?'#dc2626':'#666'}">${v>=0?'+':''}${v.toFixed(1)}</td>`;
-    const g=eqOn?-v*str:0;gn.innerHTML+=`<td style="color:${g>0.05?'#16a34a':g<-0.05?'#dc2626':'#666'}">${g>=0?'+':''}${g.toFixed(1)}</td>`;}}
-
-window.addEventListener('resize',()=>{if(balanceResults.length>0)playerDrawEQ();});
+function pDrawEQ(){const cv=document.getElementById('plEqCv');if(!cv)return;const wp=cv.parentElement,dpr=window.devicePixelRatio||1,W=wp.clientWidth,H=wp.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const{levels}=compWLS();const eqOn=document.getElementById('plEqOn').checked,str=parseInt(document.getElementById('plStr').value)/100;
+  const nhSim=document.getElementById('plNHSim').checked;const act=actEl();
+  let mxA=1;for(const i of act){const g=Math.abs(levels[i])*str;if(g>mxA)mxA=g;}mxA=Math.ceil(mxA/2)*2+2;
+  const pad={left:40,right:14,top:14,bottom:26},pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom,zY=pad.top+pH/2;
+  const bW=Math.max(5,(pW/act.length)*.6),gW=pW/act.length;
+  ctx.strokeStyle='#ddd';ctx.lineWidth=1;ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(pad.left,zY);ctx.lineTo(W-pad.right,zY);ctx.stroke();
+  const steps=Math.min(4,Math.floor(mxA/2));
+  for(let s=1;s<=steps;s++){const dB=s*(mxA/steps),yO=(dB/mxA)*(pH/2);ctx.beginPath();ctx.moveTo(pad.left,zY-yO);ctx.lineTo(W-pad.right,zY-yO);ctx.stroke();ctx.beginPath();ctx.moveTo(pad.left,zY+yO);ctx.lineTo(W-pad.right,zY+yO);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='9px Consolas,monospace';ctx.textAlign='right';ctx.fillText('+'+dB.toFixed(0),pad.left-4,zY-yO+3);ctx.fillText('-'+dB.toFixed(0),pad.left-4,zY+yO+3);ctx.setLineDash([2,4]);}
+  ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='9px Consolas,monospace';ctx.textAlign='right';ctx.fillText('0',pad.left-4,zY+3);
+  for(let j=0;j<act.length;j++){const i=act[j],x=pad.left+j*gW+(gW-bW)/2;
+    const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    let ag=hd&&eqOn?(nhSim?levels[i]*str:-levels[i]*str):0;const bH=(Math.abs(ag)/mxA)*(pH/2),y=ag>=0?zY-bH:zY;
+    ctx.fillStyle=!hd?'#ccc':ag>=0?'#16a34a':'#dc2626';if(bH>.5)ctx.fillRect(x,y,bW,bH);else{ctx.fillStyle='#ccc';ctx.fillRect(x,zY-.5,bW,1);}
+    ctx.fillStyle='#666';ctx.font='8px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),pad.left+j*gW+gW/2,H-pad.bottom+10);
+    ctx.font='7px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(freqs[i]>=1000?(freqs[i]/1000).toFixed(1)+'k':freqs[i],pad.left+j*gW+gW/2,H-pad.bottom+20);}}
+function pBuildTbl(){const{levels}=compWLS();const eqOn=document.getElementById('plEqOn').checked,str=parseInt(document.getElementById('plStr').value)/100;
+  const nhSim=document.getElementById('plNHSim').checked;
+  const h=document.getElementById('plEqH'),lv=document.getElementById('plEqLv'),gn=document.getElementById('plEqGn');
+  h.innerHTML='<th></th>';lv.innerHTML='<td style="color:var(--text-muted);font-size:.78em">Pegel</td>';gn.innerHTML='<td style="color:var(--text-muted);font-size:.78em">Gain</td>';
+  for(let i=0;i<nEl;i++){h.innerHTML+=`<th>E${dEN(i)}</th>`;
+    const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    if(!hd){lv.innerHTML+='<td style="opacity:.4">—</td>';gn.innerHTML+='<td style="opacity:.4">—</td>';continue;}
+    const v=levels[i];lv.innerHTML+=`<td style="color:${v>.05?'#2563eb':v<-.05?'#dc2626':'#666'}">${v>=0?'+':''}${v.toFixed(1)}</td>`;
+    const g=eqOn?(nhSim?v*str:-v*str):0;gn.innerHTML+=`<td style="color:${g>.05?'#16a34a':g<-.05?'#dc2626':'#666'}">${g>=0?'+':''}${g.toFixed(1)}</td>`;}}
+window.addEventListener('resize',()=>{if(bRes.length>0){pDrawEQ();if(document.getElementById('resC').style.display!=='none')renderResults();}});
 </script>
 </body>
 </html>
