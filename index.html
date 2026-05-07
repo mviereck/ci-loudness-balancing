@@ -164,7 +164,7 @@ canvas{width:100%;height:auto}
         <div class="control-group"><label id="lblMode"></label>
           <select id="testMode"><option value="balance" id="optBal"></option><option value="judgment" id="optJdg"></option></select></div>
         <div class="control-group"><label id="lblRun"></label>
-          <select id="pairType"><option value="full" id="optFull"></option><option value="convergence" id="optConv"></option><option value="conv_fast" id="optCF"></option><option value="manual" id="optMan"></option></select></div>
+          <select id="pairType"><option value="full" id="optFull"></option><option value="conv_fast" id="optCF"></option><option value="manual" id="optMan"></option></select></div>
       </div>
       <div id="runExplain" class="info-box"></div>
       <div class="controls-row">
@@ -220,7 +220,7 @@ canvas{width:100%;height:auto}
             <div id="balAbs" style="font-size:.82em;color:var(--text-muted);text-align:center;margin-top:2px;display:none"></div>
             <div id="extWrap" style="text-align:center;margin-top:5px;display:none"><button class="btn btn-sm" id="extBtn" data-t="bExtend"></button></div>
           </div>
-          <div style="margin-top:10px"><button class="btn btn-primary btn-large" id="confBtn"><span data-t="bConf"></span> <span class="kbd">Enter</span></button></div>
+          <div style="margin-top:10px"><button class="btn btn-primary btn-large" id="confBtn"><span data-t="bConf"></span> <span class="kbd" data-t="kEnter"></span></button></div>
         </div>
       </div>
     </div>
@@ -236,12 +236,26 @@ canvas{width:100%;height:auto}
       <h2 id="resTitle"></h2>
       <div id="noRes"><p style="color:var(--text-muted)" data-t="noRes"></p></div>
       <div id="resC" style="display:none">
+        <div id="reliabilityText" style="margin-bottom:14px;padding:12px 16px;background:var(--accent-light);border-radius:8px;border-left:3px solid var(--accent);font-size:.88em;line-height:1.6"></div>
         <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" id="resMeta"></p>
         <div class="chart-container"><canvas id="resChart" width="800" height="320"></canvas>
           <p id="chartExpl" style="font-size:.82em;color:var(--text-muted);margin-top:10px;line-height:1.5"></p>
         </div>
         <div style="overflow-x:auto;margin-top:14px"><table class="results-table" id="resT"><thead><tr id="resTH"></tr></thead><tbody id="resTB"></tbody></table></div>
         <div class="explain" id="resExplain"></div>
+        <div style="margin-top:16px">
+          <button class="btn" id="fClearBtn" style="color:var(--danger)">&#128465; <span data-t="fClear"></span></button>
+        </div>
+        <div style="margin-top:24px;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+          <h3 id="glossTitleEl" style="font-size:.95em;font-weight:600;margin-bottom:12px;color:var(--text-muted)"></h3>
+          <div style="font-size:.84em;line-height:1.7;display:flex;flex-direction:column;gap:8px">
+            <div id="glossResiduumEl"></div>
+            <div id="glossErrBarEl"></div>
+            <div id="glossAnpassungEl"></div>
+            <div id="glossFarbeEl"></div>
+            <div id="glossRefEl"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -340,7 +354,6 @@ canvas{width:100%;height:auto}
         <button class="btn" id="fSaveBtn">&#128190; <span data-t="fSave"></span></button>
         <button class="btn" id="fPrintBtn">&#128424; <span data-t="fPrint"></span></button>
         <button class="btn" id="fCopyBtn">&#128203; <span data-t="fCopy"></span></button>
-        <button class="btn" id="fClearBtn" style="color:var(--danger)">&#128465; <span data-t="fClear"></span></button>
       </div>
       <input type="file" id="fInput" accept=".json" class="hidden">
       <div class="explain" data-t="fExplain"></div>
@@ -369,7 +382,7 @@ canvas{width:100%;height:auto}
 // ============================================================
 const L={
 de:{
-subtitle:'CI Sound Balancing Tool · v2.1',
+subtitle:'CI Sound Balancing Tool · v2.2',
 tabIntro:'Einführung',tabFreq:'Frequenzen',tabResults:'Meßergebnisse',tabFile:'Laden/Speichern',
 introTitle:'CI Sound Balancing Tool',
 introDesc:'Dieses Tool hilft CI-Trägern, die wahrgenommene Lautstärke ihrer Elektroden systematisch zu vergleichen und eine individuelle Korrekturkurve zu erstellen.',
@@ -386,16 +399,15 @@ thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Notiz',
 resetFreq:'Zurücksetzen',sweep:'▶ Sweep',stop:'■ Stopp',lblCorr:'Korrektur anwenden',
 toneTitle:'Tonparameter',lblVol:'Lautstärke:',lblDur:'Tondauer:',lblPau:'Pause:',
 testTitle:'Testeinstellungen',lblMode:'Modus:',optBal:'Ausgleichsmodus (dB-Offset)',optJdg:'Urteilsmodus (A/gleich/B)',
-lblRun:'Testverfahren:',optFull:'Vollständig (alle Paare)',optConv:'Konvergenz (bis stabil)',optCF:'Konvergenz schnell',optMan:'Manuell',
+lblRun:'Testverfahren:',optFull:'Vollständig (alle Paare)',optCF:'Konvergenz',optMan:'Manuell',
 lblRef:'Referenzelektrode:',lblVol2:'Lautstärke:',lblDur2:'Tondauer:',lblPau2:'Pause:',
 preCorrectLabel:'Feinjustierung mit vorkorrigierten Werten',
 runExplFull:'Alle möglichen Paare werden in zufälliger Reihenfolge verglichen. A und B werden pro Paar zufällig zugewiesen. Genauestes Verfahren, dauert am längsten. Empfohlen als erster Durchlauf.',
-runExplConv:'Wie „Vollständig", aber nach der ersten Runde werden nur noch die unsichersten Paare nachgemessen. Stoppt automatisch, wenn alle Werte stabil sind (Residuum < 1 dB). Empfohlen nach einem ersten Durchlauf.',
-runExplCF:'Nur die Paare mit den größten Abweichungen (aus vorhandenen Ergebnissen) werden erneut getestet, plus einige Zufallspaare. Erfordert vorhandene Ergebnisse. Schnelle Validierung. Gern mehrfach ausführen für stabilere Ergebnisse.',
+runExplCF:'Die Paare mit den größten Abweichungen werden erneut getestet, plus einige Zufallspaare. Erfordert vorhandene Ergebnisse. Kann beliebig oft wiederholt werden.',
 runExplMan:'Zwei Elektroden frei wählen und vergleichen.',
-recommend:'Empfohlenes Vorgehen: Erst „Vollständig", danach „Konvergenz schnell" oder „Konvergenz" zur Verfeinerung.',
+recommend:'Empfohlen: Erst „Vollständig" durchführen, dann „Konvergenz" – beliebig oft wiederholbar. Auch „Vollständig" kann wiederholt werden. Meßergebnisse bleiben immer erhalten, auch bei vorzeitigem Abbruch.',
 startTest:'▶ Test starten',stopTest:'■ Test beenden',
-bBack:'Zurück',bReplay:'Nochmal',kSpace:'Leertaste',bExcl:'Ausschließen',
+bBack:'Zurück',bReplay:'Nochmal',kSpace:'Leertaste',kEnter:'Enter',bExcl:'Ausschließen',
 bLoud:'lauter',bLoud2:'lauter',bEqual:'Gleich',
 slHint:'Mittleren Ton (B) anpassen. ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
 bExtend:'Bereich erweitern (±40 dB)',bConf:'Offset bestätigen',bCanc:'Abbrechen',
@@ -405,9 +417,19 @@ comp:'Vergleich',of:'von',round:'Runde',
 chartExplB:'Wahrgenommene Lautstärke relativ zur Referenz (0 dB). Positiv = lauter, negativ = leiser. Fehlerbalken = mittleres Residuum. Berechnung: Gewichtete Least Squares.',
 chartExplJ:'Score = „lauter" minus „leiser". Hohe positive Werte = wird als zu laut empfunden.',
 thOff:'Offset (dB)',thMes:'Messungen',thRes:'∅ Residuum',thWgt:'Gewicht',thStR:'Status',thSc:'Score',thComp:'Vergl.',
-resExplain:'Residuum: Die mittlere Abweichung der Einzelmessungen einer Elektrode vom Gesamtergebnis. Hohe Werte = unsichere Messung, z.B. durch verrauschte Elektrode oder schwieriges Urteil. Least Squares: Mathematisches Verfahren, das aus allen Paarvergleichen gleichzeitig die bestmöglichen Offset-Werte berechnet. Einzelne Meßfehler haben wenig Einfluß, weil sie sich gegen viele andere Messungen behaupten müssen. Gewichtung: Verrauschte Elektroden (0.5) und fast stumme (0.1) fließen mit reduziertem Gewicht ein.',
+resExplain:'Residuum: Die mittlere Abweichung der Einzelmessungen einer Elektrode vom Gesamtergebnis. Hohe Werte = unsichere Messung, z.B. durch verrauschte Elektrode oder schwieriges Urteil. Least Squares: Mathematisches Verfahren, das aus allen Paarvergleichen gleichzeitig die bestmöglichen Offset-Werte berechnet. Einzelne Meßfehler haben wenig Einfluß, weil sie sich gegen viele andere Messungen behaupten müssen. Gewichtung: Starkes Rauschen (0.1), Rauschen mit etwas Ton (0.5), Ton mit Rauschen (0.9), fast stumm (0.1) fließen mit reduziertem Gewicht ein.',
+fClear:'Ergebnisse löschen',
+delConfirmMeas:'Meßergebnisse löschen?',
+reliabilityTitle:'Einschätzung der Meßzuverlässigkeit',
+glossTitle:'Begriffserklärung',
+glossResiduum:'<b>Residuum</b>: Zeigt, wie widersprüchlich Ihre Urteile bei einer Elektrode waren. Kurze Fehlerbalken = konsistente Urteile, lange Fehlerbalken = die Einschätzungen haben geschwankt.',
+glossErrBar:'<b>Fehlerbalken</b> (die senkrechten Striche an den Balken): Zeigen die Größe des Residuums – je länger, desto unsicherer die Messung.',
+glossAnpassung:'<b>Anpassung</b>: Gibt an, um wie viel dB diese Elektrode lauter (+) oder leiser (−) eingestellt wird als die Referenzelektrode.',
+glossFarbe:'<b>Ampelfarben</b>: Grün = zuverlässig gemessen, Gelb = grenzwertig, Rot = unsichere Messung, Grau = noch keine Messung für diese Elektrode. Die Farbe zeigt die Meßqualität – nicht die Stärke der Änderung.',
+glossRef:'<b>Referenzelektrode</b>: Der Fixpunkt der Messung. Ihre Anpassung ist immer 0 dB. Alle anderen Elektroden werden relativ zu ihr bewertet.',
+preCorrHint:'Vorheriger Wert: {v} dB vom Schätzwert',
 apikal:'apikal',basal:'basal',
-stNoisy:'verrauscht',stAlmMute:'fast stumm',stMute:'stumm',stExcl:'ausschließen',
+stNoisyHeavy:'Starkes Rauschen',stNoisyMore:'Rauschen mit etwas Ton',stNoisyLess:'Ton mit Rauschen',stAlmMute:'fast stumm',stMute:'stumm',stExcl:'ausschließen',
 total:'Gesamt',prev:'vorher',excluded:'ausgeschl.',
 copyDone:'Kopiert.',delConfirmMeas:'Meßergebnisse löschen?',delConfirmAll:'Auch alle Einstellungen zurücksetzen?',manComp:'Manueller Vergleich',
 pairsRem:'Vergleiche verbleiben',exclDuring:'ausgeschlossen',
@@ -421,7 +443,7 @@ plNHExpl:'Veranschaulicht die Fehleinstellung, die ohne Korrektur vorliegt: die 
 plMapLabel:'MAPLAW-Simulation',
 plMapExpl:'Simuliert die MED-EL MAPLAW-Kompression (logarithmisch).',
 fileTitle:'Laden / Speichern',fileDesc:'Alle Einstellungen und Ergebnisse werden als JSON-Datei gespeichert: Hersteller, Frequenzen, Elektrodenstatus, Notizen, Referenzelektrode, Tonparameter, Paradigma und alle Meßergebnisse.',
-fLoad:'Laden',fSave:'Speichern',fPrint:'Ergebnisse drucken',fCopy:'Tabelle kopieren',fClear:'Ergebnisse löschen',
+fLoad:'Laden',fSave:'Speichern',fPrint:'Ergebnisse drucken',fCopy:'Tabelle kopieren',
 fExplain:'Die Einstellungen im Player werden beim Ausdruck berücksichtigt. Der Ausdruck gibt das wieder, was Sie im Player hören und als Equalizer-Kurve sehen.',
 eeDesc:'Exportiert die Korrekturkurve als EasyEffects-Preset für PipeWire/PulseAudio.',
 eeExport:'EasyEffects-Preset exportieren',
@@ -466,16 +488,15 @@ thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Note',
 resetFreq:'Reset',sweep:'▶ Sweep',stop:'■ Stop',lblCorr:'Apply correction',
 toneTitle:'Tone parameters',lblVol:'Volume:',lblDur:'Duration:',lblPau:'Pause:',
 testTitle:'Test settings',lblMode:'Mode:',optBal:'Balance mode (dB offset)',optJdg:'Judgment mode (A/equal/B)',
-lblRun:'Test method:',optFull:'Complete (all pairs)',optConv:'Convergence (until stable)',optCF:'Convergence fast',optMan:'Manual',
+lblRun:'Test method:',optFull:'Complete (all pairs)',optCF:'Convergence',optMan:'Manual',
 lblRef:'Reference electrode:',lblVol2:'Volume:',lblDur2:'Duration:',lblPau2:'Pause:',
 preCorrectLabel:'Fine-tuning with pre-corrected values',
 runExplFull:'All possible pairs compared in random order. A and B randomly assigned per pair. Most accurate method, takes longest. Recommended as first run.',
-runExplConv:'Like "Complete", but after the first round only the most uncertain pairs are re-tested. Stops when all values are stable (residual < 1 dB). Recommended after a first run.',
-runExplCF:'Only pairs with the largest deviations are re-tested, plus some random pairs. Requires existing results. Quick validation. Run multiple times for more stable results.',
+runExplCF:'Pairs with the largest deviations are re-tested, plus some random pairs. Requires existing results. Can be repeated as often as desired.',
 runExplMan:'Freely choose two electrodes and compare them.',
-recommend:'Recommended: Start with "Complete", then "Convergence fast" or "Convergence" to refine.',
+recommend:'Recommended: Start with "Complete", then repeat "Convergence" as often as desired. "Complete" can also be repeated. Results are always preserved, even if you stop a test early.',
 startTest:'▶ Start test',stopTest:'■ End test',
-bBack:'Back',bReplay:'Replay',kSpace:'Space',bExcl:'Exclude',bLoud:'louder',bLoud2:'louder',bEqual:'Equal',
+bBack:'Back',bReplay:'Replay',kSpace:'Space',kEnter:'Enter',bExcl:'Exclude',bLoud:'louder',bLoud2:'louder',bEqual:'Equal',
 slHint:'Adjust middle tone (B). ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
 bExtend:'Extend range (±40 dB)',bConf:'Confirm offset',bCanc:'Cancel',exclTitle:'Which electrode to exclude?',
 resTitle:'Results',noRes:'No measurements yet. Start a test.',
@@ -483,9 +504,19 @@ comp:'Comparison',of:'of',round:'Round',
 chartExplB:'Perceived loudness relative to reference (0 dB). Positive = louder, negative = quieter. Error bars = mean residual. Weighted least squares.',
 chartExplJ:'Score = "louder" minus "quieter" judgments.',
 thOff:'Offset (dB)',thMes:'Measurements',thRes:'∅ Residual',thWgt:'Weight',thStR:'Status',thSc:'Score',thComp:'Comp.',
-resExplain:'Residual: mean deviation of individual measurements from the overall result. High values = uncertain measurement. Least Squares: mathematical method that calculates the best offset values from all pair comparisons simultaneously. Weighting: noisy (0.5) and almost mute (0.1) electrodes contribute with reduced weight.',
+resExplain:'Residual: mean deviation of individual measurements from the overall result. High values = uncertain measurement. Least Squares: mathematical method that calculates the best offset values from all pair comparisons simultaneously. Weighting: heavy noise (0.1), noise with some tone (0.5), tone with noise (0.9), almost mute (0.1) contribute with reduced weight.',
+fClear:'Delete results',
+delConfirmMeas:'Delete measurement results?',
+reliabilityTitle:'Measurement Reliability Assessment',
+glossTitle:'Glossary',
+glossResiduum:'<b>Residual</b>: Shows how inconsistent your judgments were for an electrode. Short error bars = consistent judgments, long error bars = judgments varied.',
+glossErrBar:'<b>Error bars</b> (the vertical lines on the bars): Show the size of the residual – the longer, the more uncertain the measurement.',
+glossAnpassung:'<b>Adjustment</b>: How many dB louder (+) or quieter (−) this electrode is set compared to the reference electrode.',
+glossFarbe:'<b>Traffic light colors</b>: Green = reliably measured, Yellow = borderline, Red = uncertain measurement, Grey = no measurements yet for this electrode. The color shows measurement quality – not the size of the adjustment.',
+glossRef:'<b>Reference electrode</b>: The fixed point of the measurement. Its adjustment is always 0 dB. All other electrodes are evaluated relative to it.',
+preCorrHint:'Previous value: {v} dB from estimate',
 apikal:'apical',basal:'basal',
-stNoisy:'noisy',stAlmMute:'almost mute',stMute:'mute',stExcl:'exclude',
+stNoisyHeavy:'Heavy noise',stNoisyMore:'Noise with some tone',stNoisyLess:'Tone with noise',stAlmMute:'almost mute',stMute:'mute',stExcl:'exclude',
 total:'Total',prev:'previous',excluded:'excluded',copyDone:'Copied.',delConfirmMeas:'Delete measurement results?',delConfirmAll:'Also reset all settings?',manComp:'Manual comparison',pairsRem:'pairs remaining',exclDuring:'excluded',
 plTitle:'Audio player with correction equalizer',plDesc:'This player simulates corrected sound. It modifies the signal before CI processing – not identical to MCL adjustment, but an indication.',
 plNoData:'No measurement data yet. Run a test first.',plFile:'Audio file (MP3, WAV, FLAC, OGG, M4A, MP4)',
@@ -495,7 +526,7 @@ plNotice:'The equalizer corrects the audio signal before CI processing. Not iden
 plNHLabel:'Normal hearing simulation',plNHExpl:'Illustrates the distortion present without correction: measured loudness differences are applied (not inverted).',
 plMapLabel:'MAPLAW simulation',plMapExpl:'Simulates MED-EL MAPLAW compression.',
 fileTitle:'Load / Save',fileDesc:'All settings and results saved as JSON.',
-fLoad:'Load results',fSave:'Save results',fPrint:'Print results',fCopy:'Copy table',fClear:'Delete results',
+fLoad:'Load results',fSave:'Save results',fPrint:'Print results',fCopy:'Copy table',
 fExplain:'Player settings are included in the printout. The printout reflects what you hear in the player and see as equalizer curve.',
 eeDesc:'Exports the correction curve as EasyEffects preset for PipeWire/PulseAudio.',
 eeExport:'Export EasyEffects preset',
@@ -519,10 +550,10 @@ printPreCorrect:'Fine-tuning with pre-correction: active',
 },
 fr:{subtitle:'CI Sound Balancing Tool · v2.1',tabIntro:'Introduction',tabFreq:'Fréquences',tabResults:'Résultats',tabFile:'Charger/Sauver',
 introTitle:'CI Sound Balancing Tool',introDesc:'Cet outil aide les porteurs d\'IC à comparer systématiquement le volume perçu de leurs électrodes et à créer une courbe de correction individuelle.',introWhat:'Que puis-je faire?',introWhatDesc:'Vous comparez des paires d\'électrodes et jugez quel ton semble le plus fort. L\'outil calcule quelles électrodes sont relativement trop fortes ou trop faibles. Les résultats peuvent être imprimés pour votre audiologiste.',introFlow:'Procédure',introFlowDesc:'<b>1. Fréquences</b> – Choisissez votre fabricant.<br><b>2. Mesurer</b> – Lancez une série de tests.<br><b>3. Levels</b> – Ajustements manuels optionnels.<br><b>4. Lecteur</b> – Écoutez la différence.',introWarn:'Désactivez les égaliseurs audio système pendant la mesure.',introAudio:'Pour votre audiologiste',introAudioDesc:'Les résultats peuvent être imprimés avec les corrections souhaitées.',
-freqTitle:'Fréquences & statut',lblMfr:'Fabricant:',freqHint:'Valeurs de bicial. ▶ = son, ◼ = son continu.',thEl:'Él.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optConv:'Convergence',optCF:'Conv. rapide',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires comparées aléatoirement. Recommandé.',runExplConv:'Comme Complet, puis re-test des paires incertaines.',runExplCF:'Re-test rapide des paires incertaines.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: Complet d\'abord, puis Convergence.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'Résidu: écart moyen. Least Squares: calcul optimal.',apikal:'apical',basal:'basal',stNoisy:'bruité',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Simule le son corrigé.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fClear:'Supprimer',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetDesc:'Courbes prédéfinies. Tilt/Pivot = outils MAESTRO. Clavier: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Aperçu',lvChartMan:'Manuel',lvChartSum:'Somme',plSrcLabel:'Source Equalizer:',plSrcMeas:'Mesuré',plSrcLevels:'Levels',plSrcBoth:'Les deux',printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif'},
+freqTitle:'Fréquences & statut',lblMfr:'Fabricant:',freqHint:'Valeurs de bicial. ▶ = son, ◼ = son continu.',thEl:'Él.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optCF:'Convergence',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires comparées aléatoirement. Recommandé comme premier passage.',runExplCF:'Re-test des paires les plus incertaines. Répétable à volonté.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: D\'abord «Complet», puis «Convergence» – répétable à volonté. Les résultats sont toujours conservés.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',kEnter:'Entrée',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'Résidu: écart moyen des mesures individuelles. Least Squares: calcul optimal. Pondération: bruit fort (0,1), bruit avec ton (0,5), ton avec bruit (0,9), presque muet (0,1).',apikal:'apical',basal:'basal',stNoisyHeavy:'Bruit fort',stNoisyMore:'Bruit avec ton',stNoisyLess:'Ton avec bruit',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',fClear:'Supprimer résultats',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Simule le son corrigé.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetDesc:'Courbes prédéfinies. Tilt/Pivot = outils MAESTRO. Clavier: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Aperçu',lvChartMan:'Manuel',lvChartSum:'Somme',plSrcLabel:'Source Equalizer:',plSrcMeas:'Mesuré',plSrcLevels:'Levels',plSrcBoth:'Les deux',printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif',reliabilityTitle:'Fiabilité des mesures',glossTitle:'Glossaire',glossResiduum:'<b>Résidu</b>: Indique l\'incohérence de vos jugements pour une électrode. Barres courtes = jugements cohérents, barres longues = jugements variables.',glossErrBar:'<b>Barres d\'erreur</b> (traits verticaux sur les barres): Indiquent la taille du résidu.',glossAnpassung:'<b>Correction</b>: De combien de dB cette électrode est réglée plus fort (+) ou moins fort (−) que la référence.',glossFarbe:'<b>Couleurs</b>: Vert = fiable, Jaune = limite, Rouge = incertain, Gris = pas encore mesuré. La couleur indique la qualité de mesure, pas l\'amplitude de la correction.',glossRef:'<b>Électrode de référence</b>: Le point fixe de la mesure. Sa correction est toujours 0 dB.',preCorrHint:'Valeur précédente: {v} dB de l\'estimation'},
 es:{subtitle:'CI Sound Balancing Tool · v2.1',tabIntro:'Introducción',tabFreq:'Frecuencias',tabResults:'Resultados',tabFile:'Cargar/Guardar',
 introTitle:'CI Sound Balancing Tool',introDesc:'Esta herramienta ayuda a los usuarios de IC a comparar sistemáticamente el volumen percibido de sus electrodos y crear una curva de corrección individual.',introWhat:'¿Qué puedo hacer?',introWhatDesc:'Compare pares de electrodos y juzgue cuál suena más fuerte. La herramienta calcula qué electrodos son relativamente demasiado fuertes o débiles. Los resultados se pueden imprimir para su audiólogo.',introFlow:'Procedimiento',introFlowDesc:'<b>1. Frecuencias</b> – Elija su fabricante.<br><b>2. Medir</b> – Inicie una serie de pruebas.<br><b>3. Levels</b> – Ajustes manuales opcionales.<br><b>4. Reproductor</b> – Escuche la diferencia.',introWarn:'Desactive ecualizadores de audio del sistema durante la medición.',introAudio:'Para su audiólogo',introAudioDesc:'Los resultados se pueden imprimir con las correcciones deseadas.',
-freqTitle:'Frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Valores de bicial. ▶ = tono, ◼ = tono continuo.',thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optConv:'Convergencia',optCF:'Conv. rápida',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares comparados aleatoriamente. Recomendado.',runExplConv:'Como Completo, luego re-test de pares inciertos.',runExplCF:'Re-test rápido. Requiere resultados previos.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: Completo primero, luego Convergencia.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'Residuo: desviación media. Least Squares: cálculo óptimo.',apikal:'apical',basal:'basal',stNoisy:'ruidoso',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Simula sonido corregido.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fClear:'Eliminar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetDesc:'Curvas predefinidas. Tilt/Pivot = herramientas MAESTRO. Teclado: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Resumen',lvChartMan:'Manual',lvChartSum:'Suma',plSrcLabel:'Fuente Equalizer:',plSrcMeas:'Medido',plSrcLevels:'Levels',plSrcBoth:'Ambos',printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo'}
+freqTitle:'Frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Valores de bicial. ▶ = tono, ◼ = tono continuo.',thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optCF:'Convergencia',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares comparados aleatoriamente. Recomendado como primera pasada.',runExplCF:'Re-test de los pares más inciertos. Repetible a voluntad.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: Primero «Completo», luego «Convergencia» – repetible a voluntad. Los resultados siempre se conservan.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',kEnter:'Intro',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'Residuo: desviación media. Least Squares: cálculo óptimo. Ponderación: ruido fuerte (0,1), ruido con tono (0,5), tono con ruido (0,9), casi mudo (0,1).',apikal:'apical',basal:'basal',stNoisyHeavy:'Ruido fuerte',stNoisyMore:'Ruido con tono',stNoisyLess:'Tono con ruido',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',fClear:'Eliminar resultados',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Simula sonido corregido.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetDesc:'Curvas predefinidas. Tilt/Pivot = herramientas MAESTRO. Teclado: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Resumen',lvChartMan:'Manual',lvChartSum:'Suma',plSrcLabel:'Fuente Equalizer:',plSrcMeas:'Medido',plSrcLevels:'Levels',plSrcBoth:'Ambos',printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo',reliabilityTitle:'Fiabilidad de las mediciones',glossTitle:'Glosario',glossResiduum:'<b>Residuo</b>: Indica la inconsistencia de sus juicios para un electrodo. Barras cortas = juicios coherentes, barras largas = juicios variables.',glossErrBar:'<b>Barras de error</b> (líneas verticales en las barras): Muestran el tamaño del residuo.',glossAnpassung:'<b>Ajuste</b>: Cuántos dB más fuerte (+) o más suave (−) se configura este electrodo respecto a la referencia.',glossFarbe:'<b>Colores semáforo</b>: Verde = fiable, Amarillo = límite, Rojo = incierto, Gris = sin medición. El color indica la calidad de medición, no la magnitud del ajuste.',glossRef:'<b>Electrodo de referencia</b>: El punto fijo de la medición. Su ajuste es siempre 0 dB.',preCorrHint:'Valor anterior: {v} dB de la estimación'}
 };
 let lang='de';
 function t(k){return(L[lang]&&L[lang][k])||(L.de[k])||k;}
@@ -534,7 +565,7 @@ function applyLang(){lang=document.getElementById('langSelect').value;
   s('resetBtn','resetFreq');s('sweepBtn','sweep');s('stopBtn','stop');s('lblCorr','lblCorr');
   s('toneTitle','toneTitle');s('lblVol','lblVol');s('lblDur','lblDur');s('lblPau','lblPau');
   s('testTitle','testTitle');s('lblMode','lblMode');s('optBal','optBal');s('optJdg','optJdg');
-  s('lblRun','lblRun');s('optFull','optFull');s('optConv','optConv');s('optCF','optCF');s('optMan','optMan');
+  s('lblRun','lblRun');s('optFull','optFull');s('optCF','optCF');s('optMan','optMan');
   s('lblRef','lblRef');s('lblVol2','lblVol2');s('lblDur2','lblDur2');s('lblPau2','lblPau2');
   s('startBtn','startTest');s('stopTBtn','stopTest');s('resTitle','resTitle');
   updEqToggleBtn();
@@ -544,7 +575,7 @@ function applyLang(){lang=document.getElementById('langSelect').value;
 }
 function updateRunExplain(){
   const v=document.getElementById('pairType').value;
-  const m={full:'runExplFull',convergence:'runExplConv',conv_fast:'runExplCF',manual:'runExplMan'};
+  const m={full:'runExplFull',conv_fast:'runExplCF',manual:'runExplMan'};
   document.getElementById('runExplain').innerHTML=t(m[v]||'runExplFull')+'<br><br><em>'+t('recommend')+'</em>';
 }
 
@@ -632,7 +663,7 @@ function updInd(i,w){document.querySelectorAll('.freq-table .pbtn[data-a="play"]
 function buildFreqTable(){
   document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th>${t('thNote')}</th>`;
   const tb=document.getElementById('freqTB');tb.innerHTML='';
-  const so=`<option value="">—</option><option value="noisy">${t('stNoisy')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="excluded">${t('stExcl')}</option>`;
+  const so=`<option value="">—</option><option value="noisyHeavy">${t('stNoisyHeavy')}</option><option value="noisyMore">${t('stNoisyMore')}</option><option value="noisyLess">${t('stNoisyLess')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="excluded">${t('stExcl')}</option>`;
   for(let i=0;i<nEl;i++){const tr=document.createElement('tr');
     let ex='';if(i===0)ex=` <span class="el-extra">(${t('apikal')})</span>`;if(i===nEl-1)ex=` <span class="el-extra">(${t('basal')})</span>`;
     tr.innerHTML=`<td style="font-weight:600">${dEN(i)}${ex}</td><td><input type="number" class="fi" data-i="${i}" value="${Math.round(freqs[i])}" min="20" max="20000"></td><td><button class="pbtn" data-a="play" data-i="${i}">&#9654;</button></td><td><button class="pbtn" data-a="hold" data-i="${i}">&#9724;</button></td><td><select class="ss" data-i="${i}">${so}</select></td><td><input type="text" class="ni" data-i="${i}" value="${elNt[i]||''}" placeholder="${t('thNote')}"></td>`;
@@ -658,7 +689,7 @@ function allEl(){return[...Array(nEl).keys()];}
 function allPairs(){const a=actEl(),p=[];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)p.push([a[i],a[j]]);return p;}
 function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 function randAB(p){return p.map(([x,y])=>Math.random()<.5?[x,y]:[y,x]);}
-function gWt(i){const s=elSt[i];if(s==='excluded'||s==='mute')return 0;if(s==='almostMute')return .1;if(s==='noisy')return .5;return 1;}
+function gWt(i){const s=elSt[i];if(s==='excluded'||s==='mute')return 0;if(s==='almostMute')return .1;if(s==='noisyHeavy')return .1;if(s==='noisyMore')return .5;if(s==='noisyLess')return .9;return 1;}
 function compWLS(){const n=nEl,lv=new Array(n).fill(0);
   const valid=bRes.filter(r=>r.a>=0&&r.a<n&&r.b>=0&&r.b<n&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
   if(!valid.length)return{levels:lv,residuals:[],elRes:new Array(n).fill(0),elWt:new Array(n).fill(1)};
@@ -693,9 +724,9 @@ function getPreCorrOffset(a,b){
 // ============================================================
 function startTest(){const pt=document.getElementById('pairType').value;testMode=document.getElementById('testMode').value;refEl=+document.getElementById('refEl').value;
   if(pt==='manual')return;let p;
-  if(pt==='full')p=allPairs();else if(pt==='convergence')p=getConvPairs(false);else if(pt==='conv_fast')p=getConvPairs(true);else p=allPairs();
+  if(pt==='full')p=allPairs();else if(pt==='conv_fast')p=getConvPairs(true);else p=allPairs();
   testPairs=randAB(shuffle(p));testIdx=0;undoSt=[];testAct=true;curPlayed=false;compCnt=0;
-  convRnd=(pt==='convergence'||pt==='conv_fast')?1:0;tStart=Date.now();
+  convRnd=(pt==='conv_fast')?1:0;tStart=Date.now();
   document.getElementById('startBtn').disabled=true;document.getElementById('stopTBtn').disabled=false;
   document.getElementById('testArea').style.display='block';document.getElementById('exclDlg').classList.add('hidden');
   if(convRnd>0){const ri=document.getElementById('roundInfo');ri.textContent=`${t('round')} ${convRnd} – ${testPairs.length} ${t('comp')}`;ri.classList.remove('hidden');}
@@ -718,8 +749,12 @@ function showCurPair(){
     const preCorr=getPreCorrOffset(a,b);
     // Slider shows real offset: start at preCorr if pre-correction is on, else at prevOff's slider portion
     if(document.getElementById('preCorrect').checked&&bRes.length>0){
-      curBase=preCorr; // tones pre-corrected by this amount
+      curBase=preCorr;
       rstSlR();document.getElementById('balSl').value=0;document.getElementById('balV').textContent='0.0 dB';
+      // Hint: Abweichung vorheriger Wert vom Schätzwert
+      const hintEl=document.getElementById('balAbs');
+      if(ex&&hintEl){const diff=prevOff-preCorr;hintEl.textContent=t('preCorrHint').replace('{v}',(diff>=0?'+':'')+diff.toFixed(1));hintEl.style.display='';}
+      else if(hintEl)hintEl.style.display='none';
     } else {
       curBase=prevOff; // existing offset as base
       rstSlR();document.getElementById('balSl').value=0;document.getElementById('balV').textContent='0.0 dB';
@@ -791,14 +826,55 @@ function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
   meta+=` · ${t('lblVol')} ${vol}% · Ref: E${dEN(refEl)} · ${MFR[mfr].name}`;
   document.getElementById('resMeta').innerHTML=meta;
   const th=document.getElementById('resTH'),tb=document.getElementById('resTB');th.innerHTML='';tb.innerHTML='';
+  // Glossar befüllen
+  const gEl=id=>document.getElementById(id);
+  if(gEl('glossTitleEl'))gEl('glossTitleEl').textContent=t('glossTitle');
+  ['glossResiduum','glossErrBar','glossAnpassung','glossFarbe','glossRef'].forEach(k=>{const el=gEl(k+'El');if(el)el.innerHTML=t(k);});
   if(hB){const{levels,elRes,elWt}=compWLS();const pc=new Array(nEl).fill(0);
     const valid=bRes.filter(r=>elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
     for(const r of valid){pc[r.a]++;pc[r.b]++;}
+    // Zuverlässigkeitseinschätzung berechnen
+    const act=actEl();
+    const maxLv=Math.max(...act.map(i=>Math.abs(levels[i])),0.001);
+    function elColor(i){
+      if(!pc[i])return'grey';
+      const lv=Math.abs(levels[i]),res=elRes[i]||0.001;
+      const snr=lv/res,risk=res*(lv/maxLv);
+      if(snr>2&&risk<0.7)return'green';
+      if(snr<1||risk>1.2)return'red';
+      return'yellow';
+    }
+    // Fließtext
+    const avgMeas=act.length>0?(pc.reduce((s,v)=>s+v,0)/act.length):0;
+    const rtEl=document.getElementById('reliabilityText');
+    if(rtEl){
+      const rmsLv=Math.sqrt(act.reduce((s,i)=>s+levels[i]**2,0)/(act.length||1));
+      const meanRes=act.reduce((s,i)=>s+elRes[i],0)/(act.length||1);
+      const globalSNR=meanRes>0?rmsLv/meanRes:0;
+      const redEls=act.filter(i=>elColor(i)==='red');
+      const yellEls=act.filter(i=>elColor(i)==='yellow');
+      let txt='';
+      if(avgMeas<2){
+        const msgs={de:'Erste Meßwerte liegen vor. Für eine zuverlässige Einschätzung sind noch mehr Vergleiche nötig. Bitte weitere Testreihen durchführen.',en:'First measurements recorded. More comparisons are needed for a reliable assessment. Please run more test series.',fr:'Premières mesures enregistrées. Des comparaisons supplémentaires sont nécessaires pour une évaluation fiable.',es:'Primeras mediciones registradas. Se necesitan más comparaciones para una evaluación fiable.'};
+        txt=msgs[lang]||msgs.en;
+      } else if(avgMeas<4){
+        const msgs={de:`Mittlere Datenlage. Globales Signal-Rausch-Verhältnis: ${globalSNR.toFixed(1)}. Die Anpassungen sind tendenziell verlässlich, aber weitere Messungen verbessern die Genauigkeit.`,en:`Moderate data. Global signal-to-noise ratio: ${globalSNR.toFixed(1)}. Adjustments are likely reliable, but more measurements will improve accuracy.`,fr:`Données modérées. Rapport signal/bruit global: ${globalSNR.toFixed(1)}. Les corrections sont probablement fiables, mais des mesures supplémentaires améliorent la précision.`,es:`Datos moderados. Relación señal/ruido global: ${globalSNR.toFixed(1)}. Los ajustes son probablemente fiables, pero más mediciones mejorarán la precisión.`};
+        txt=msgs[lang]||msgs.en;
+      } else {
+        const msgs={de:`Gute Datenlage. Globales Signal-Rausch-Verhältnis: ${globalSNR.toFixed(1)}. Mittlere Anpassung: ${rmsLv.toFixed(1)} dB, mittleres Residuum: ${meanRes.toFixed(1)} dB.`,en:`Good data. Global signal-to-noise ratio: ${globalSNR.toFixed(1)}. Mean adjustment: ${rmsLv.toFixed(1)} dB, mean residual: ${meanRes.toFixed(1)} dB.`,fr:`Bonnes données. Rapport signal/bruit global: ${globalSNR.toFixed(1)}. Correction moyenne: ${rmsLv.toFixed(1)} dB, résidu moyen: ${meanRes.toFixed(1)} dB.`,es:`Buenos datos. Relación señal/ruido global: ${globalSNR.toFixed(1)}. Ajuste medio: ${rmsLv.toFixed(1)} dB, residuo medio: ${meanRes.toFixed(1)} dB.`};
+        txt=msgs[lang]||msgs.en;
+        if(redEls.length){const names=redEls.map(i=>`E${dEN(i)}`).join(', ');const warn={de:` Unsichere Messung bei: ${names}. Weitere Testreihen empfohlen.`,en:` Uncertain measurement for: ${names}. Further test runs recommended.`,fr:` Mesure incertaine pour: ${names}. Des séries de tests supplémentaires sont recommandées.`,es:` Medición incierta para: ${names}. Se recomiendan más series de pruebas.`};txt+=(warn[lang]||warn.en);}
+        else if(yellEls.length){const names=yellEls.map(i=>`E${dEN(i)}`).join(', ');const warn={de:` Grenzwertige Meßqualität bei: ${names}.`,en:` Borderline measurement quality for: ${names}.`,fr:` Qualité de mesure limite pour: ${names}.`,es:` Calidad de medición límite para: ${names}.`};txt+=(warn[lang]||warn.en);}
+        else{const ok={de:' Alle Elektroden zuverlässig gemessen.',en:' All electrodes reliably measured.',fr:' Toutes les électrodes mesurées de manière fiable.',es:' Todos los electrodos medidos de forma fiable.'};txt+=(ok[lang]||ok.en);}
+      }
+      rtEl.textContent=txt;
+    }
     th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thOff')}</th><th>${t('thMes')}</th><th>${t('thRes')}</th><th>${t('thWgt')}</th><th>${t('thStR')}</th>`;
     for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),v=levels[i],ex=elSt[i]==='excluded'||elSt[i]==='mute';
-      let st='';if(elSt[i]){const lb={noisy:t('stNoisy'),almostMute:t('stAlmMute'),mute:t('stMute'),excluded:t('excluded')};st=lb[elSt[i]]||'';}if(elNt[i])st+=(st?' · ':'')+elNt[i];
+      let st='';if(elSt[i]){const lb={noisyHeavy:t('stNoisyHeavy'),noisyMore:t('stNoisyMore'),noisyLess:t('stNoisyLess'),almostMute:t('stAlmMute'),mute:t('stMute'),excluded:t('excluded')};st=lb[elSt[i]]||'';}if(elNt[i])st+=(st?' · ':'')+elNt[i];
+      if(ex){tr.style.opacity='0.4';}
       tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${ex?'#999':v>.05?'#2563eb':v<-.05?'#dc2626':'#666'}">${ex?'—':(v>=0?'+':'')+v.toFixed(1)}</td><td>${pc[i]||'—'}</td><td>${elRes[i]>0?elRes[i].toFixed(1):'—'}</td><td>${ex?'—':elWt[i].toFixed(1)}</td><td style="font-size:.78em">${st}</td>`;tb.appendChild(tr);}
-    drawChart(document.getElementById('resChart'),levels,elRes,true);document.getElementById('chartExpl').textContent=t('chartExplB');
+    drawChart(document.getElementById('resChart'),levels,elRes,true,elColor);document.getElementById('chartExpl').textContent=t('chartExplB');
   }else if(hJ){const sc=new Array(nEl).fill(0),cc=new Array(nEl).fill(0);
     for(const r of jRes){cc[r.a]++;cc[r.b]++;if(r.result==='a'){sc[r.a]++;sc[r.b]--;}else if(r.result==='b'){sc[r.b]++;sc[r.a]--;}}
     th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thSc')}</th><th>${t('thComp')}</th>`;
@@ -809,24 +885,27 @@ function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
 // ============================================================
 // CHART
 // ============================================================
-function drawChart(cv,vals,res,isOff){const ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,w=cv.parentElement.clientWidth-32,h=320;
+function drawChart(cv,vals,res,isOff,elColor){const ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,w=cv.parentElement.clientWidth-32,h=320;
   cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';ctx.scale(dpr,dpr);
   const pad={top:30,right:20,bottom:55,left:55},pW=w-pad.left-pad.right,pH=h-pad.top-pad.bottom;ctx.clearRect(0,0,w,h);
-  const act=actEl(),aV=act.map(i=>vals[i]),aR=res?act.map(i=>res[i]):null;
+  const act=actEl(),allE=allEl(),aV=act.map(i=>vals[i]),aR=res?act.map(i=>res[i]):null;
   let yMn,yMx;if(isOff){let am=Math.max(Math.ceil(Math.max(...aV.map(Math.abs),1)),5);if(aR)am=Math.max(am,Math.ceil(Math.max(...act.map(i=>Math.abs(vals[i])+res[i]))));yMn=-am;yMx=am;}
   else{yMn=Math.min(0,...aV);yMx=Math.max(0,...aV);const r=yMx-yMn||1;yMn-=r*.1;yMx+=r*.1;}
-  const xS=pW/(act.length-1||1),tX=i=>pad.left+i*xS,tY=v=>pad.top+(yMx-v)*(pH/(yMx-yMn||1));
+  const xS=pW/(allE.length-1||1),tX=i=>pad.left+i*xS,tY=v=>pad.top+(yMx-v)*(pH/(yMx-yMn||1));
   ctx.strokeStyle='#e5e5e5';ctx.lineWidth=1;for(let i=0;i<=5;i++){const v=yMn+(yMx-yMn)*i/5,y=tY(v);ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(w-pad.right,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px Consolas,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.left-8,y+4);}
   if(yMn<0&&yMx>0){ctx.strokeStyle='#aaa';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(pad.left,tY(0));ctx.lineTo(w-pad.right,tY(0));ctx.stroke();ctx.setLineDash([]);}
   const bW=Math.min(xS*.6,34);
-  for(let i=0;i<act.length;i++){const v=aV[i],x=tX(i)-bW/2,yZ=tY(0),yV=tY(v);ctx.fillStyle=v>.05?'#2563eb':v<-.05?'#dc2626':'#9ca3af';ctx.fillRect(x,Math.min(yZ,yV),bW,Math.abs(yV-yZ)||2);
-    if(aR&&aR[i]>0){const r=aR[i],yt=tY(v+r),yb=tY(v-r);ctx.strokeStyle='#00000044';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tX(i),yt);ctx.lineTo(tX(i),yb);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(i)-4,yt);ctx.lineTo(tX(i)+4,yt);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(i)-4,yb);ctx.lineTo(tX(i)+4,yb);ctx.stroke();}
-    ctx.fillStyle=act[i]===refEl?'#2563eb':'#555';ctx.font=(act[i]===refEl?'bold ':'')+'10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(act[i]),tX(i),h-pad.bottom+14);
-    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(Math.round(freqs[act[i]]),tX(i),h-pad.bottom+25);
-    if(i===0){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('apikal'),tX(i),h-pad.bottom+36);}
-    if(i===act.length-1){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('basal'),tX(i),h-pad.bottom+36);}}
-  ctx.strokeStyle='#2563eb44';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<act.length;i++){if(i===0)ctx.moveTo(tX(i),tY(aV[i]));else ctx.lineTo(tX(i),tY(aV[i]));}ctx.stroke();
-  for(let i=0;i<act.length;i++){ctx.beginPath();ctx.arc(tX(i),tY(aV[i]),3.5,0,Math.PI*2);ctx.fillStyle='#2563eb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+  const colorMap={green:'#16a34a',yellow:'#d97706',red:'#dc2626',grey:'#9ca3af'};
+  for(let j=0;j<allE.length;j++){const i=allE[j],v=vals[i]||0,x=tX(j)-bW/2,yZ=tY(0),yV=tY(v);
+    const col=elColor?colorMap[elColor(i)||'grey']:(v>.05?'#2563eb':v<-.05?'#dc2626':'#9ca3af');
+    ctx.fillStyle=col;ctx.fillRect(x,Math.min(yZ,yV),bW,Math.abs(yV-yZ)||2);
+    if(res&&res[i]>0&&act.includes(i)){const r=res[i],yt=tY(v+r),yb=tY(v-r);ctx.strokeStyle='#00000044';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tX(j),yt);ctx.lineTo(tX(j),yb);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(j)-4,yt);ctx.lineTo(tX(j)+4,yt);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(j)-4,yb);ctx.lineTo(tX(j)+4,yb);ctx.stroke();}
+    ctx.fillStyle=i===refEl?'#2563eb':'#555';ctx.font=(i===refEl?'bold ':'')+'10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),tX(j),h-pad.bottom+14);
+    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(Math.round(freqs[i]),tX(j),h-pad.bottom+25);
+    if(j===0){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('apikal'),tX(j),h-pad.bottom+36);}
+    if(j===allE.length-1){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('basal'),tX(j),h-pad.bottom+36);}}
+  ctx.strokeStyle='#2563eb44';ctx.lineWidth=2;ctx.beginPath();let first=true;for(let j=0;j<allE.length;j++){const i=allE[j];if(!act.includes(i))continue;if(first){ctx.moveTo(tX(j),tY(vals[i]));first=false;}else ctx.lineTo(tX(j),tY(vals[i]));}ctx.stroke();
+  for(let j=0;j<allE.length;j++){const i=allE[j];if(!act.includes(i))continue;ctx.beginPath();ctx.arc(tX(j),tY(vals[i]),3.5,0,Math.PI*2);ctx.fillStyle='#2563eb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
   ctx.save();ctx.translate(12,pad.top+pH/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#666';ctx.font='10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('dB',0,0);ctx.restore();}
 
 // ============================================================
@@ -1185,18 +1264,20 @@ document.getElementById('plTL').addEventListener('input',function(){if(!pBuf)ret
 function pDrawEQ(){const cv=document.getElementById('plEqCv');if(!cv)return;const wp=cv.parentElement,dpr=window.devicePixelRatio||1,W=wp.clientWidth,H=wp.clientHeight;
   cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
   const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
-  const nhSim=document.getElementById('plNHSim').checked;const act=actEl();
-  let mxA=1;for(const i of act){const g=Math.abs(gains[i])*str;if(g>mxA)mxA=g;}mxA=Math.ceil(mxA/2)*2+2;
+  const nhSim=document.getElementById('plNHSim').checked;const allE=allEl();const act=new Set(actEl());
+  let mxA=1;for(const i of allE){if(!act.has(i))continue;const g=Math.abs(gains[i])*str;if(g>mxA)mxA=g;}mxA=Math.ceil(mxA/2)*2+2;
   const pad={left:40,right:14,top:14,bottom:26},pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom,zY=pad.top+pH/2;
-  const bW=Math.max(5,(pW/act.length)*.6),gW=pW/act.length;
+  const bW=Math.max(5,(pW/allE.length)*.6),gW=pW/allE.length;
   ctx.strokeStyle='#ddd';ctx.lineWidth=1;ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(pad.left,zY);ctx.lineTo(W-pad.right,zY);ctx.stroke();
   const steps=Math.min(4,Math.floor(mxA/2));
   for(let s=1;s<=steps;s++){const dB=s*(mxA/steps),yO=(dB/mxA)*(pH/2);ctx.beginPath();ctx.moveTo(pad.left,zY-yO);ctx.lineTo(W-pad.right,zY-yO);ctx.stroke();ctx.beginPath();ctx.moveTo(pad.left,zY+yO);ctx.lineTo(W-pad.right,zY+yO);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='9px Consolas,monospace';ctx.textAlign='right';ctx.fillText('+'+dB.toFixed(0),pad.left-4,zY-yO+3);ctx.fillText('-'+dB.toFixed(0),pad.left-4,zY+yO+3);ctx.setLineDash([2,4]);}
   ctx.setLineDash([]);ctx.fillStyle='#999';ctx.font='9px Consolas,monospace';ctx.textAlign='right';ctx.fillText('0',pad.left-4,zY+3);
-  for(let j=0;j<act.length;j++){const i=act[j],x=pad.left+j*gW+(gW-bW)/2;
-    let ag=plEqOn?(nhSim?gains[i]*str:-gains[i]*str):0;const bH=(Math.abs(ag)/mxA)*(pH/2),y=ag>=0?zY-bH:zY;
-    ctx.fillStyle=ag===0?'#ccc':ag>=0?'#16a34a':'#dc2626';if(bH>.5)ctx.fillRect(x,y,bW,bH);else{ctx.fillStyle='#ccc';ctx.fillRect(x,zY-.5,bW,1);}
-    ctx.fillStyle='#666';ctx.font='8px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),pad.left+j*gW+gW/2,H-pad.bottom+10);
+  for(let j=0;j<allE.length;j++){const i=allE[j],x=pad.left+j*gW+(gW-bW)/2;
+    const isAct=act.has(i);
+    let ag=isAct&&plEqOn?(nhSim?gains[i]*str:-gains[i]*str):0;const bH=(Math.abs(ag)/mxA)*(pH/2),y=ag>=0?zY-bH:zY;
+    if(!isAct){ctx.fillStyle='#d1d5db';ctx.fillRect(x,zY-.5,bW,1);}
+    else{ctx.fillStyle=ag===0?'#ccc':ag>=0?'#16a34a':'#dc2626';if(bH>.5)ctx.fillRect(x,y,bW,bH);else{ctx.fillStyle='#ccc';ctx.fillRect(x,zY-.5,bW,1);}}
+    ctx.fillStyle=isAct?'#666':'#bbb';ctx.font='8px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),pad.left+j*gW+gW/2,H-pad.bottom+10);
     ctx.font='7px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(freqs[i]>=1000?(freqs[i]/1000).toFixed(1)+'k':freqs[i],pad.left+j*gW+gW/2,H-pad.bottom+20);}}
 function pBuildTbl(){const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
   const nhSim=document.getElementById('plNHSim').checked;
