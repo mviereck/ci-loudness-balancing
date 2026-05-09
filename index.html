@@ -86,7 +86,12 @@ canvas{width:100%;height:auto}
 .pr-tbl .pr-param select{font-family:var(--font)}
 .pr-tbl .pr-param input[type="number"]{width:62px;text-align:center}
 .pr-row-off{opacity:.45}
+.modal-overlay{display:none;position:fixed;inset:0;background:#0006;z-index:999;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;min-width:320px;max-width:90vw;box-shadow:0 8px 32px #0004;text-align:center}
+.modal-box h2{font-size:1.05em;font-weight:600;margin-bottom:10px}
 @media print{body{background:#fff}.tabs,.btn,.controls-row,.judgment-buttons,.balance-slider-wrap,.no-print{display:none!important}.panel{display:block!important}.card{border:1px solid #ccc;break-inside:avoid}.print-section{display:block!important}}
+.side-btn-active{background:var(--success)!important;color:#fff!important;border-color:var(--success)!important}
 @media(max-width:768px){.container{padding:12px}.freq-table{font-size:.76em}.freq-table input[type="number"]{width:55px}.judgment-buttons .btn{min-width:90px}.tab{padding:8px 10px;font-size:.84em}}
 </style>
 </head>
@@ -94,20 +99,29 @@ canvas{width:100%;height:auto}
 <div class="container">
   <div class="header-row">
     <h1>CI Sound Balancing Tool</h1>
-    <select class="lang-select" id="langSelect">
-      <option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option>
-      <option value="fr">🇫🇷 Français</option><option value="es">🇪🇸 Español</option>
-    </select>
+    <div style="display:flex;align-items:center;gap:8px">
+      <select class="lang-select" id="langSelect">
+        <option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option>
+        <option value="fr">🇫🇷 Français</option><option value="es">🇪🇸 Español</option>
+      </select>
+    </div>
   </div>
+  <div style="display:flex;justify-content:center;gap:10px;margin-bottom:14px">
+    <button id="sideLeftBtn" data-t="sideLeft" onclick="setActiveSide('left')" style="min-width:110px;padding:10px 24px;font-size:1.05em;font-weight:700;border-radius:6px;border:2px solid var(--border);cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:.04em">LINKS</button>
+    <button id="sideRightBtn" data-t="sideRight" onclick="setActiveSide('right')" style="min-width:110px;padding:10px 24px;font-size:1.05em;font-weight:700;border-radius:6px;border:2px solid var(--border);cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:.04em">RECHTS</button>
+  </div>
+  <!-- hidden select kept for JS compatibility -->
+  <select id="ciSideSelect" style="display:none"><option value="left">Links</option><option value="right">Rechts</option></select>
   <p class="subtitle" id="subtitleText"></p>
 
   <div class="tabs">
     <button class="tab active" data-tab="intro" id="tabIntro"></button>
     <button class="tab" data-tab="setup" id="tabSetup"></button>
-    <button class="tab" data-tab="test" id="tabTest">Test</button>
+    <button class="tab" data-tab="test" id="tabTest"></button>
     <button class="tab" data-tab="results" id="tabResults"></button>
-    <button class="tab" data-tab="levels" id="tabLevels">Levels</button>
-    <button class="tab" data-tab="player" id="tabPlayer">Player</button>
+    <button class="tab" data-tab="levels" id="tabLevels"></button>
+    <button class="tab" data-tab="player" id="tabPlayer"></button>
+    <button class="tab" data-tab="balance" id="tabBalance"></button>
     <button class="tab" data-tab="file" id="tabFile"></button>
   </div>
 
@@ -117,8 +131,6 @@ canvas{width:100%;height:auto}
       <h2 data-t="introTitle"></h2>
       <p style="font-size:.88em;color:var(--text-muted);margin-bottom:14px" data-t="introDesc"></p>
       <h3 data-t="introWhat"></h3>
-      <p style="font-size:.86em;color:var(--text-muted);margin-bottom:14px" data-t="introWhatDesc"></p>
-      <h3 data-t="introFlow"></h3>
       <div style="font-size:.86em;color:var(--text-muted);margin-bottom:14px" data-t="introFlowDesc"></div>
       <div class="explain explain-warn" data-t="introWarn"></div>
       <h3 style="margin-top:14px" data-t="introAudio"></h3>
@@ -130,15 +142,15 @@ canvas{width:100%;height:auto}
   <div id="panel-setup" class="panel">
     <div class="card">
       <h2 id="freqTitle"></h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:8px" id="freqHint"></p>
+      <div id="freqDeactHintEl" class="explain explain-warn" style="margin-bottom:12px"></div>
       <div class="controls-row">
         <div class="control-group"><label id="lblMfr"></label>
           <select id="mfrSelect"><option value="medel">MED-EL (12)</option><option value="ab">Advanced Bionics (16)</option><option value="cochlear">Cochlear (22)</option></select>
         </div>
       </div>
-      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:10px" id="freqHint"></p>
       <div style="overflow-x:auto"><table class="freq-table" id="freqTable"><thead><tr id="freqTH"></tr></thead><tbody id="freqTB"></tbody></table></div>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn" id="resetBtn"></button>
         <button class="btn" id="sweepBtn"></button>
         <button class="btn" id="stopBtn"></button>
         <label style="margin-left:12px;font-size:.85em;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -195,6 +207,9 @@ canvas{width:100%;height:auto}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span class="progress-label" id="progLbl"></span><span class="timer-display" id="timerD">0:00</span>
         </div>
+        <div style="display:flex;justify-content:center;margin-bottom:4px">
+          <button class="btn btn-sm" id="swapBtn" style="font-size:.85em;padding:3px 14px;min-height:28px;border-radius:4px">⇄ A↔B</button>
+        </div>
         <div class="pair-indicator">
           <span class="tone-a" id="tAL"><span class="aba-label">A (Ref)</span>E1</span>
           <span style="align-self:center;font-weight:400;font-size:.55em;color:var(--text-muted)">vs.</span>
@@ -230,6 +245,19 @@ canvas{width:100%;height:auto}
     </div>
   </div>
 
+  <!-- ===== BALANCE ===== -->
+  <div id="panel-balance" class="panel">
+    <div class="card">
+      <h2 data-t="balTitle"></h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:14px" data-t="balDesc"></p>
+      <div class="control-group" style="margin-bottom:14px">
+        <label data-t="balLabel"></label>
+        <input type="range" id="balBalance" min="-12" max="12" step="0.1" value="0" style="width:100%;margin-left:8px">
+      </div>
+      <div class="balance-value" id="balValue">0.0 dB</div>
+    </div>
+  </div>
+
   <!-- ===== RESULTS ===== -->
   <div id="panel-results" class="panel">
     <div class="card">
@@ -242,7 +270,6 @@ canvas{width:100%;height:auto}
           <p id="chartExpl" style="font-size:.82em;color:var(--text-muted);margin-top:10px;line-height:1.5"></p>
         </div>
         <div style="overflow-x:auto;margin-top:14px"><table class="results-table" id="resT"><thead><tr id="resTH"></tr></thead><tbody id="resTB"></tbody></table></div>
-        <div class="explain" id="resExplain"></div>
         <div style="margin-top:16px">
           <button class="btn" id="fClearBtn" style="color:var(--danger)">&#128465; <span data-t="fClear"></span></button>
         </div>
@@ -254,6 +281,7 @@ canvas{width:100%;height:auto}
             <div id="glossAnpassungEl"></div>
             <div id="glossFarbeEl"></div>
             <div id="glossRefEl"></div>
+            <div id="glossLSEl"></div>
           </div>
         </div>
       </div>
@@ -262,19 +290,6 @@ canvas{width:100%;height:auto}
 
   <!-- ===== LEVELS ===== -->
   <div id="panel-levels" class="panel">
-    <div class="card">
-      <h2 data-t="lvTitle"></h2>
-      <div class="explain" style="margin-bottom:14px" data-t="lvExpl"></div>
-      <div class="lv-grid" id="lvGrid"></div>
-      <div style="margin-top:10px">
-        <button class="btn btn-sm" id="lvResetBtn" data-t="lvReset"></button>
-      </div>
-    </div>
-    <div class="card">
-      <h2 data-t="lvPresetTitle"></h2>
-      <div class="explain" style="margin-bottom:10px" data-t="lvPresetDesc"></div>
-      <table class="pr-tbl" id="prTbl"></table>
-    </div>
     <div class="card">
       <h2 data-t="lvChartTitle"></h2>
       <div style="margin-bottom:8px;display:flex;gap:12px;flex-wrap:wrap;font-size:.84em">
@@ -285,6 +300,20 @@ canvas{width:100%;height:auto}
         <span style="font-weight:600">&#9644; <span data-t="lvChartSum"></span></span>
       </div>
       <div style="position:relative;width:100%;height:400px;background:var(--bg);border-radius:8px;overflow:hidden"><canvas id="lvChartCv" style="width:100%;height:100%;display:block"></canvas></div>
+    </div>
+    <div class="card">
+      <h2 data-t="lvPresetTitle"></h2>
+      <div class="explain" style="margin-bottom:10px" data-t="lvPresetDesc"></div>
+      <label style="font-size:.85em;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="prBothSides" checked> <span data-t="lvPresetBoth"></span></label>
+      <table class="pr-tbl" id="prTbl"></table>
+    </div>
+    <div class="card">
+      <h2 data-t="lvTitle"></h2>
+      <div class="explain" style="margin-bottom:14px" data-t="lvExpl"></div>
+      <div class="lv-grid" id="lvGrid"></div>
+      <div style="margin-top:10px">
+        <button class="btn btn-sm" id="lvResetBtn" data-t="lvReset"></button>
+      </div>
     </div>
   </div>
 
@@ -299,11 +328,18 @@ canvas{width:100%;height:auto}
         <div class="btn-group"><button class="btn btn-sm plStrBtn" data-v="25">25%</button><button class="btn btn-sm plStrBtn" data-v="50">50%</button><button class="btn btn-sm plStrBtn" data-v="75">75%</button><button class="btn btn-sm plStrBtn" data-v="100">100%</button><button class="btn btn-sm plStrBtn" data-v="150">150%</button><button class="btn btn-sm plStrBtn" data-v="200">200%</button><button class="btn btn-sm plStrBtn" data-v="300">300%</button></div>
       </div>
       <div class="controls-row" style="margin-top:8px">
-        <div class="control-group"><label data-t="plSrcLabel"></label>
-          <select id="plSrc" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.88em">
-            <option value="measured" data-t="plSrcMeas"></option>
-            <option value="levels" data-t="plSrcLevels"></option>
-            <option value="both" selected data-t="plSrcBoth"></option>
+        <div class="control-group" style="flex-wrap:wrap;gap:6px">
+          <label data-t="plSrcLabel" style="align-self:center"></label>
+          <button id="plSrcMeasBtn" class="btn btn-sm" style="min-width:120px" data-t="plSrcMeas"></button>
+          <button id="plSrcLevelsBtn" class="btn btn-sm" style="min-width:80px" data-t="plSrcLevels"></button>
+        </div>
+        <!-- hidden select for compatibility -->
+        <select id="plSrc" style="display:none"><option value="measured"></option><option value="levels"></option><option value="both" selected></option></select>
+        <div class="control-group"><label data-t="plSideLabel"></label>
+          <select id="plSide" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:.88em">
+            <option value="left">Links</option>
+            <option value="right">Rechts</option>
+            <option value="both">Beide</option>
           </select>
         </div>
         <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plNHSim"> <span data-t="plNHLabel"></span></label></div>
@@ -340,7 +376,6 @@ canvas{width:100%;height:auto}
       <h2 data-t="plEqTitle"></h2>
       <div style="position:relative;width:100%;height:400px;background:var(--bg);border-radius:8px;overflow:hidden"><canvas id="plEqCv" style="width:100%;height:100%;display:block"></canvas></div>
       <div style="margin-top:12px;overflow-x:auto"><table class="results-table" style="font-size:.78em"><thead><tr id="plEqH"></tr></thead><tbody><tr id="plEqLv"></tr><tr id="plEqGn"></tr></tbody></table></div>
-      <p class="explain explain-warn" data-t="plNotice"></p>
     </div>
   </div>
 
@@ -357,6 +392,7 @@ canvas{width:100%;height:auto}
       </div>
       <input type="file" id="fInput" accept=".json" class="hidden">
       <div class="explain" data-t="fExplain"></div>
+    <button class="btn" id="fResetBtn" style="color:var(--danger);margin-top:16px">🔄 <span data-t="fResetAll"></span></button>
     </div>
     <div class="card">
       <h2>EasyEffects Export</h2>
@@ -364,6 +400,15 @@ canvas{width:100%;height:auto}
       <div class="explain explain-warn" style="margin-bottom:10px" data-t="eePlayerHint"></div>
       <button class="btn" id="eeExportBtn">&#128190; <span data-t="eeExport"></span></button>
       <div class="explain" style="margin-top:10px" data-t="eeHowTo"></div>
+    </div>
+  </div>
+
+  <!-- ===== LOAD SIDE MODAL ===== -->
+  <div id="loadSideOverlay" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Alte Datei laden</h2>
+      <p style="color:var(--text-muted);margin-bottom:14px">Diese Datei ist im alten Format. Auf welche Seite sollen die Daten geladen werden?</p>
+      <div class="btn-group" style="justify-content:center"><button class="btn btn-large" id="loadSideLeft">Links</button><button class="btn btn-large" id="loadSideRight">Rechts</button><button class="btn" id="loadSideCanc" data-t="bCanc"></button></div>
     </div>
   </div>
 
@@ -382,21 +427,27 @@ canvas{width:100%;height:auto}
 // ============================================================
 const L={
 de:{
-subtitle:'CI Sound Balancing Tool · v2.2',
-tabIntro:'Einführung',tabFreq:'Frequenzen',tabResults:'Meßergebnisse',tabFile:'Laden/Speichern',
-introTitle:'CI Sound Balancing Tool',
-introDesc:'Dieses Tool hilft CI-Trägern, die wahrgenommene Lautstärke ihrer Elektroden systematisch zu vergleichen und eine individuelle Korrekturkurve zu erstellen.',
-introWhat:'Was kann ich damit tun?',
-introWhatDesc:'Sie vergleichen Elektrodenpaare miteinander und beurteilen, welcher Ton lauter klingt. Aus allen Vergleichen berechnet das Tool, welche Elektroden relativ zu laut oder zu leise sind. Diese Ergebnisse können Sie als Equalizer auf Musik oder Sprachaufnahmen anwenden, um den Unterschied direkt zu hören, oder als Grundlage für ein Gespräch mit Ihrem Audiologen ausdrucken. Zusätzlich können Sie Änderungen wie Sprachoptimierung oder Bassverstärkung testen. Die meisten Zahleneinträge können Sie anklicken und mit Pfeiltasten der Tastatur ändern.',
-introFlow:'Ablauf',
-introFlowDesc:'<b>1. Elektrodenfrequenzen</b> – Wählen Sie Ihren Hersteller. Falls bekannt, korrigieren Sie die Einträge für die Frequenzen pro Elektrode. Markieren Sie ggf. problematische Elektroden (verrauscht/fast stumm/deaktiviert).<br><b>2. Messen</b> – Starten Sie eine Testreihe. Das Tool spielt Tonpaare ab; Sie stellen ein, bis beide gleich laut klingen.<br><b>3. Levels</b> – Optional: Passen Sie einzelne Elektroden manuell an oder machen Sie Gesamteinstellungen (z.B. Sprachbetonung, Bassverstärkung).<br><b>4. Player</b> – Laden Sie eine Musikdatei und hören Sie den Unterschied mit und ohne Korrektur.',
-introWarn:'Deaktivieren Sie systemweite Audio-Equalizer (z.B. EasyEffects) während der Messung. Verwenden Sie ein CI-Programm ohne Sprachfilter, das ansonsten Ihrem Hauptprogramm entspricht. Die Meßtöne selbst werden nicht durch Einstellungen im Tool beeinflußt.',
+subtitle:'CI Sound Balancing Tool · v2.4',
+sideLeft:'LINKS',
+sideRight:'RECHTS',
+tabIntro:'Einführung',tabFreq:'Implantat',tabTest:'Messung',tabResults:'Meßergebnisse',tabFile:'Laden/Speichern',
+introTitle:'Sound Balancing Tool für Cochlea Implantat Träger',
+introDesc:'Dieses Tool hilft CI-Trägern, die wahrgenommene Lautstärke ihrer Elektroden systematisch zu vergleichen und eine individuelle Korrekturkurve zu erstellen. Ziel ist es, exakt gleiche Lautstärke aller Elektroden einzustellen – die grundlegende Basis für gutes Hören mit CI. Diese Einstellung ist optimal für Musik und Naturgeräusche. Anpassungen für Sprachverständnis oder Effekte wie Baßverstärkung sind ebenfalls möglich und können live getestet werden.',
+introWhat:'Wie ist der Ablauf?',
+introWhatDesc:'',
+introFlow:'',
+introFlowDesc:'<b>1. Seite</b> - Wählen Sie oben rechts die Seite aus, auf der Sie das CI tragen. Wenn Sie 2 CI tragen, führen Sie die Messung (Punkt 3) für beide aus.<br><b>2. Implantat</b> – Wählen Sie Ihren Hersteller. Falls bekannt, korrigieren Sie die Frequenzeinträge pro Elektrode. Standardwerte sind voreingestellt.<br><b>Wichtig:</b> Deaktivierte Elektroden müssen unter „Status“ markiert werden.<br><b>3. Messung</b> – Starten Sie eine Testreihe. Das Tool spielt Tonpaare ab; Sie stellen ein, bis beide gleich laut klingen.<br><b>4. Player</b> – Laden Sie eine Musikdatei und hören Sie den Unterschied mit und ohne Korrektur.<br><b>5. Levels</b> – Optional: Gesamteinstellungen wie Sprachbetonung oder Baßverstärkung, live hörbar im Player.',
+introWarn:'Verwenden Sie möglichst ein CI-Programm ohne Sprachfilter, das ansonsten Ihrem Hauptprogramm entspricht. Sprachfilter neigen dazu, Töne zu verfälschen. Verbinden Sie Ihr CI mit Bluetooth für möglichst klare Töne.',
 introAudio:'Für Ihren Audiologen',
+tabPlayer:'Player',tabBalance:'Stereo-Balance',
 introAudioDesc:'Die Ergebnisse können ausgedruckt werden. Der Ausdruck enthält die Meßergebnisse, Ihre gewünschten Korrekturen und die resultierenden Equalizer-Werte.',
-freqTitle:'Elektrodenfrequenzen & Status',lblMfr:'Hersteller:',
-freqHint:'Standardwerte nach bicial. Eigene FAT-Werte direkt eintragen. ▶ = Einzelton, ◼ = Dauerton.',
-thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Notiz',
-resetFreq:'Zurücksetzen',sweep:'▶ Sweep',stop:'■ Stopp',lblCorr:'Korrektur anwenden',
+freqTitle:'Hersteller, Elektrodenfrequenzen & Status',lblSide:'Seite:',lblMfr:'Hersteller:',
+freqHint:'Wählen Sie den Hersteller Ihres CI aus. Markieren Sie problematische Elektroden unter „Status“. Status „Deaktiviert“ = Elektrode im CI selbst abgeschaltet, wird automatisch ausgeschlossen. Standardwerte nach bicial; eigene FAT-Werte in „Hz eigene“ eintragen. ▶ = Einzelton, ◼ = Dauerton.',
+freqDeactHint:'<b>Wichtig – deaktivierte Elektroden:</b> Wenn in Ihrem CI Elektroden deaktiviert sind, verteilt das Implantat den Frequenzbereich auf die verbleibenden aktiven Elektroden. Die Mittenfrequenzen aller anderen Elektroden verschieben sich dadurch – die hier voreingestellten Standardwerte gelten dann nicht mehr.<br>Markieren Sie deaktivierte Elektroden unter „Status“ und tragen Sie die aktuellen Mittenfrequenzen aus Ihrer Anpassung ein. Ohne korrekte Frequenzen sind Messung und Player-Equalizer nicht aussagekräftig.',
+thEl:'El.',thHzStd:'Hz Standard',thHzOwn:'Hz eigene',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Notiz',thExclCb:'Ausschließen',
+stDeactivated:'Deaktiviert im CI',
+warnDeactivated:'Achtung: Frequenztabelle vermutlich nicht aktuell. Sie haben Elektrode(n) als deaktiviert markiert, die Frequenzwerte entsprechen aber den Standardwerten. Wenn Elektroden im CI deaktiviert sind, verteilen sich die Frequenzbänder auf die aktiven Elektroden um. Bitte aktuelle Mittenfrequenzen vom Audiologen erfragen und eintragen, sonst sind Messung und Equalizer nicht aussagekräftig.',
+resetFreq:'Zurücksetzen',sweep:'▶ Sweep',stop:'■ Stopp',lblCorr:'Korrektur anwenden',lblLevels:'Levels anwenden',
 toneTitle:'Tonparameter',lblVol:'Lautstärke:',lblDur:'Tondauer:',lblPau:'Pause:',
 testTitle:'Testeinstellungen',lblMode:'Modus:',optBal:'Ausgleichsmodus (dB-Offset)',optJdg:'Urteilsmodus (A/gleich/B)',
 lblRun:'Testverfahren:',optFull:'Vollständig (alle Paare)',optCF:'Konvergenz',optMan:'Manuell',
@@ -405,7 +456,7 @@ preCorrectLabel:'Feinjustierung mit vorkorrigierten Werten',
 runExplFull:'Alle möglichen Paare werden in zufälliger Reihenfolge verglichen. A und B werden pro Paar zufällig zugewiesen. Genauestes Verfahren, dauert am längsten. Empfohlen als erster Durchlauf.',
 runExplCF:'Die Paare mit den größten Abweichungen werden erneut getestet, plus einige Zufallspaare. Erfordert vorhandene Ergebnisse. Kann beliebig oft wiederholt werden.',
 runExplMan:'Zwei Elektroden frei wählen und vergleichen.',
-recommend:'Empfohlen: Erst „Vollständig" durchführen, dann „Konvergenz" – beliebig oft wiederholbar. Auch „Vollständig" kann wiederholt werden. Meßergebnisse bleiben immer erhalten, auch bei vorzeitigem Abbruch.',
+recommend:'Empfehlung: <br> - Erst Testverfahren „Vollständig" durchführen, dann „Konvergenz". Beides ist beliebig oft wiederholbar. <br> - Wenn die Einstellungen grundsätzlich stimmig sind, nach diesen beiden Testvarianten das Häkchen bei „Feinjustierung" setzen und „Konvergenz" erneut durchführen. <br> - Im Reiter Meßergebnisse kann die Qualität der Justierung anhand der Farben eingeschätzt werden. <br> - Meßergebnisse bleiben immer erhalten, auch bei vorzeitigem Abbruch.',
 startTest:'▶ Test starten',stopTest:'■ Test beenden',
 bBack:'Zurück',bReplay:'Nochmal',kSpace:'Leertaste',kEnter:'Enter',bExcl:'Ausschließen',
 bLoud:'lauter',bLoud2:'lauter',bEqual:'Gleich',
@@ -418,22 +469,22 @@ chartExplB:'Wahrgenommene Lautstärke relativ zur Referenz (0 dB). Positiv = lau
 chartExplJ:'Score = „lauter" minus „leiser". Hohe positive Werte = wird als zu laut empfunden.',
 thOff:'Offset (dB)',thMes:'Messungen',thRes:'∅ Residuum',thWgt:'Gewicht',thStR:'Status',thSc:'Score',thComp:'Vergl.',
 resExplain:'Residuum: Die mittlere Abweichung der Einzelmessungen einer Elektrode vom Gesamtergebnis. Hohe Werte = unsichere Messung, z.B. durch verrauschte Elektrode oder schwieriges Urteil. Least Squares: Mathematisches Verfahren, das aus allen Paarvergleichen gleichzeitig die bestmöglichen Offset-Werte berechnet. Einzelne Meßfehler haben wenig Einfluß, weil sie sich gegen viele andere Messungen behaupten müssen. Gewichtung: Starkes Rauschen (0.1), Rauschen mit etwas Ton (0.5), Ton mit Rauschen (0.9), fast stumm (0.1) fließen mit reduziertem Gewicht ein.',
-fClear:'Ergebnisse löschen',
-delConfirmMeas:'Meßergebnisse löschen?',
+fClear:'Meßergebnisse für eingestellte Seite löschen',
+delConfirmMeas:'Meßergebnisse löschen?',resetConfirm:'Wirklich alles zurücksetzen? Alle Einstellungen, Meßwerte und Notizen werden gelöscht.',resetDone:'Alles zurückgesetzt.',
 reliabilityTitle:'Einschätzung der Meßzuverlässigkeit',
 glossTitle:'Begriffserklärung',
 glossResiduum:'<b>Residuum</b>: Zeigt, wie widersprüchlich Ihre Urteile bei einer Elektrode waren. Kurze Fehlerbalken = konsistente Urteile, lange Fehlerbalken = die Einschätzungen haben geschwankt.',
 glossErrBar:'<b>Fehlerbalken</b> (die senkrechten Striche an den Balken): Zeigen die Größe des Residuums – je länger, desto unsicherer die Messung.',
 glossAnpassung:'<b>Anpassung</b>: Gibt an, um wie viel dB diese Elektrode lauter (+) oder leiser (−) eingestellt wird als die Referenzelektrode.',
 glossFarbe:'<b>Ampelfarben</b>: Grün = zuverlässig gemessen, Gelb = grenzwertig, Rot = unsichere Messung, Grau = noch keine Messung für diese Elektrode. Die Farbe zeigt die Meßqualität – nicht die Stärke der Änderung.',
-glossRef:'<b>Referenzelektrode</b>: Der Fixpunkt der Messung. Ihre Anpassung ist immer 0 dB. Alle anderen Elektroden werden relativ zu ihr bewertet.',
+glossRef:'<b>Referenzelektrode</b>: Der Fixpunkt der Messung. Ihre Anpassung ist immer 0 dB. Alle anderen Elektroden werden relativ zu ihr bewertet.',glossLS:'<b>Least Squares</b>: Mathematisches Verfahren, das aus allen Paarvergleichen gleichzeitig die bestmöglichen Offset-Werte berechnet. Einzelne Meßehler haben wenig Einfluß, weil sie sich gegen viele andere Messungen behaupten müssen. Im Reiter „Implantat“ als problematisch markierte Elektroden fließen mit reduziertem Gewicht ein.',
 preCorrHint:'Vorheriger Wert: {v} dB vom Schätzwert',
 apikal:'apikal',basal:'basal',
 stNoisyHeavy:'Starkes Rauschen',stNoisyMore:'Rauschen mit etwas Ton',stNoisyLess:'Ton mit Rauschen',stAlmMute:'fast stumm',stMute:'stumm',stExcl:'ausschließen',
 total:'Gesamt',prev:'vorher',excluded:'ausgeschl.',
 copyDone:'Kopiert.',delConfirmMeas:'Meßergebnisse löschen?',delConfirmAll:'Auch alle Einstellungen zurücksetzen?',manComp:'Manueller Vergleich',
 pairsRem:'Vergleiche verbleiben',exclDuring:'ausgeschlossen',
-plTitle:'Audioplayer mit Korrektur-Equalizer',plDesc:'Dieser Player simuliert, wie Musik klingen könnte, wenn die CI-Lautstärkekurve korrigiert würde. Er verändert das Signal vor der CI-Verarbeitung – nicht identisch mit einer MCL-Anpassung, aber ein Anhaltspunkt.',
+plTitle:'Audioplayer mit Korrektur-Equalizer',plDesc:'Dieser Player simuliert, wie Musik oder Sprache klingen könnte, wenn die CI-Lautstärkekurve korrigiert würde. Er verändert das Signal vor der CI-Verarbeitung – nicht identisch mit einer MCL-Anpassung, aber ein Anhaltspunkt.',
 plNoData:'Noch keine Meßdaten. Erst einen Test durchführen.',plFile:'Audiodatei (MP3, WAV, FLAC, OGG, M4A, MP4)',
 plEqOn:'Equalizer AN',plEqOff:'Equalizer AUS',
 plEqStr:'Equalizer-Stärke:',plEqTitle:'Equalizer-Kurve (angewandt)',
@@ -442,8 +493,9 @@ plNHLabel:'Simulation für Normalhörende',
 plNHExpl:'Veranschaulicht die Fehleinstellung, die ohne Korrektur vorliegt: die gemessenen Lautstärkeunterschiede werden auf das Originalsignal angewandt (nicht invertiert). Einschränkung: Dies zeigt nur die Lautstärkebalance, nicht die CI-typischen Artefakte.',
 plMapLabel:'MAPLAW-Simulation',
 plMapExpl:'Simuliert die MED-EL MAPLAW-Kompression (logarithmisch).',
+balTitle:'Stereo-Balance',balDesc:'Stellt die relative Lautstärke zwischen linker und rechter Korrektur ein. Funktioniert im Player bei Stereo-Audio.',balLabel:'Balance:',
 fileTitle:'Laden / Speichern',fileDesc:'Alle Einstellungen und Ergebnisse werden als JSON-Datei gespeichert: Hersteller, Frequenzen, Elektrodenstatus, Notizen, Referenzelektrode, Tonparameter, Paradigma und alle Meßergebnisse.',
-fLoad:'Laden',fSave:'Speichern',fPrint:'Ergebnisse drucken',fCopy:'Tabelle kopieren',
+fLoad:'Laden',fSave:'Speichern',fPrint:'Ergebnisse drucken',fCopy:'Tabelle kopieren',fResetAll:'Alles zurücksetzen',
 fExplain:'Die Einstellungen im Player werden beim Ausdruck berücksichtigt. Der Ausdruck gibt das wieder, was Sie im Player hören und als Equalizer-Kurve sehen.',
 eeDesc:'Exportiert die Korrekturkurve als EasyEffects-Preset für PipeWire/PulseAudio.',
 eeExport:'EasyEffects-Preset exportieren',
@@ -462,30 +514,37 @@ lvPrExplBass:'Tiefe Frequenzen anheben (positiv) oder absenken (negativ). Grenzp
 lvPrExplHigh:'Hohe Frequenzen anheben (positiv) oder absenken (negativ). Grenzpunkt bestimmt, ab welcher Elektrode der Effekt wirkt.',
 lvPrExplSpeech:'Gewichtung nach Sprachverständlichkeit (ANSI S3.5 Band Importance Function). Positive Werte heben sprachrelevante Frequenzen (ca. 800–4000 Hz) an, negative senken sie ab.',
 lvPresetTitle:'Presets',
-lvPresetDesc:'Vordefinierte Kurvenformen, die zu den manuellen Werten addiert werden. Tilt und Pivot entsprechen den gleichnamigen MAESTRO-Werkzeugen. Das Sprache-Preset gewichtet Frequenzen nach ihrer Bedeutung für die Sprachverständlichkeit (ANSI S3.5). Tastatur: ←→ ±0.5 dB, Shift ±0.1 dB.',
+lvPresetBoth:'Veränderung auf beide Seiten anwenden',
+lvPresetDesc:'Vordefinierte Kurvenformen. Tilt und Pivot entsprechen den gleichnamigen MAESTRO-Werkzeugen. Das Sprache-Preset gewichtet Frequenzen nach ihrer Bedeutung für die Sprachverständlichkeit (ANSI S3.5). Tastatur: ↑↓ justiert Werte im Eingabefeld.',
 lvChartTitle:'Übersicht',lvChartMan:'Manuell',lvChartSum:'Summe',
 lvPrCenter:'Mitte:',lvPrWidth:'Breite:',lvPrCutoff:'Grenzpunkt:',
-plSrcLabel:'Equalizer-Quelle:',plSrcMeas:'Gemessen',plSrcLevels:'Levels',plSrcBoth:'Beide (addiert)',
+plSrcLabel:'Equalizer-Quelle:',plSideLabel:'Seite:',plSrcMeas:'Gemessen',plSrcLevels:'Levels',plSrcBoth:'Beide (addiert)',
 plFileTitle:'Audiodatei',
 printPlayerTitle:'Player-Einstellungen',
 printPreCorrect:'Feinjustierung mit Vorkorrektur: aktiv',
 },
 en:{
-subtitle:'CI Sound Balancing Tool · v2.1',
-tabIntro:'Introduction',tabFreq:'Frequencies',tabResults:'Results',tabFile:'Load/Save',
-introTitle:'CI Sound Balancing Tool',
-introDesc:'This tool helps CI users systematically compare the perceived loudness of their electrodes and create an individual correction curve.',
-introWhat:'What can I do with this?',
-introWhatDesc:'You compare electrode pairs and judge which tone sounds louder. From all comparisons, the tool calculates which electrodes are relatively too loud or too quiet. You can apply these results as an equalizer to music or speech recordings to hear the difference directly, or print them as a basis for discussion with your audiologist. Additionally, you can test changes such as speech optimization or bass boost. Most number entries can be clicked and changed with keyboard arrow keys.',
-introFlow:'Workflow',
-introFlowDesc:'<b>1. Electrode frequencies</b> – Choose your manufacturer. If known, correct the frequency entries per electrode. Mark problematic electrodes (noisy/almost mute/deactivated) if applicable.<br><b>2. Measure</b> – Start a test run. The tool plays tone pairs; you adjust until both sound equally loud.<br><b>3. Levels</b> – Optional: Adjust individual electrodes manually or make overall settings (e.g. speech emphasis, bass boost).<br><b>4. Player</b> – Load a music file and hear the difference with and without correction.',
-introWarn:'Disable system-wide audio equalizers (e.g. EasyEffects) during measurement. Use a CI program without speech filters that otherwise matches your main program. The test tones themselves are not affected by settings in the tool.',
+subtitle:'CI Sound Balancing Tool · v2.4',
+sideLeft:'LEFT',
+sideRight:'RIGHT',
+tabIntro:'Introduction',tabFreq:'Implant',tabTest:'Measurement',tabResults:'Results',tabFile:'Load/Save',
+introTitle:'Sound Balancing Tool for Cochlear Implant Users',
+introDesc:'This tool helps CI users systematically compare the perceived loudness of their electrodes and create an individual correction curve. The goal is to set exactly equal loudness across all electrodes – the fundamental basis for good hearing with CI. This setting is optimal for music and natural sounds. Adjustments for speech intelligibility or effects such as bass boost are also possible and can be tested live.',
+introWhat:'What is the workflow?',
+introWhatDesc:'',
+introFlow:'',
+introFlowDesc:'<b>1. Side</b> – Select the side on which you wear your CI in the top right corner. If you wear two CIs, perform the measurement (Step 3) for both.<br><b>2. Implant</b> – Select your manufacturer. If known, adjust the frequency values listed for each electrode; standard values are pre-configured by default.<br><b>Important:</b> Deactivated electrodes must be marked under “Status”.<br><b>3. Measurement</b> – Start a test sequence. The tool plays pairs of tones; adjust the settings until both tones sound equally loud. Recommendation: Set the volume to a level that borders on being uncomfortable.<br><b>4. Player</b> – Load a music file and listen to the difference with and without the correction applied.<br><b>5. Levels</b> – Optional: Apply global settings (e.g., speech emphasis, bass boosting) and listen to the difference live in the player simultaneously.',
+introWarn:'Use a CI program without speech filters that otherwise matches your main program. Speech filters tend to distort tones. Connect your CI via Bluetooth for the clearest possible sound..',
 introAudio:'For your audiologist',
-introAudioDesc:'Results can be printed. The printout contains the measurement results, your desired corrections, and the resulting equalizer values.',
-freqTitle:'Electrode frequencies & status',lblMfr:'Manufacturer:',
-freqHint:'Default values from bicial. Enter your own FAT values. ▶ = single tone, ◼ = sustained tone.',
-thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Note',
-resetFreq:'Reset',sweep:'▶ Sweep',stop:'■ Stop',lblCorr:'Apply correction',
+tabPlayer:'Player',tabBalance:'Stereo-Balance',
+introAudioDesc:'The results can be printed out. The printout includes the measurement results, your requested corrections, and the resulting equalizer values. This allows your audiologist to see exactly where adjustments are needed.<br>Project Homepage: <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
+freqTitle:'Manufacturer, electrode frequencies & status',lblSide:'Side:',lblMfr:'Manufacturer:',
+freqHint:'Select your CI manufacturer. Mark problematic electrodes under "Status". Status "Deactivated" = electrode switched off in the CI itself, will be automatically excluded. Default Hz values from bicial; enter your own FAT values in "Hz custom". ▶ = single tone, ◼ = sustained tone.',
+freqDeactHint:'<b>Important – deactivated electrodes:</b> When electrodes in your CI are deactivated, the implant redistributes the frequency range across the remaining active electrodes. The centre frequencies of all other electrodes shift as a result – the pre-set default values no longer apply.<br>Mark deactivated electrodes under “Status” and enter the current centre frequencies from your fitting. Without correct frequencies, measurements and the player equalizer will not be meaningful.',
+thEl:'El.',thHzStd:'Hz default',thHzOwn:'Hz custom',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Note',thExclCb:'Exclude',
+stDeactivated:'Deactivated in CI',
+warnDeactivated:'Warning: Frequency table may not be current. You have marked electrode(s) as deactivated, but the frequency values still reflect the default values. When electrodes in the CI are deactivated, the frequency bands are redistributed across the active electrodes. Please ask your audiologist for the current centre frequencies and enter them here – otherwise measurements and the equalizer will not be meaningful.',
+resetFreq:'Reset',sweep:'▶ Sweep',stop:'■ Stop',lblCorr:'Apply correction',lblLevels:'Apply levels',
 toneTitle:'Tone parameters',lblVol:'Volume:',lblDur:'Duration:',lblPau:'Pause:',
 testTitle:'Test settings',lblMode:'Mode:',optBal:'Balance mode (dB offset)',optJdg:'Judgment mode (A/equal/B)',
 lblRun:'Test method:',optFull:'Complete (all pairs)',optCF:'Convergence',optMan:'Manual',
@@ -494,7 +553,7 @@ preCorrectLabel:'Fine-tuning with pre-corrected values',
 runExplFull:'All possible pairs compared in random order. A and B randomly assigned per pair. Most accurate method, takes longest. Recommended as first run.',
 runExplCF:'Pairs with the largest deviations are re-tested, plus some random pairs. Requires existing results. Can be repeated as often as desired.',
 runExplMan:'Freely choose two electrodes and compare them.',
-recommend:'Recommended: Start with "Complete", then repeat "Convergence" as often as desired. "Complete" can also be repeated. Results are always preserved, even if you stop a test early.',
+recommend:'Recommendation: <br> - First, perform the "Complete" test procedure, then "Convergence." Both can be repeated as often as desired. <br> - If the settings appear fundamentally sound, check the "Fine-tuning" box after running these two test variants, and then run "Convergence" again. <br> - On the "Measurement Results" tab, the quality of the adjustment can be assessed based on the colors. <br> - Measurement results are always retained, even if the process is interrupted prematurely.',
 startTest:'▶ Start test',stopTest:'■ End test',
 bBack:'Back',bReplay:'Replay',kSpace:'Space',kEnter:'Enter',bExcl:'Exclude',bLoud:'louder',bLoud2:'louder',bEqual:'Equal',
 slHint:'Adjust middle tone (B). ◀▶ ±0.5 dB · Shift+◀▶ ±0.1 dB',
@@ -504,29 +563,30 @@ comp:'Comparison',of:'of',round:'Round',
 chartExplB:'Perceived loudness relative to reference (0 dB). Positive = louder, negative = quieter. Error bars = mean residual. Weighted least squares.',
 chartExplJ:'Score = "louder" minus "quieter" judgments.',
 thOff:'Offset (dB)',thMes:'Measurements',thRes:'∅ Residual',thWgt:'Weight',thStR:'Status',thSc:'Score',thComp:'Comp.',
-resExplain:'Residual: mean deviation of individual measurements from the overall result. High values = uncertain measurement. Least Squares: mathematical method that calculates the best offset values from all pair comparisons simultaneously. Weighting: heavy noise (0.1), noise with some tone (0.5), tone with noise (0.9), almost mute (0.1) contribute with reduced weight.',
+resExplain:'',
 fClear:'Delete results',
-delConfirmMeas:'Delete measurement results?',
+delConfirmMeas:'Delete measurement results?',resetConfirm:'Really reset everything? All settings, measurement results, and notes will be deleted.',resetDone:'Everything reset.',
 reliabilityTitle:'Measurement Reliability Assessment',
 glossTitle:'Glossary',
 glossResiduum:'<b>Residual</b>: Shows how inconsistent your judgments were for an electrode. Short error bars = consistent judgments, long error bars = judgments varied.',
 glossErrBar:'<b>Error bars</b> (the vertical lines on the bars): Show the size of the residual – the longer, the more uncertain the measurement.',
 glossAnpassung:'<b>Adjustment</b>: How many dB louder (+) or quieter (−) this electrode is set compared to the reference electrode.',
 glossFarbe:'<b>Traffic light colors</b>: Green = reliably measured, Yellow = borderline, Red = uncertain measurement, Grey = no measurements yet for this electrode. The color shows measurement quality – not the size of the adjustment.',
-glossRef:'<b>Reference electrode</b>: The fixed point of the measurement. Its adjustment is always 0 dB. All other electrodes are evaluated relative to it.',
+glossRef:'<b>Reference electrode</b>: The fixed point of the measurement. Its adjustment is always 0 dB. All other electrodes are evaluated relative to it.',glossLS:'<b>Least Squares</b>: Mathematical method that calculates the best offset values from all pair comparisons simultaneously. Individual measurement errors have little influence because they must compete against many other measurements. Electrodes marked as problematic in the "Implant" tab contribute with reduced weight.',
 preCorrHint:'Previous value: {v} dB from estimate',
 apikal:'apical',basal:'basal',
 stNoisyHeavy:'Heavy noise',stNoisyMore:'Noise with some tone',stNoisyLess:'Tone with noise',stAlmMute:'almost mute',stMute:'mute',stExcl:'exclude',
 total:'Total',prev:'previous',excluded:'excluded',copyDone:'Copied.',delConfirmMeas:'Delete measurement results?',delConfirmAll:'Also reset all settings?',manComp:'Manual comparison',pairsRem:'pairs remaining',exclDuring:'excluded',
-plTitle:'Audio player with correction equalizer',plDesc:'This player simulates corrected sound. It modifies the signal before CI processing – not identical to MCL adjustment, but an indication.',
+plTitle:'Audio player with correction equalizer',plDesc:'This player simulates how music or speech might sound if the CI loudness curve were corrected. It modifies the signal before CI processing – not identical to MCL adjustment, but an indication.',
 plNoData:'No measurement data yet. Run a test first.',plFile:'Audio file (MP3, WAV, FLAC, OGG, M4A, MP4)',
 plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',
 plEqStr:'Equalizer strength:',plEqTitle:'Equalizer curve (applied)',
 plNotice:'The equalizer corrects the audio signal before CI processing. Not identical to MCL adjustment but an indication.',
 plNHLabel:'Normal hearing simulation',plNHExpl:'Illustrates the distortion present without correction: measured loudness differences are applied (not inverted).',
 plMapLabel:'MAPLAW simulation',plMapExpl:'Simulates MED-EL MAPLAW compression.',
+balTitle:'Stereo balance',balDesc:'Adjust the relative loudness between left and right correction. Works in the player with stereo audio.',balLabel:'Balance:',
 fileTitle:'Load / Save',fileDesc:'All settings and results saved as JSON.',
-fLoad:'Load results',fSave:'Save results',fPrint:'Print results',fCopy:'Copy table',
+fLoad:'Load results',fSave:'Save results',fPrint:'Print results',fCopy:'Copy table',fResetAll:'Reset everything',
 fExplain:'Player settings are included in the printout. The printout reflects what you hear in the player and see as equalizer curve.',
 eeDesc:'Exports the correction curve as EasyEffects preset for PipeWire/PulseAudio.',
 eeExport:'Export EasyEffects preset',
@@ -540,7 +600,8 @@ lvPrExplTilt:'Linear slope from apical to basal. Positive values emphasize highs
 lvPrExplPivot:'Emphasize center, reduce edges (positive) or vice versa (negative). Corresponds to the MAESTRO Pivot tool.',
 lvPrExplScurve:'Like Tilt but with a softer transition in the center.',lvPrExplGauss:'Bell curve around a chosen electrode. Width determines how many neighboring electrodes are affected.',lvPrExplBass:'Boost low frequencies (positive) or cut them (negative). Cutoff sets which electrode the effect reaches.',lvPrExplHigh:'Boost high frequencies (positive) or cut them (negative). Cutoff sets where the effect starts.',lvPrExplSpeech:'Weighting by speech intelligibility (ANSI S3.5 Band Importance Function). Positive values boost speech-relevant frequencies (approx. 800–4000 Hz), negative values reduce them.',
 lvPresetTitle:'Presets',
-lvPresetDesc:'Predefined curve shapes added to manual values. Tilt and Pivot correspond to the MAESTRO tools of the same name. The Speech preset weights frequencies by their importance for speech intelligibility (ANSI S3.5). Keyboard: ←→ ±0.5 dB, Shift ±0.1 dB.',
+lvPresetBoth:'Apply changes to both sides',
+lvPresetDesc:'Predefined curve shapes. Tilt and Pivot correspond to the MAESTRO tools of the same name. The Speech preset weights frequencies by their importance for speech intelligibility (ANSI S3.5). Keyboard: ↑↓ adjusts values in the input field.',
 lvChartTitle:'Overview',lvChartMan:'Manual',lvChartSum:'Sum',
 lvPrCenter:'Center:',lvPrWidth:'Width:',lvPrCutoff:'Cutoff:',
 plSrcLabel:'Equalizer source:',plSrcMeas:'Measured',plSrcLevels:'Levels',plSrcBoth:'Both (summed)',
@@ -548,44 +609,72 @@ plFileTitle:'Audio file',
 printPlayerTitle:'Player settings',
 printPreCorrect:'Fine-tuning with pre-correction: active',
 },
-fr:{subtitle:'CI Sound Balancing Tool · v2.1',tabIntro:'Introduction',tabFreq:'Fréquences',tabResults:'Résultats',tabFile:'Charger/Sauver',
-introTitle:'CI Sound Balancing Tool',introDesc:'Cet outil aide les porteurs d\'IC à comparer systématiquement le volume perçu de leurs électrodes et à créer une courbe de correction individuelle.',introWhat:'Que puis-je faire?',introWhatDesc:'Vous comparez des paires d\'électrodes et jugez quel ton semble le plus fort. L\'outil calcule quelles électrodes sont relativement trop fortes ou trop faibles. Les résultats peuvent être imprimés pour votre audiologiste.',introFlow:'Procédure',introFlowDesc:'<b>1. Fréquences</b> – Choisissez votre fabricant.<br><b>2. Mesurer</b> – Lancez une série de tests.<br><b>3. Levels</b> – Ajustements manuels optionnels.<br><b>4. Lecteur</b> – Écoutez la différence.',introWarn:'Désactivez les égaliseurs audio système pendant la mesure.',introAudio:'Pour votre audiologiste',introAudioDesc:'Les résultats peuvent être imprimés avec les corrections souhaitées.',
-freqTitle:'Fréquences & statut',lblMfr:'Fabricant:',freqHint:'Valeurs de bicial. ▶ = son, ◼ = son continu.',thEl:'Él.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optCF:'Convergence',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires comparées aléatoirement. Recommandé comme premier passage.',runExplCF:'Re-test des paires les plus incertaines. Répétable à volonté.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: D\'abord «Complet», puis «Convergence» – répétable à volonté. Les résultats sont toujours conservés.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',kEnter:'Entrée',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'Résidu: écart moyen des mesures individuelles. Least Squares: calcul optimal. Pondération: bruit fort (0,1), bruit avec ton (0,5), ton avec bruit (0,9), presque muet (0,1).',apikal:'apical',basal:'basal',stNoisyHeavy:'Bruit fort',stNoisyMore:'Bruit avec ton',stNoisyLess:'Ton avec bruit',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',fClear:'Supprimer résultats',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Simule le son corrigé.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetDesc:'Courbes prédéfinies. Tilt/Pivot = outils MAESTRO. Clavier: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Aperçu',lvChartMan:'Manuel',lvChartSum:'Somme',plSrcLabel:'Source Equalizer:',plSrcMeas:'Mesuré',plSrcLevels:'Levels',plSrcBoth:'Les deux',printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif',reliabilityTitle:'Fiabilité des mesures',glossTitle:'Glossaire',glossResiduum:'<b>Résidu</b>: Indique l\'incohérence de vos jugements pour une électrode. Barres courtes = jugements cohérents, barres longues = jugements variables.',glossErrBar:'<b>Barres d\'erreur</b> (traits verticaux sur les barres): Indiquent la taille du résidu.',glossAnpassung:'<b>Correction</b>: De combien de dB cette électrode est réglée plus fort (+) ou moins fort (−) que la référence.',glossFarbe:'<b>Couleurs</b>: Vert = fiable, Jaune = limite, Rouge = incertain, Gris = pas encore mesuré. La couleur indique la qualité de mesure, pas l\'amplitude de la correction.',glossRef:'<b>Électrode de référence</b>: Le point fixe de la mesure. Sa correction est toujours 0 dB.',preCorrHint:'Valeur précédente: {v} dB de l\'estimation'},
-es:{subtitle:'CI Sound Balancing Tool · v2.1',tabIntro:'Introducción',tabFreq:'Frecuencias',tabResults:'Resultados',tabFile:'Cargar/Guardar',
-introTitle:'CI Sound Balancing Tool',introDesc:'Esta herramienta ayuda a los usuarios de IC a comparar sistemáticamente el volumen percibido de sus electrodos y crear una curva de corrección individual.',introWhat:'¿Qué puedo hacer?',introWhatDesc:'Compare pares de electrodos y juzgue cuál suena más fuerte. La herramienta calcula qué electrodos son relativamente demasiado fuertes o débiles. Los resultados se pueden imprimir para su audiólogo.',introFlow:'Procedimiento',introFlowDesc:'<b>1. Frecuencias</b> – Elija su fabricante.<br><b>2. Medir</b> – Inicie una serie de pruebas.<br><b>3. Levels</b> – Ajustes manuales opcionales.<br><b>4. Reproductor</b> – Escuche la diferencia.',introWarn:'Desactive ecualizadores de audio del sistema durante la medición.',introAudio:'Para su audiólogo',introAudioDesc:'Los resultados se pueden imprimir con las correcciones deseadas.',
-freqTitle:'Frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Valores de bicial. ▶ = tono, ◼ = tono continuo.',thEl:'El.',thHz:'Hz',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optCF:'Convergencia',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares comparados aleatoriamente. Recomendado como primera pasada.',runExplCF:'Re-test de los pares más inciertos. Repetible a voluntad.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: Primero «Completo», luego «Convergencia» – repetible a voluntad. Los resultados siempre se conservan.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',kEnter:'Intro',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'Residuo: desviación media. Least Squares: cálculo óptimo. Ponderación: ruido fuerte (0,1), ruido con tono (0,5), tono con ruido (0,9), casi mudo (0,1).',apikal:'apical',basal:'basal',stNoisyHeavy:'Ruido fuerte',stNoisyMore:'Ruido con tono',stNoisyLess:'Tono con ruido',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',fClear:'Eliminar resultados',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Simula sonido corregido.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetDesc:'Curvas predefinidas. Tilt/Pivot = herramientas MAESTRO. Teclado: ←→ ±0,5 dB, Shift ±0,1 dB.',lvChartTitle:'Resumen',lvChartMan:'Manual',lvChartSum:'Suma',plSrcLabel:'Fuente Equalizer:',plSrcMeas:'Medido',plSrcLevels:'Levels',plSrcBoth:'Ambos',printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo',reliabilityTitle:'Fiabilidad de las mediciones',glossTitle:'Glosario',glossResiduum:'<b>Residuo</b>: Indica la inconsistencia de sus juicios para un electrodo. Barras cortas = juicios coherentes, barras largas = juicios variables.',glossErrBar:'<b>Barras de error</b> (líneas verticales en las barras): Muestran el tamaño del residuo.',glossAnpassung:'<b>Ajuste</b>: Cuántos dB más fuerte (+) o más suave (−) se configura este electrodo respecto a la referencia.',glossFarbe:'<b>Colores semáforo</b>: Verde = fiable, Amarillo = límite, Rojo = incierto, Gris = sin medición. El color indica la calidad de medición, no la magnitud del ajuste.',glossRef:'<b>Electrodo de referencia</b>: El punto fijo de la medición. Su ajuste es siempre 0 dB.',preCorrHint:'Valor anterior: {v} dB de la estimación'}
+fr:{subtitle:'CI Sound Balancing Tool · v2.4',sideLeft:'LEFT',
+sideRight:'RIGHT',
+sideLeft:'GAUCHE',
+sideRight:'DROITE',
+tabIntro:'Introduction',tabFreq:'Implant',tabTest:'Mesure',tabResults:'Résultats',tabFile:'Charger/Sauver',
+introTitle:'CI Sound Balancing Tool',introDesc:'Cet outil aide les porteurs d\'IC à comparer systématiquement le volume perçu de leurs électrodes et à créer une courbe de correction individuelle. L\'objectif est d\'obtenir un volume exactement égal pour toutes les électrodes – la base fondamentale d\'une bonne audition avec IC. Ce réglage est optimal pour la musique et les sons naturels. Des ajustements pour la compréhension de la parole ou des effets comme le renforcement des basses sont également possibles.',introWhat:'Quel est le déroulement?',introWhatDesc:'',introFlow:'',introFlowDesc:'<b>1. Côté</b> – Sélectionnez, dans le coin supérieur droit, le côté sur lequel vous portez votre implant cochléaire. Si vous portez deux implants, effectuez la mesure (Étape 3) pour chacun d\'eux.<br><b>2. Implant</b> – Sélectionnez le fabricant de votre implant cochléaire. Si vous les connaissez, ajustez les valeurs de fréquence indiquées pour chaque électrode ; des valeurs standard sont préconfigurées par défaut.<br><b>Important :</b> Les électrodes désactivées doivent être marquées sous «Statut».<br><b>3. Mesure</b> – Lancez une séquence de test. L\'outil diffuse des paires de sons ; ajustez les réglages jusqu\'à ce que les deux sons vous semblent avoir exactement le même volume. Recommandation : réglez le volume à un niveau frisant l\'inconfort.<br><b>4. Lecteur</b> – Chargez un fichier musical et écoutez la différence, avec et sans l\'application de la correction.<br><b>5. Niveaux</b> – Facultatif : Appliquez des réglages globaux (par ex. accentuation de la parole, renforcement des basses) et écoutez simultanément la différence en direct dans le lecteur.',introWarn:'Si possible, utilisez un programme d\'implant cochléaire sans filtre vocal qui corresponde par ailleurs à votre programme principal. Les filtres vocaux ont tendance à déformer les sons. Connectez votre implant cochléaire via Bluetooth pour obtenir le son le plus clair possible.',introAudio:'Pour votre audiologiste',tabPlayer:'Player',tabBalance:'Stereo-Balance',introAudioDesc:'Les résultats peuvent être imprimés. Le document contient les résultats de mesure, vos corrections souhaitées et les valeurs égaliseur. Cela permet à votre audiologiste de voir directement où un ajustement est nécessaire.<br>Page d\'accueil du projet : <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
+freqTitle:'Fabricant, fréquences & statut',lblMfr:'Fabricant:',freqHint:'Sélectionnez le fabricant de votre IC. Marquez les électrodes problématiques sous «Statut». Statut «Désactivé» = électrode éteinte dans l’IC lui-même, sera automatiquement exclue. Valeurs Hz par défaut selon bicial; entrez vos propres valeurs FAT dans «Hz propres». ▶ = son, ◼ = son continu.',
+freqDeactHint:'<b>Important – électrodes désactivées :</b> Lorsque des électrodes de votre IC sont désactivées, l’implant redistribue la plage de fréquences sur les électrodes actives restantes. Les fréquences centrales de toutes les autres électrodes se déplacent en conséquence – les valeurs standard préconfigurées ne s’appliquent alors plus.<br>Marquez les électrodes désactivées sous «Statut» et saisissez les fréquences centrales actuelles de votre réglage. Sans fréquences correctes, les mesures et l’égaliseur du lecteur ne seront pas significatifs.',thEl:'Él.',thHzStd:'Hz standard',thHzOwn:'Hz propres',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',thExclCb:'Exclure',
+stDeactivated:'Désactivé dans IC',
+warnDeactivated:'Attention : tableau de fréquences probablement pas à jour. Vous avez marqué des électrode(s) comme désactivées, mais les valeurs de fréquence correspondent encore aux valeurs standard. Lorsque des électrodes sont désactivées dans l’IC, les bandes de fréquence se redistribuent sur les électrodes actives. Veuillez demander à votre audiologiste les fréquences centrales actuelles et les saisir ici – sinon les mesures et l’égaliseur ne seront pas significatifs.',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',lblLevels:'Appliquer les niveaux',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optCF:'Convergence',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires comparées aléatoirement. Recommandé comme premier passage.',runExplCF:'Re-test des paires les plus incertaines. Répétable à volonté.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: D\'abord «Complet», puis «Convergence». Si les réglages sont fondamentalement corrects, cochez «Ajustement fin» et répétez «Convergence». Dans l\'onglet Résultats, évaluez la qualité par les couleurs. Toutes les mesures peuvent être répétées à volonté et améliorent le résultat. Les résultats sont toujours conservés.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',kEnter:'Entrée',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Bruit fort',stNoisyMore:'Bruit avec ton',stNoisyLess:'Ton avec bruit',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',fClear:'Supprimer résultats',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Ce lecteur simule comment la musique ou la parole pourrait sonner si la courbe de volume IC était corrigée.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetBoth:'Appliquer les changements aux deux côtés',
+lvPresetDesc:'Courbes prédéfinies. Tilt/Pivot = outils MAESTRO. Le préréglage Parole pondère les fréquences selon leur importance pour la compréhension de la parole (ANSI S3.5). Clavier: ↑↓ ajuste les valeurs dans le champ de saisie.',lvChartTitle:'Aperçu',lvChartMan:'Manuel',lvChartSum:'Somme',plSrcLabel:'Source Equalizer:',plSrcMeas:'Mesuré',plSrcLevels:'Levels',plSrcBoth:'Les deux',printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif',reliabilityTitle:'Fiabilité des mesures',glossTitle:'Glossaire',glossResiduum:'<b>Résidu</b>: Indique l\'incohérence de vos jugements pour une électrode. Barres courtes = jugements cohérents, barres longues = jugements variables.',glossErrBar:'<b>Barres d\'erreur</b> (traits verticaux sur les barres): Indiquent la taille du résidu.',glossAnpassung:'<b>Correction</b>: De combien de dB cette électrode est réglée plus fort (+) ou moins fort (−) que la référence.',glossFarbe:'<b>Couleurs</b>: Vert = fiable, Jaune = limite, Rouge = incertain, Gris = pas encore mesuré. La couleur indique la qualité de mesure, pas l\'amplitude de la correction.',glossRef:'<b>Électrode de référence</b>: Le point fixe de la mesure. Sa correction est toujours 0 dB.',glossLS:'<b>Least Squares</b>: Méthode mathématique qui calcule simultanément les meilleures valeurs d\'offset à partir de toutes les comparaisons de paires. Les erreurs de mesure individuelles ont peu d\'influence. Les électrodes marquées comme problématiques dans l\'onglet «Implantat» contribuent avec un poids réduit.',preCorrHint:'Valeur précédente: {v} dB de l\'estimation'},
+es:{subtitle:'CI Sound Balancing Tool · v2.4',sideLeft:'IZQUIERDA',
+sideRight:'DERECHA',
+tabIntro:'Introducción',tabFreq:'Implante',tabTest:'Medición',tabResults:'Resultados',tabFile:'Cargar/Guardar',
+introTitle:'CI Sound Balancing Tool',introDesc:'Esta herramienta ayuda a los usuarios de IC a comparar sistemáticamente el volumen percibido de sus electrodos y crear una curva de corrección individual. El objetivo es ajustar exactamente el mismo volumen en todos los electrodos – la base fundamental para una buena audición con IC. Este ajuste es óptimo para música y sonidos naturales. Los ajustes para la comprensión del habla o efectos como el realce de graves también son posibles.',introWhat:'¿Cuál es el procedimiento?',introWhatDesc:'',introFlow:'',introFlowDesc:'<b>1. Lado</b> – Seleccione, en la esquina superior derecha, el lado en el que lleva su IC. Si utiliza dos IC, realice la medición (Paso 3) para ambos.<br><b>2. Implante</b> – Seleccione su fabricante. Si conoce los datos específicos, ajuste los valores de frecuencia listados para cada electrodo; los valores estándar vienen preconfigurados por defecto.<br><b>Importante:</b> Los electrodos desactivados deben marcarse en «Estado».<br><b>3. Medición</b> – Inicie una secuencia de prueba. La herramienta reproduce pares de tonos; ajuste la configuración hasta que ambos tonos suenen con la misma intensidad. Recomendación: Ajuste el volumen a un nivel que roce lo incómodo.<br><b>4. Reproductor</b> – Cargue un archivo de música y escuche la diferencia con y sin la corrección aplicada.<br><b>5. Niveles</b> – Opcional: Aplique ajustes globales (p. ej., énfasis en el habla, refuerzo de graves) y escuche la diferencia en directo en el reproductor de forma simultánea.',introWarn:'Si es posible, utilice un programa de su implante coclear sin filtro de voz que, por lo demás, corresponda a su programa principal. Los filtros de voz tienden a distorsionar los sonidos. Conecte su implante coclear mediante Bluetooth para obtener el sonido más nítido posible.',introAudio:'Para su audiólogo',tabPlayer:'Player',tabBalance:'Balance Estéreo',introAudioDesc:'Los resultados se pueden imprimir. El documento contiene los resultados de medición, sus correcciones deseadas y los valores de ecualizador resultantes. Esto permite al audiólogo ver exactamente dónde son necesarios los ajustes.<br>Página web del proyecto: <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
+freqTitle:'Fabricante, frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Seleccione el fabricante de su IC. Marque los electrodos problemáticos en «Estado». Estado «Desactivado» = electrodo apagado en el propio IC, será excluido automáticamente. Valores Hz por defecto según bicial; introduzca valores FAT propios en «Hz propios». ▶ = tono, ◼ = tono continuo.',
+freqDeactHint:'<b>Importante – electrodos desactivados:</b> Cuando los electrodos de su IC están desactivados, el implante redistribuye el rango de frecuencias entre los electrodos activos restantes. Las frecuencias centrales de todos los demás electrodos se desplazan en consecuencia – los valores estándar preconfigurados ya no son válidos.<br>Marque los electrodos desactivados en «Estado» e introduzca las frecuencias centrales actuales de su ajuste. Sin frecuencias correctas, las mediciones y el ecualizador del reproductor no serán significativos.',thEl:'El.',thHzStd:'Hz estándar',thHzOwn:'Hz propios',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',thExclCb:'Excluir',
+stDeactivated:'Desactivado en IC',
+warnDeactivated:'Atención: la tabla de frecuencias probablemente no está actualizada. Ha marcado electrodo(s) como desactivados, pero los valores de frecuencia corresponden aún a los valores estándar. Cuando los electrodos están desactivados en el IC, las bandas de frecuencia se redistribuyen entre los electrodos activos. Por favor, pregunte a su audiólogo las frecuencias centrales actuales e intródzcalas aquí, de lo contrario las mediciones y el ecualizador no serán significativos.',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',lblLevels:'Aplicar Levels',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optCF:'Convergencia',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares comparados aleatoriamente. Recomendado como primera pasada.',runExplCF:'Re-test de los pares más inciertos. Repetible a voluntad.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: Primero «Completo», luego «Convergencia». Si la configuración es fundamentalmente sólida, marque «Ajuste fino» y repita «Convergencia». En la pestaña Resultados, evalúe la calidad por los colores. Todas las mediciones pueden repetirse tantas veces como se desee y mejoran el resultado. Los resultados siempre se conservan.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',kEnter:'Intro',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Ruido fuerte',stNoisyMore:'Ruido con tono',stNoisyLess:'Tono con ruido',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',fClear:'Eliminar resultados',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Este reproductor simula cómo podría sonar la música o el habla si se corrigiera la curva de volumen del IC.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetBoth:'Aplicar cambios a ambos lados',
+lvPresetDesc:'Curvas predefinidas. Tilt/Pivot = herramientas MAESTRO. El preset Habla pondera las frecuencias según su importancia para la inteligibilidad del habla (ANSI S3.5). Teclado: ↑↓ ajusta valores en el campo de entrada.',lvChartTitle:'Resumen',lvChartMan:'Manual',lvChartSum:'Suma',plSrcLabel:'Fuente Equalizer:',plSrcMeas:'Medido',plSrcLevels:'Levels',plSrcBoth:'Ambos',printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo',reliabilityTitle:'Fiabilidad de las mediciones',glossTitle:'Glosario',glossResiduum:'<b>Residuo</b>: Indica la inconsistencia de sus juicios para un electrodo. Barras cortas = juicios coherentes, barras largas = juicios variables.',glossErrBar:'<b>Barras de error</b> (líneas verticales en las barras): Muestran el tamaño del residuo.',glossAnpassung:'<b>Ajuste</b>: Cuántos dB más fuerte (+) o más suave (−) se configura este electrodo respecto a la referencia.',glossFarbe:'<b>Colores semáforo</b>: Verde = fiable, Amarillo = límite, Rojo = incierto, Gris = sin medición. El color indica la calidad de medición, no la magnitud del ajuste.',glossRef:'<b>Electrodo de referencia</b>: El punto fijo de la medición. Su ajuste es siempre 0 dB.',glossLS:'<b>Least Squares</b>: Método matemático que calcula simultáneamente los mejores valores de offset a partir de todas las comparaciones de pares. Los errores de medición individuales tienen poca influencia. Los electrodos marcados como problemáticos en la pestaña «Implante» contribuyen con peso reducido.',preCorrHint:'Valor anterior: {v} dB de la estimación'}
 };
 let lang='de';
 function t(k){return(L[lang]&&L[lang][k])||(L.de[k])||k;}
+function updateMfrSelectLabels(){
+  const labels={de:'Elektroden',en:'electrodes',fr:'électrodes',es:'electrodos'};
+  const lbl=labels[lang]||'electrodes';
+  const opts=document.getElementById('mfrSelect').options;
+  if(opts[0])opts[0].text='MED-EL (12 '+lbl+')';
+  if(opts[1])opts[1].text='Advanced Bionics (16 '+lbl+')';
+  if(opts[2])opts[2].text='Cochlear (22 '+lbl+')';
+}
 function applyLang(){lang=document.getElementById('langSelect').value;
   document.querySelectorAll('[data-t]').forEach(el=>{const v=t(el.dataset.t);if(v.includes('<'))el.innerHTML=v;else el.textContent=v;});
   const s=(id,k)=>{const e=document.getElementById(id);if(e)e.textContent=t(k);};
-  s('subtitleText','subtitle');s('tabIntro','tabIntro');s('tabSetup','tabFreq');s('tabResults','tabResults');s('tabFile','tabFile');s('tabLevels','tabLevels');
+  updateMfrSelectLabels();
+  s('subtitleText','subtitle');s('tabIntro','tabIntro');s('tabSetup','tabFreq');s('tabTest','tabTest');s('tabResults','tabResults');s('tabLevels','tabLevels');s('tabPlayer','tabPlayer');s('tabBalance','tabBalance');s('tabFile','tabFile');
+  const gEl2=id=>document.getElementById(id);if(gEl2('glossLSEl'))gEl2('glossLSEl').innerHTML=t('glossLS');
   s('freqTitle','freqTitle');s('lblMfr','lblMfr');s('freqHint','freqHint');
-  s('resetBtn','resetFreq');s('sweepBtn','sweep');s('stopBtn','stop');s('lblCorr','lblCorr');
+  s('sweepBtn','sweep');s('stopBtn','stop');s('lblCorr','lblCorr');
   s('toneTitle','toneTitle');s('lblVol','lblVol');s('lblDur','lblDur');s('lblPau','lblPau');
   s('testTitle','testTitle');s('lblMode','lblMode');s('optBal','optBal');s('optJdg','optJdg');
   s('lblRun','lblRun');s('optFull','optFull');s('optCF','optCF');s('optMan','optMan');
-  s('lblRef','lblRef');s('lblVol2','lblVol2');s('lblDur2','lblDur2');s('lblPau2','lblPau2');
+  s('lblRef','lblRef');s('lblVol2','lblVol2');s('lblDur2','lblDur2');s('lblPau2','lblPau2');s('balLabel','balLabel');
   s('startBtn','startTest');s('stopTBtn','stopTest');s('resTitle','resTitle');
   updEqToggleBtn();
+  updPlSrcButtons();
+  updSideButtons();
   updateRunExplain();buildFreqTable();
   if(document.getElementById('resC').style.display!=='none')renderResults();
   try{localStorage.setItem('ci-lb-lang',lang);}catch(e){}
 }
 function updateRunExplain(){
-  const v=document.getElementById('pairType').value;
-  const m={full:'runExplFull',conv_fast:'runExplCF',manual:'runExplMan'};
-  document.getElementById('runExplain').innerHTML=t(m[v]||'runExplFull')+'<br><br><em>'+t('recommend')+'</em>';
+  document.getElementById('runExplain').innerHTML=t('recommend').split('\n').map(l=>l.startsWith('*')?'<li>'+l.slice(1).trim()+'</li>':l).join('<br>');
 }
 
 // ============================================================
 // MANUFACTURERS
 // ============================================================
 const MFR={medel:{name:'MED-EL',n:12,apFirst:true,freqs:[120,235,384,579,836,1175,1624,2222,3019,4084,5507,7410]},ab:{name:'Advanced Bionics',n:16,apFirst:true,freqs:[333,455,540,642,762,906,1076,1278,1518,1803,2142,2544,3022,3590,4264,6665]},cochlear:{name:'Cochlear',n:22,apFirst:false,freqs:[250,375,500,625,750,875,1000,1125,1250,1500,1750,2000,2250,2625,3000,3500,4000,4625,5250,6000,6875,8000]}};
-let mfr='medel',nEl=12,freqs=[...MFR.medel.freqs];
-let elSt=[],elNt=[],elExDur=[];
-let manualLevels=[],lvFocus=0;
+const SIDES=['left','right'];
+let activeSide='left';
+const sideData={left:{},right:{}};
+let mfr,nEl,freqs,elFreqOwn,elSt,elNt,elExDur,manualLevels,refEl,jRes,bRes;
+// effFreq[i] = elFreqOwn[i] ?? freqs[i] (MFR default)
+function effFreq(i){return(elFreqOwn&&elFreqOwn[i]!=null)?elFreqOwn[i]:freqs[i];}
+let lvFocus=0;
 const PR_TYPES=['speech','tilt','scurve','pivot','gauss','bassboost','highboost'];
 const PR_NAMES={speech:'lvPrSpeech',tilt:'lvPrTilt',scurve:'lvPrScurve',pivot:'lvPrPivot',gauss:'lvPrGauss',bassboost:'lvPrBass',highboost:'lvPrHigh'};
 const PR_EXPL={speech:'lvPrExplSpeech',tilt:'lvPrExplTilt',scurve:'lvPrExplScurve',pivot:'lvPrExplPivot',gauss:'lvPrExplGauss',bassboost:'lvPrExplBass',highboost:'lvPrExplHigh'};
@@ -593,18 +682,61 @@ const PR_HAS_CENTER={tilt:true,scurve:true,pivot:true,gauss:true,bassboost:false
 const PR_HAS_WIDTH={gauss:true};
 const PR_HAS_CUTOFF={bassboost:true,highboost:true};
 let presets=[];
-function initPresets(){presets=PR_TYPES.map(tp=>({type:tp,on:false,strength:0,center:Math.floor(nEl/2),width:Math.max(2,Math.floor(nEl/4)),cutoff:tp==='bassboost'?Math.floor(nEl/3):Math.floor(nEl*2/3)}));}
-initPresets();
-function initManLv(){manualLevels=new Array(nEl).fill(0);}
-function initEl(){elSt=new Array(nEl).fill(null);elNt=new Array(nEl).fill('');elExDur=new Array(nEl).fill(null);initManLv();}
-initEl();
+function initPresets(){const centerMap={medel:5.5,ab:7.5,cochlear:10.5};const defaultCenter=centerMap[mfr]||Math.floor(nEl/2);presets=PR_TYPES.map(tp=>({type:tp,on:false,strength:0,center:defaultCenter,width:Math.max(2,Math.floor(nEl/4)),cutoff:tp==='bassboost'?Math.floor(nEl/3):Math.floor(nEl*2/3)}));}
+function bindActiveSide(){const s=sideData[activeSide];mfr=s.manufacturer;nEl=s.nEl;freqs=s.freqs;elFreqOwn=s.elFreqOwn;elSt=s.elSt;elNt=s.elNt;elExDur=s.elExDur;manualLevels=s.manualLevels;presets=s.presets;refEl=s.refEl;jRes=s.jRes;bRes=s.bRes;}
+function initSideData(side,m){const s=sideData[side];s.manufacturer=m||'medel';s.nEl=MFR[s.manufacturer].n;s.freqs=[...MFR[s.manufacturer].freqs];s.elSt=new Array(s.nEl).fill(null);s.elNt=new Array(s.nEl).fill('');s.elExDur=new Array(s.nEl).fill(null);s.elFreqOwn=new Array(s.nEl).fill(null);s.manualLevels=new Array(s.nEl).fill(0);s.refEl=Math.floor(s.nEl/2);s.jRes=[];s.bRes=[];activeSide=side;bindActiveSide();initPresets();s.presets=presets;}
+function updSideButtons(){
+  const L=document.getElementById('sideLeftBtn'),R=document.getElementById('sideRightBtn');
+  if(!L||!R)return;
+  const activeStyle='background:var(--success);color:#fff;border-color:var(--success)';
+  const inactiveStyle='background:var(--surface);color:var(--text);border-color:var(--border)';
+  L.style.cssText=L.style.cssText.replace(/background:[^;]+;color:[^;]+;border-color:[^;]+/,'');
+  R.style.cssText=R.style.cssText.replace(/background:[^;]+;color:[^;]+;border-color:[^;]+/,'');
+  if(activeSide==='left'){L.style.background='var(--success)';L.style.color='#fff';L.style.borderColor='var(--success)';R.style.background='';R.style.color='';R.style.borderColor='';}
+  else{R.style.background='var(--success)';R.style.color='#fff';R.style.borderColor='var(--success)';L.style.background='';L.style.color='';L.style.borderColor='';}
+}
+function updFClearBtn(){
+  const btn=document.getElementById('fClearBtn');
+  if(!btn)return;
+  const sideLabel=activeSide==='left'?'LINKS':'RECHTS';
+  btn.innerHTML='&#128465; Messergebnisse '+sideLabel+' löschen';
+}
+function setActiveSide(side){
+  if(!SIDES.includes(side))return;
+  activeSide=side;bindActiveSide();
+  document.getElementById('ciSideSelect').value=side;
+  document.getElementById('mfrSelect').value=mfr;
+  buildFreqTable();buildLvGrid();drawLvChart();renderResults();
+  // Update player side unless currently set to 'both'
+  const plSideEl=document.getElementById('plSide');
+  if(plSideEl&&plSideEl.value!=='both')plSideEl.value=activeSide;
+  updSideButtons();
+  updFClearBtn();
+  updPlSrcButtons();
+  if(pBuf)plCheck();
+}
+function loadSideData(side,d){const s=sideData[side];if(d.manufacturer&&MFR[d.manufacturer]){s.manufacturer=d.manufacturer;s.nEl=MFR[s.manufacturer].n;s.freqs=d.frequencies||[...MFR[s.manufacturer].freqs];}else{s.nEl=MFR[s.manufacturer].n;s.freqs=[...MFR[s.manufacturer].freqs];}
+s.elSt=d.electrodeStatus||new Array(s.nEl).fill(null);s.elNt=d.electrodeNotes||new Array(s.nEl).fill('');s.elExDur=d.electrodeExcludedDuring||new Array(s.nEl).fill(null);
+// Migrate old 'excluded' from elSt to elExDur
+for(let _i=0;_i<s.elSt.length;_i++){if(s.elSt[_i]==='excluded'){s.elExDur[_i]=s.elExDur[_i]||Date.now();s.elSt[_i]=null;}}
+// Deactivated: ensure elExDur is set
+for(let _i=0;_i<s.elSt.length;_i++){if(s.elSt[_i]==='deactivated'){s.elExDur[_i]=s.elExDur[_i]||Date.now();}}
+s.refEl=(d.referenceElectrode!==undefined?d.referenceElectrode:Math.floor(s.nEl/2));s.jRes=d.judgmentResults||[];s.bRes=d.balanceResults||[];s.manualLevels=d.manualLevels||new Array(s.nEl).fill(0);s.presets=d.presets||s.presets;
+// Load elFreqOwn: if present use it; else split loaded freqs vs defaults
+if(d.electrodeFreqOwn){s.elFreqOwn=[...d.electrodeFreqOwn];}
+else{const defF=MFR[s.manufacturer].freqs;s.elFreqOwn=s.freqs.map((f,i)=>Math.round(f)===Math.round(defF[i])?null:f);}
+}
+function getPlayerSide(){return document.getElementById('plSide')?.value||'both';}
+function getPlayerBalance(){return parseFloat(document.getElementById('balBalance')?.value)||0;}
+function withSide(side,fn){const prevSide=activeSide;const prev={mfr,nEl,freqs,elSt,elNt,elExDur,manualLevels,presets,refEl,jRes,bRes};activeSide=side;bindActiveSide();try{return fn();}finally{activeSide=prevSide;bindActiveSide();}}
 function dEN(i){return MFR[mfr].apFirst?i+1:nEl-i;}
+initSideData('left','medel');initSideData('right','medel');activeSide='left';bindActiveSide();updateMfrSelectLabels();
 
 let audioCtx=null,curOsc=null,playTO=null,sweepAct=false,isPlay=false,holdIdx=-1;
 let testAct=false,testPairs=[],testIdx=0,testMode='balance',curPlayed=false,curBase=0,slExt=false;
-let curA=-1,curB=-1,undoSt=[],tStart=0,tInt=null,compCnt=0,convRnd=0,refEl=5;
-let jRes=[],bRes=[];
+let curA=-1,curB=-1,undoSt=[],tStart=0,tInt=null,compCnt=0,convRnd=0;
 let plEqOn=true; // EQ toggle state
+let plSrcMeas=true,plSrcLevels=true; // EQ source toggles
 
 // SII Band Importance Function (ANSI S3.5-1997)
 const SII_THIRD_OCT={freq:[160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000],
@@ -628,7 +760,7 @@ function calcPresetCurve(pr){
   if(pr.type==='gauss'){const sig=Math.max(0.5,pr.width||2);for(const i of act)c[i]=Math.exp(-0.5*Math.pow((i-ctr)/sig,2));const mx2=Math.max(...c.map(Math.abs))||1;for(const i of act)c[i]/=mx2;return c;}
   if(pr.type==='bassboost'){const cut=pr.cutoff!=null?pr.cutoff:Math.floor(nEl/3);for(const i of act){if(i<=cut)c[i]=1;else{const d=(i-cut)/(mx-cut||1);c[i]=Math.max(0,1-d*2);}}return c;}
   if(pr.type==='highboost'){const cut=pr.cutoff!=null?pr.cutoff:Math.floor(nEl*2/3);for(const i of act){if(i>=cut)c[i]=1;else{const d=(cut-i)/(cut-mn||1);c[i]=Math.max(0,1-d*2);}}return c;}
-  if(pr.type==='speech'){const w=siiWeightsForFreqs(freqs);const mean=w.reduce((a,b)=>a+b,0)/n;for(let i=0;i<n;i++)c[i]=w[i]-mean;const mx2=Math.max(...c.map(Math.abs))||1;for(let i=0;i<n;i++)c[i]/=mx2;return c;}
+  if(pr.type==='speech'){const effF=Array.from({length:n},(_,i)=>effFreq(i));const w=siiWeightsForFreqs(effF);const mean=w.reduce((a,b)=>a+b,0)/n;for(let i=0;i<n;i++)c[i]=w[i]-mean;const mx2=Math.max(...c.map(Math.abs))||1;for(let i=0;i<n;i++)c[i]/=mx2;return c;}
   return c;}
 function getTotalPresetCurve(){const c=new Array(nEl).fill(0);
   for(const pr of presets){if(!pr.on||pr.strength===0)continue;const pc=calcPresetCurve(pr);for(let i=0;i<nEl;i++)c[i]+=pc[i]*pr.strength;}return c;}
@@ -646,13 +778,13 @@ function stopAll(){if(curOsc){try{curOsc.stop();}catch(e){}curOsc=null;}if(playT
 function playTone(hz,vol,ms,ramp=20){return new Promise(r=>{const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+ramp/1000);g.gain.setValueAtTime(Math.max(0,vol),c.currentTime+(ms-ramp)/1000);g.gain.linearRampToValueAtTime(0,c.currentTime+ms/1000);o.connect(g);g.connect(c.destination);curOsc=o;o.start();o.stop(c.currentTime+ms/1000+.01);o.onended=()=>{curOsc=null;r();};});}
 function playHold(hz,vol){stopAll();const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+.02);o.connect(g);g.connect(c.destination);curOsc=o;o.start();}
 function corrG(i){if(!document.getElementById('corrToggle').checked||bRes.length===0)return 1;const{levels}=compWLS();return dB2G(-levels[i]);}
-async function playSingle(i){if(isPlay&&holdIdx===-1){stopAll();return;}stopAll();isPlay=true;updInd(i);await playTone(freqs[i],gVol()*corrG(i),gDur());isPlay=false;updInd(-1);}
-function toggleHold(i){if(holdIdx===i){stopAll();return;}stopAll();holdIdx=i;updInd(i);playHold(freqs[i],gVol()*corrG(i));}
-async function playSweep(){stopAll();sweepAct=true;isPlay=true;for(let i=0;i<nEl;i++){if(!sweepAct)break;updInd(i);await playTone(freqs[i],gVol()*corrG(i),gDur());if(!sweepAct)break;await new Promise(r=>playTO=setTimeout(r,50+gPau()));}isPlay=false;sweepAct=false;updInd(-1);}
+async function playSingle(i){if(isPlay&&holdIdx===-1){stopAll();return;}stopAll();isPlay=true;updInd(i);await playTone(effFreq(i),gVol()*corrG(i),gDur());isPlay=false;updInd(-1);}
+function toggleHold(i){if(holdIdx===i){stopAll();return;}stopAll();holdIdx=i;updInd(i);playHold(effFreq(i),gVol()*corrG(i));}
+async function playSweep(){stopAll();sweepAct=true;isPlay=true;for(let i=0;i<nEl;i++){if(!sweepAct)break;updInd(i);await playTone(effFreq(i),gVol()*corrG(i),gDur());if(!sweepAct)break;await new Promise(r=>playTO=setTimeout(r,50+gPau()));}isPlay=false;sweepAct=false;updInd(-1);}
 async function playSeq(eA,eB,off){const v=gVol(),d=gDur(),p=gPau(),vB=Math.max(Math.min(v*dB2G(off),1),0);
-  updInd(eA,'a');await playTone(freqs[eA],v,d);if(!isPlay)return;updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;
-  updInd(eB,'b');await playTone(freqs[eB],vB,d);if(!isPlay)return;
-  if(document.getElementById('paraI').value==='aba'){updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;updInd(eA,'a');await playTone(freqs[eA],v,d);}
+  updInd(eA,'a');await playTone(effFreq(eA),v,d);if(!isPlay)return;updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;
+  updInd(eB,'b');await playTone(effFreq(eB),vB,d);if(!isPlay)return;
+  if(document.getElementById('paraI').value==='aba'){updInd(-1);await new Promise(r=>playTO=setTimeout(r,50+p));if(!isPlay)return;updInd(eA,'a');await playTone(effFreq(eA),v,d);}
   isPlay=false;updInd(-1);}
 function updInd(i,w){document.querySelectorAll('.freq-table .pbtn[data-a="play"]').forEach((b,j)=>{b.style.background=(j===i)?'var(--accent-light)':'';});
   const a=document.getElementById('tAL'),b=document.getElementById('tBL');if(a)a.classList.toggle('playing',w==='a');if(b)b.classList.toggle('playing',w==='b');}
@@ -661,37 +793,79 @@ function updInd(i,w){document.querySelectorAll('.freq-table .pbtn[data-a="play"]
 // FREQUENCY TABLE
 // ============================================================
 function buildFreqTable(){
-  document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th>${t('thNote')}</th>`;
+  document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHzStd')}</th><th>${t('thHzOwn')}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th style="white-space:nowrap">${t('thExclCb')}</th><th>${t('thNote')}</th>`;
   const tb=document.getElementById('freqTB');tb.innerHTML='';
-  const so=`<option value="">—</option><option value="noisyHeavy">${t('stNoisyHeavy')}</option><option value="noisyMore">${t('stNoisyMore')}</option><option value="noisyLess">${t('stNoisyLess')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="excluded">${t('stExcl')}</option>`;
+  const so=`<option value="">ok</option><option value="noisyLess">${t('stNoisyLess')}</option><option value="noisyMore">${t('stNoisyMore')}</option><option value="noisyHeavy">${t('stNoisyHeavy')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="deactivated" style="font-weight:700;color:#dc2626;text-transform:uppercase">${t('stDeactivated').toUpperCase()}</option>`;
   for(let i=0;i<nEl;i++){const tr=document.createElement('tr');
     let ex='';if(i===0)ex=` <span class="el-extra">(${t('apikal')})</span>`;if(i===nEl-1)ex=` <span class="el-extra">(${t('basal')})</span>`;
-    tr.innerHTML=`<td style="font-weight:600">${dEN(i)}${ex}</td><td><input type="number" class="fi" data-i="${i}" value="${Math.round(freqs[i])}" min="20" max="20000"></td><td><button class="pbtn" data-a="play" data-i="${i}">&#9654;</button></td><td><button class="pbtn" data-a="hold" data-i="${i}">&#9724;</button></td><td><select class="ss" data-i="${i}">${so}</select></td><td><input type="text" class="ni" data-i="${i}" value="${elNt[i]||''}" placeholder="${t('thNote')}"></td>`;
+    const isExcl=elExDur[i]!==null;
+    const isDeact=elSt[i]==='deactivated';
+    const stdHz=Math.round(freqs[i]);
+    const ownVal=elFreqOwn[i]!=null?Math.round(elFreqOwn[i]):'';
+    if(isDeact||isExcl)tr.style.opacity='0.55';
+    tr.innerHTML=`<td style="font-weight:600">${dEN(i)}${ex}</td>`+
+      `<td style="color:#999;font-family:var(--mono);font-size:.86em;padding:4px 6px">${stdHz}</td>`+
+      `<td><input type="number" class="fo" data-i="${i}" value="${ownVal}" min="20" max="20000" style="width:70px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em"></td>`+
+      `<td><button class="pbtn" data-a="play" data-i="${i}">&#9654;</button></td>`+
+      `<td><button class="pbtn" data-a="hold" data-i="${i}">&#9724;</button></td>`+
+      `<td><select class="ss" data-i="${i}">${so}</select></td>`+
+      `<td style="text-align:center"><input type="checkbox" class="ec" data-i="${i}" ${(isExcl||isDeact)?'checked':''} ${isDeact?'disabled title="Deaktivierte Elektroden sind automatisch ausgeschlossen"':''}></td>`+
+      `<td><input type="text" class="ni" data-i="${i}" value="${elNt[i]||''}" placeholder="${t('thNote')}"></td>`;
     tb.appendChild(tr);tr.querySelector('.ss').value=elSt[i]||'';}
-  tb.querySelectorAll('.fi').forEach(inp=>inp.addEventListener('change',e=>{const i=+e.target.dataset.i,v=parseFloat(e.target.value);if(v>=20&&v<=20000)freqs[i]=v;else e.target.value=Math.round(freqs[i]);}));
+  // Hz own inputs
+  tb.querySelectorAll('.fo').forEach(inp=>inp.addEventListener('change',e=>{
+    const i=+e.target.dataset.i,v=parseFloat(e.target.value);
+    if(e.target.value===''||isNaN(v)){elFreqOwn[i]=null;e.target.value='';}
+    else if(v>=20&&v<=20000){elFreqOwn[i]=v;}
+    else{e.target.value=elFreqOwn[i]!=null?Math.round(elFreqOwn[i]):'';}
+  }));
   tb.querySelectorAll('.pbtn[data-a="play"]').forEach(b=>b.addEventListener('click',()=>playSingle(+b.dataset.i)));
   tb.querySelectorAll('.pbtn[data-a="hold"]').forEach(b=>b.addEventListener('click',()=>toggleHold(+b.dataset.i)));
-  tb.querySelectorAll('.ss').forEach(s=>s.addEventListener('change',e=>{elSt[+e.target.dataset.i]=e.target.value||null;buildFreqTable();updRef();}));
+  tb.querySelectorAll('.ss').forEach(s=>s.addEventListener('change',e=>{
+    const idx=+e.target.dataset.i,val=e.target.value||null;
+    elSt[idx]=val;
+    if(val==='deactivated'){elExDur[idx]=elExDur[idx]||Date.now();}
+    // If status changed away from deactivated, do NOT auto-clear elExDur
+    buildFreqTable();updRef();
+  }));
+  tb.querySelectorAll('.ec').forEach(cb=>cb.addEventListener('change',e=>{
+    const idx=+e.target.dataset.i;
+    elExDur[idx]=e.target.checked?(elExDur[idx]||Date.now()):null;
+    buildFreqTable();updRef();
+  }));
   tb.querySelectorAll('.ni').forEach(n=>n.addEventListener('change',e=>{elNt[+e.target.dataset.i]=e.target.value;}));
+  // Hinweistext für deaktivierte Elektroden (immer sichtbar sobald mind. eine deakt.)
+  const hintEl=document.getElementById('freqDeactHintEl');
+  const hasDeact=elSt.some(s=>s==='deactivated');
+  if(hintEl){hintEl.innerHTML=t('freqDeactHint');}
+  // Warnbalken: nur wenn deaktivierte Elektroden noch Standard-Frequenzen haben
+  let wb=document.getElementById('deactWarnBar');
+  const deactIdxs=[...Array(nEl).keys()].filter(i=>elSt[i]==='deactivated');
+  const deactHasDefault=deactIdxs.some(i=>elFreqOwn[i]==null);
+  if(hasDeact&&deactHasDefault){
+    if(!wb){wb=document.createElement('div');wb.id='deactWarnBar';wb.className='warning-bar';wb.style.cssText='background:#fee2e2;color:#dc2626;border-left:3px solid #dc2626;padding:8px 14px;border-radius:6px;margin-bottom:10px;font-size:.88em;line-height:1.5';
+      const freqCard=document.getElementById('freqTable').closest('.card');freqCard.insertBefore(wb,document.getElementById('freqTable').parentElement);}
+    wb.innerHTML=t('warnDeactivated');
+  } else if(wb){wb.remove();}
   updRef();updManSel();}
 function updRef(){const s=document.getElementById('refEl'),p=s.value;s.innerHTML='';
-  for(let i=0;i<nEl;i++){if(elSt[i]==='excluded'||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`;}
+  for(let i=0;i<nEl;i++){if(elExDur[i]!==null||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)}</option>`;}
   if(p&&s.querySelector(`option[value="${p}"]`))s.value=p;else s.value=String(Math.floor(nEl/2));refEl=+s.value;}
-function updManSel(){['manA','manB'].forEach(id=>{const s=document.getElementById(id);s.innerHTML='';for(let i=0;i<nEl;i++){if(elSt[i]==='excluded'||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`;}});const b=document.getElementById('manB');if(b.options.length>1)b.selectedIndex=1;}
-function switchMfr(m){mfr=m;nEl=MFR[m].n;freqs=[...MFR[m].freqs];initEl();jRes=[];bRes=[];refEl=Math.floor(nEl/2);buildFreqTable();}
-function resetFreqs(){freqs=[...MFR[mfr].freqs];initEl();buildFreqTable();}
+function updManSel(){['manA','manB'].forEach(id=>{const s=document.getElementById(id);s.innerHTML='';for(let i=0;i<nEl;i++){if(elExDur[i]!==null||elSt[i]==='mute')continue;s.innerHTML+=`<option value="${i}">E${dEN(i)}</option>`;}});const b=document.getElementById('manB');if(b.options.length>1)b.selectedIndex=1;}
+function switchMfr(m){const s=sideData[activeSide];s.manufacturer=m;s.nEl=MFR[m].n;s.freqs=[...MFR[m].freqs];s.elFreqOwn=new Array(s.nEl).fill(null);activeSide=activeSide;bindActiveSide();initPresets();s.presets=presets;initEl();jRes.splice(0,jRes.length);bRes.splice(0,bRes.length);refEl=Math.floor(nEl/2);buildFreqTable();}
+function resetFreqs(){freqs=[...MFR[mfr].freqs];elFreqOwn.fill(null);initEl();buildFreqTable();}
 
 // ============================================================
 // PAIRS & WEIGHTED LEAST SQUARES
 // ============================================================
-function actEl(){return[...Array(nEl).keys()].filter(i=>elSt[i]!=='excluded'&&elSt[i]!=='mute');}
+function actEl(){return[...Array(nEl).keys()].filter(i=>elExDur[i]===null&&elSt[i]!=='mute');}
 function allEl(){return[...Array(nEl).keys()];}
 function allPairs(){const a=actEl(),p=[];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)p.push([a[i],a[j]]);return p;}
 function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 function randAB(p){return p.map(([x,y])=>Math.random()<.5?[x,y]:[y,x]);}
-function gWt(i){const s=elSt[i];if(s==='excluded'||s==='mute')return 0;if(s==='almostMute')return .1;if(s==='noisyHeavy')return .1;if(s==='noisyMore')return .5;if(s==='noisyLess')return .9;return 1;}
+function gWt(i){const s=elSt[i];if(elExDur[i]!==null||s==='mute')return 0;if(s==='almostMute')return .05;if(s==='noisyHeavy')return .15;if(s==='noisyMore')return .4;if(s==='noisyLess')return .8;return 1;}
 function compWLS(){const n=nEl,lv=new Array(n).fill(0);
-  const valid=bRes.filter(r=>r.a>=0&&r.a<n&&r.b>=0&&r.b<n&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+  const valid=bRes.filter(r=>r.a>=0&&r.a<n&&r.b>=0&&r.b<n&&elExDur[r.a]===null&&elSt[r.a]!=='mute'&&elExDur[r.b]===null&&elSt[r.b]!=='mute');
   if(!valid.length)return{levels:lv,residuals:[],elRes:new Array(n).fill(0),elWt:new Array(n).fill(1)};
   for(let it=0;it<80;it++){const su=new Array(n).fill(0),wt=new Array(n).fill(0);
     for(const r of valid){const w=Math.min(gWt(r.a),gWt(r.b));su[r.b]+=(lv[r.a]-r.offset)*w;wt[r.b]+=w;su[r.a]+=(lv[r.b]+r.offset)*w;wt[r.a]+=w;}
@@ -733,14 +907,14 @@ function startTest(){const pt=document.getElementById('pairType').value;testMode
   else document.getElementById('roundInfo').classList.add('hidden');
   startTmr();showMode();showCurPair();}
 function endTest(){stopAll();testAct=false;document.getElementById('startBtn').disabled=false;document.getElementById('stopTBtn').disabled=true;document.getElementById('testArea').style.display='none';document.getElementById('exclDlg').classList.add('hidden');stopTmr();}
-function showMode(){const j=testMode==='judgment';document.getElementById('jdgC').style.display=j?'':'none';document.getElementById('balC').style.display=j?'none':'';}
+function showMode(){const j=testMode==='judgment';document.getElementById('jdgC').style.display=j?'':'none';document.getElementById('balC').style.display=j?'none':'';document.getElementById('swapBtn').style.display=j?'none':'';}
 function showCurPair(){
   if(testIdx>=testPairs.length){if(convRnd>0)return nextConvRnd();endTest();switchTab('results');renderResults();return;}
   const[a,b]=testPairs[testIdx];curA=a;curB=b;
   document.getElementById('progLbl').textContent=`${t('comp')} ${testIdx+1} ${t('of')} ${testPairs.length}${convRnd>0?` (${t('round')} ${convRnd})`:''}`;
   document.getElementById('tAL').innerHTML=`<span class="aba-label">A (Ref)</span>E${dEN(a)}`;
   document.getElementById('tBL').innerHTML=`<span class="aba-label">B (Slider)</span>E${dEN(b)}`;
-  document.getElementById('pairF').textContent=`${Math.round(freqs[a])} Hz vs. ${Math.round(freqs[b])} Hz`;
+  document.getElementById('pairF').textContent=`${Math.round(effFreq(a))} Hz vs. ${Math.round(effFreq(b))} Hz`;
   if(testMode==='balance'){
     // Get existing offset for this pair
     const ex=bRes.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
@@ -788,11 +962,11 @@ function nextConvRnd(){const{residuals}=compWLS();const act=new Set(actEl());
   testPairs=randAB(shuffle(mg));testIdx=0;undoSt=[];
   document.getElementById('roundInfo').textContent=`${t('round')} ${convRnd} – ${mg.length} (max res: ${mx.toFixed(1)} dB)`;document.getElementById('roundInfo').classList.remove('hidden');showCurPair();}
 function showExclDlg(){if(!testAct||testIdx>=testPairs.length)return;stopAll();
-  document.getElementById('exclInfo').textContent=`E${dEN(curA)} (${Math.round(freqs[curA])} Hz) vs. E${dEN(curB)} (${Math.round(freqs[curB])} Hz)`;
+  document.getElementById('exclInfo').textContent=`E${dEN(curA)} (${Math.round(effFreq(curA))} Hz) vs. E${dEN(curB)} (${Math.round(effFreq(curB))} Hz)`;
   document.getElementById('exclA').textContent=`E${dEN(curA)} ${t('bExcl')}`;document.getElementById('exclB').textContent=`E${dEN(curB)} ${t('bExcl')}`;
   document.getElementById('exclA').onclick=()=>doExcl(curA);document.getElementById('exclB').onclick=()=>doExcl(curB);
   document.getElementById('exclDlg').classList.remove('hidden');}
-function doExcl(i){elSt[i]='excluded';elExDur[i]=Date.now();const rem=testPairs.slice(testIdx).filter(([a,b])=>a!==i&&b!==i);
+function doExcl(i){elExDur[i]=Date.now();const rem=testPairs.slice(testIdx).filter(([a,b])=>a!==i&&b!==i);
   testPairs=[...testPairs.slice(0,testIdx),...rem];document.getElementById('exclDlg').classList.add('hidden');buildFreqTable();
   document.getElementById('roundInfo').textContent=`E${dEN(i)} ${t('exclDuring')}. ${testPairs.length-testIdx} ${t('pairsRem')}.`;document.getElementById('roundInfo').classList.remove('hidden');
   if(testIdx>=testPairs.length){endTest();switchTab('results');renderResults();}else showCurPair();}
@@ -809,7 +983,7 @@ function playManPair(){const a=parseInt(document.getElementById('manA').value),b
   document.getElementById('testArea').style.display='block';document.getElementById('stopTBtn').disabled=false;document.getElementById('roundInfo').classList.add('hidden');showMode();
   document.getElementById('progLbl').textContent=t('manComp');curA=pa;curB=pb;
   document.getElementById('tAL').innerHTML=`<span class="aba-label">A</span>E${dEN(pa)}`;document.getElementById('tBL').innerHTML=`<span class="aba-label">B</span>E${dEN(pb)}`;
-  document.getElementById('pairF').textContent=`${Math.round(freqs[pa])} Hz vs. ${Math.round(freqs[pb])} Hz`;
+  document.getElementById('pairF').textContent=`${Math.round(effFreq(pa))} Hz vs. ${Math.round(effFreq(pb))} Hz`;
   if(testMode==='balance'){const ex=bRes.find(r=>(r.a===pa&&r.b===pb)||(r.a===pb&&r.b===pa));curBase=ex?((ex.a===pa)?ex.offset:-ex.offset):0;rstSlR();document.getElementById('balSl').value=0;document.getElementById('balV').textContent='0.0 dB';updBalAbs(0);}
   curPlayed=false;startTmr();playCur();}
 function afterManRes(){stopTmr();document.getElementById('testArea').style.display='none';testAct=false;renderResults();}
@@ -818,36 +992,35 @@ function afterManRes(){stopTmr();document.getElementById('testArea').style.displ
 // RESULTS
 // ============================================================
 function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
-  if(!hJ&&!hB){document.getElementById('noRes').style.display='';document.getElementById('resC').style.display='none';return;}
-  document.getElementById('noRes').style.display='none';document.getElementById('resC').style.display='';
+  if(!hJ&&!hB){const nr=document.getElementById('noRes');const rc=document.getElementById('resC');if(nr)nr.style.display='';if(rc)rc.style.display='none';return;}
+  const noResEl=document.getElementById('noRes');if(noResEl)noResEl.style.display='none';const resCEl=document.getElementById('resC');if(resCEl)resCEl.style.display='';
   const vol=document.getElementById('vol2').value;
   let meta=`${new Date().toLocaleString(lang==='de'?'de-DE':lang==='fr'?'fr-FR':lang==='es'?'es-ES':'en-US')}`;
   if(hB)meta+=` · ${bRes.length} bal.`;if(hJ)meta+=` · ${jRes.length} jdg.`;
   meta+=` · ${t('lblVol')} ${vol}% · Ref: E${dEN(refEl)} · ${MFR[mfr].name}`;
-  document.getElementById('resMeta').innerHTML=meta;
+  const rMeta=document.getElementById('resMeta');if(rMeta)rMeta.innerHTML=meta;
   const th=document.getElementById('resTH'),tb=document.getElementById('resTB');th.innerHTML='';tb.innerHTML='';
   // Glossar befüllen
   const gEl=id=>document.getElementById(id);
   if(gEl('glossTitleEl'))gEl('glossTitleEl').textContent=t('glossTitle');
-  ['glossResiduum','glossErrBar','glossAnpassung','glossFarbe','glossRef'].forEach(k=>{const el=gEl(k+'El');if(el)el.innerHTML=t(k);});
+  ['glossResiduum','glossErrBar','glossAnpassung','glossFarbe','glossRef','glossLS'].forEach(k=>{const el=gEl(k+'El');if(el)el.innerHTML=t(k);});
   if(hB){const{levels,elRes,elWt}=compWLS();const pc=new Array(nEl).fill(0);
-    const valid=bRes.filter(r=>elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
+    const valid=bRes.filter(r=>elExDur[r.a]===null&&elSt[r.a]!=='mute'&&elExDur[r.b]===null&&elSt[r.b]!=='mute');
     for(const r of valid){pc[r.a]++;pc[r.b]++;}
     // Zuverlässigkeitseinschätzung berechnen
     const act=actEl();
     const maxLv=Math.max(...act.map(i=>Math.abs(levels[i])),0.001);
     function elColor(i){
       if(!pc[i])return'grey';
-      const lv=Math.abs(levels[i]),res=elRes[i]||0.001;
-      const snr=lv/res,risk=res*(lv/maxLv);
-      if(snr>2&&risk<0.7)return'green';
-      if(snr<1||risk>1.2)return'red';
-      return'yellow';
+      const res=elRes[i]||0.001;
+      if(res<=1.0)return'green';
+      if(res<3.0)return'yellow';
+      return'red';
     }
     // Fließtext
     const avgMeas=act.length>0?(pc.reduce((s,v)=>s+v,0)/act.length):0;
     const rtEl=document.getElementById('reliabilityText');
-    if(rtEl){
+    if(rtEl&&rtEl.parentElement){
       const rmsLv=Math.sqrt(act.reduce((s,i)=>s+levels[i]**2,0)/(act.length||1));
       const meanRes=act.reduce((s,i)=>s+elRes[i],0)/(act.length||1);
       const globalSNR=meanRes>0?rmsLv/meanRes:0;
@@ -858,10 +1031,10 @@ function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
         const msgs={de:'Erste Meßwerte liegen vor. Für eine zuverlässige Einschätzung sind noch mehr Vergleiche nötig. Bitte weitere Testreihen durchführen.',en:'First measurements recorded. More comparisons are needed for a reliable assessment. Please run more test series.',fr:'Premières mesures enregistrées. Des comparaisons supplémentaires sont nécessaires pour une évaluation fiable.',es:'Primeras mediciones registradas. Se necesitan más comparaciones para una evaluación fiable.'};
         txt=msgs[lang]||msgs.en;
       } else if(avgMeas<4){
-        const msgs={de:`Mittlere Datenlage. Globales Signal-Rausch-Verhältnis: ${globalSNR.toFixed(1)}. Die Anpassungen sind tendenziell verlässlich, aber weitere Messungen verbessern die Genauigkeit.`,en:`Moderate data. Global signal-to-noise ratio: ${globalSNR.toFixed(1)}. Adjustments are likely reliable, but more measurements will improve accuracy.`,fr:`Données modérées. Rapport signal/bruit global: ${globalSNR.toFixed(1)}. Les corrections sont probablement fiables, mais des mesures supplémentaires améliorent la précision.`,es:`Datos moderados. Relación señal/ruido global: ${globalSNR.toFixed(1)}. Los ajustes son probablemente fiables, pero más mediciones mejorarán la precisión.`};
+        const msgs={de:`Mittlere Datenlage. Mittleres Residuum: ${meanRes.toFixed(1)} dB. Die Anpassungen sind tendenziell verlässlich, aber weitere Messungen verbessern die Genauigkeit.`,en:`Moderate data. Mean residual: ${meanRes.toFixed(1)} dB. Adjustments are likely reliable, but more measurements will improve accuracy.`,fr:`Données modérées. Résidu moyen: ${meanRes.toFixed(1)} dB. Les corrections sont probablement fiables, mais des mesures supplémentaires améliorent la précision.`,es:`Datos moderados. Residuo medio: ${meanRes.toFixed(1)} dB. Los ajustes son probablemente fiables, pero más mediciones mejorarán la precisión.`};
         txt=msgs[lang]||msgs.en;
       } else {
-        const msgs={de:`Gute Datenlage. Globales Signal-Rausch-Verhältnis: ${globalSNR.toFixed(1)}. Mittlere Anpassung: ${rmsLv.toFixed(1)} dB, mittleres Residuum: ${meanRes.toFixed(1)} dB.`,en:`Good data. Global signal-to-noise ratio: ${globalSNR.toFixed(1)}. Mean adjustment: ${rmsLv.toFixed(1)} dB, mean residual: ${meanRes.toFixed(1)} dB.`,fr:`Bonnes données. Rapport signal/bruit global: ${globalSNR.toFixed(1)}. Correction moyenne: ${rmsLv.toFixed(1)} dB, résidu moyen: ${meanRes.toFixed(1)} dB.`,es:`Buenos datos. Relación señal/ruido global: ${globalSNR.toFixed(1)}. Ajuste medio: ${rmsLv.toFixed(1)} dB, residuo medio: ${meanRes.toFixed(1)} dB.`};
+        const msgs={de:`Gute Datenlage. Mittleres Residuum: ${meanRes.toFixed(1)} dB. Mittlere Anpassung: ${rmsLv.toFixed(1)} dB.`,en:`Good data. Mean residual: ${meanRes.toFixed(1)} dB. Mean adjustment: ${rmsLv.toFixed(1)} dB.`,fr:`Bonnes données. Résidu moyen: ${meanRes.toFixed(1)} dB. Correction moyenne: ${rmsLv.toFixed(1)} dB.`,es:`Buenos datos. Residuo medio: ${meanRes.toFixed(1)} dB. Ajuste medio: ${rmsLv.toFixed(1)} dB.`};
         txt=msgs[lang]||msgs.en;
         if(redEls.length){const names=redEls.map(i=>`E${dEN(i)}`).join(', ');const warn={de:` Unsichere Messung bei: ${names}. Weitere Testreihen empfohlen.`,en:` Uncertain measurement for: ${names}. Further test runs recommended.`,fr:` Mesure incertaine pour: ${names}. Des séries de tests supplémentaires sont recommandées.`,es:` Medición incierta para: ${names}. Se recomiendan más series de pruebas.`};txt+=(warn[lang]||warn.en);}
         else if(yellEls.length){const names=yellEls.map(i=>`E${dEN(i)}`).join(', ');const warn={de:` Grenzwertige Meßqualität bei: ${names}.`,en:` Borderline measurement quality for: ${names}.`,fr:` Qualité de mesure limite pour: ${names}.`,es:` Calidad de medición límite para: ${names}.`};txt+=(warn[lang]||warn.en);}
@@ -870,17 +1043,18 @@ function renderResults(){const hJ=jRes.length>0,hB=bRes.length>0;
       rtEl.textContent=txt;
     }
     th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thOff')}</th><th>${t('thMes')}</th><th>${t('thRes')}</th><th>${t('thWgt')}</th><th>${t('thStR')}</th>`;
-    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),v=levels[i],ex=elSt[i]==='excluded'||elSt[i]==='mute';
-      let st='';if(elSt[i]){const lb={noisyHeavy:t('stNoisyHeavy'),noisyMore:t('stNoisyMore'),noisyLess:t('stNoisyLess'),almostMute:t('stAlmMute'),mute:t('stMute'),excluded:t('excluded')};st=lb[elSt[i]]||'';}if(elNt[i])st+=(st?' · ':'')+elNt[i];
+    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),v=levels[i],ex=elExDur[i]!==null||elSt[i]==='mute';
+      let st='';if(elExDur[i]!==null)st=t('excluded');else if(elSt[i]){const lb={noisyHeavy:t('stNoisyHeavy'),noisyMore:t('stNoisyMore'),noisyLess:t('stNoisyLess'),almostMute:t('stAlmMute'),mute:t('stMute')};st=lb[elSt[i]]||'';}if(elNt[i])st+=(st?' · ':'')+elNt[i];
       if(ex){tr.style.opacity='0.4';}
-      tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${ex?'#999':v>.05?'#2563eb':v<-.05?'#dc2626':'#666'}">${ex?'—':(v>=0?'+':'')+v.toFixed(1)}</td><td>${pc[i]||'—'}</td><td>${elRes[i]>0?elRes[i].toFixed(1):'—'}</td><td>${ex?'—':elWt[i].toFixed(1)}</td><td style="font-size:.78em">${st}</td>`;tb.appendChild(tr);}
-    drawChart(document.getElementById('resChart'),levels,elRes,true,elColor);document.getElementById('chartExpl').textContent=t('chartExplB');
+      tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(effFreq(i))}</td><td style="color:${ex?'#999':v>.05?'#2563eb':v<-.05?'#dc2626':'#666'}">${ex?'—':(v>=0?'+':'')+v.toFixed(1)}</td><td>${pc[i]||'—'}</td><td style="color:${ex?'#999':elColor(i)==='green'?'#16a34a':elColor(i)==='yellow'?'#d97706':elColor(i)==='red'?'#dc2626':'#999'}">${elRes[i]>0?elRes[i].toFixed(1):'—'}</td><td>${ex?'—':elWt[i].toFixed(1)}</td><td style="font-size:.78em">${st}</td>`;tb.appendChild(tr);}
+    drawChart(document.getElementById('resChart'),levels,elRes,true,elColor);const chE=document.getElementById('chartExpl');if(chE)chE.textContent=t('chartExplB');
   }else if(hJ){const sc=new Array(nEl).fill(0),cc=new Array(nEl).fill(0);
     for(const r of jRes){cc[r.a]++;cc[r.b]++;if(r.result==='a'){sc[r.a]++;sc[r.b]--;}else if(r.result==='b'){sc[r.b]++;sc[r.a]--;}}
-    th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHz')}</th><th>${t('thSc')}</th><th>${t('thComp')}</th>`;
-    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),s=sc[i];tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(freqs[i])}</td><td style="color:${s>0?'#2563eb':s<0?'#dc2626':'#666'}">${s>0?'+':''}${s}</td><td>${cc[i]||'—'}</td>`;tb.appendChild(tr);}
-    drawChart(document.getElementById('resChart'),sc,null,false);document.getElementById('chartExpl').textContent=t('chartExplJ');}
-  document.getElementById('resExplain').textContent=t('resExplain');}
+    th.innerHTML=`<th>${t('thEl')}</th><th>${t('thHzStd')}</th><th>${t('thSc')}</th><th>${t('thComp')}</th>`;
+    for(let i=0;i<nEl;i++){const tr=document.createElement('tr'),s=sc[i];tr.innerHTML=`<td style="font-weight:600">${dEN(i)}</td><td>${Math.round(effFreq(i))}</td><td style="color:${s>0?'#2563eb':s<0?'#dc2626':'#666'}">${s>0?'+':''}${s}</td><td>${cc[i]||'—'}</td>`;tb.appendChild(tr);}
+    drawChart(document.getElementById('resChart'),sc,null,false);const chEj=document.getElementById('chartExpl');if(chEj)chEj.textContent=t('chartExplJ');}
+  const reExp=document.getElementById('resExplain');if(reExp)reExp.textContent=t('resExplain');
+  if(typeof updFClearBtn==='function')updFClearBtn();}
 
 // ============================================================
 // CHART
@@ -901,7 +1075,7 @@ function drawChart(cv,vals,res,isOff,elColor){const ctx=cv.getContext('2d'),dpr=
     ctx.fillStyle=col;ctx.fillRect(x,Math.min(yZ,yV),bW,Math.abs(yV-yZ)||2);
     if(res&&res[i]>0&&act.includes(i)){const r=res[i],yt=tY(v+r),yb=tY(v-r);ctx.strokeStyle='#00000044';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tX(j),yt);ctx.lineTo(tX(j),yb);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(j)-4,yt);ctx.lineTo(tX(j)+4,yt);ctx.stroke();ctx.beginPath();ctx.moveTo(tX(j)-4,yb);ctx.lineTo(tX(j)+4,yb);ctx.stroke();}
     ctx.fillStyle=i===refEl?'#2563eb':'#555';ctx.font=(i===refEl?'bold ':'')+'10px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),tX(j),h-pad.bottom+14);
-    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(Math.round(freqs[i]),tX(j),h-pad.bottom+25);
+    ctx.font='8px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(Math.round(effFreq(i)),tX(j),h-pad.bottom+25);
     if(j===0){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('apikal'),tX(j),h-pad.bottom+36);}
     if(j===allE.length-1){ctx.font='8px Segoe UI,sans-serif';ctx.fillText(t('basal'),tX(j),h-pad.bottom+36);}}
   ctx.strokeStyle='#2563eb44';ctx.lineWidth=2;ctx.beginPath();let first=true;for(let j=0;j<allE.length;j++){const i=allE[j];if(!act.includes(i))continue;if(first){ctx.moveTo(tX(j),tY(vals[i]));first=false;}else ctx.lineTo(tX(j),tY(vals[i]));}ctx.stroke();
@@ -914,48 +1088,222 @@ function drawChart(cv,vals,res,isOff,elColor){const ctx=cv.getContext('2d'),dpr=
 function expText(){const ls=[],now=new Date().toLocaleString(lang==='de'?'de-DE':'en-US'),vol=document.getElementById('vol2').value;
   ls.push(`CI Sound Balancing – ${now}`);ls.push(`${MFR[mfr].name} (${nEl}) | ${t('lblVol')} ${vol}% | Ref: E${dEN(refEl)}`);ls.push('');
   if(bRes.length>0){const{levels,elRes}=compWLS();ls.push(`${t('thEl')}  ${t('thHz')}      ${t('thOff')}     ${t('thRes')}   ${t('thStR')}`);ls.push('───  ────────  ─────────  ────────  ──────');
-    for(let i=0;i<nEl;i++){const st=elSt[i]||'',n=elNt[i]?` (${elNt[i]})`:'';const hd=bRes.some(r=>(r.a===i||r.b===i));ls.push(`${String(dEN(i)).padStart(3)}  ${String(Math.round(freqs[i])).padStart(5)} Hz  ${!hd?'    —    ':((levels[i]>=0?'+':'')+levels[i].toFixed(1)+' dB').padStart(9)}  ${!hd?'  —   ':(elRes[i].toFixed(1)+' dB').padStart(8)}  ${st}${n}`);}}
+    for(let i=0;i<nEl;i++){const st=elSt[i]||'',n=elNt[i]?` (${elNt[i]})`:'';const hd=bRes.some(r=>(r.a===i||r.b===i));ls.push(`${String(dEN(i)).padStart(3)}  ${String(Math.round(effFreq(i))).padStart(5)} Hz  ${!hd?'    —    ':((levels[i]>=0?'+':'')+levels[i].toFixed(1)+' dB').padStart(9)}  ${!hd?'  —   ':(elRes[i].toFixed(1)+' dB').padStart(8)}  ${st}${n}`);}}
   const eff=getEffectiveLevels();if(eff.some(v=>v!==0)){ls.push('');ls.push('Levels:');
-    for(let i=0;i<nEl;i++)ls.push(`  E${dEN(i)} (${Math.round(freqs[i])} Hz): ${(eff[i]>=0?'+':'')+eff[i].toFixed(1)} dB`);}
+    for(let i=0;i<nEl;i++)ls.push(`  E${dEN(i)} (${Math.round(effFreq(i))} Hz): ${(eff[i]>=0?'+':'')+eff[i].toFixed(1)} dB`);}
   return ls.join('\n');}
 function copyRes(){navigator.clipboard.writeText(expText()).then(()=>alert(t('copyDone'))).catch(()=>{const ta=document.createElement('textarea');ta.value=expText();document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert(t('copyDone'));});}
-async function saveJson(){const d={version:'2.1',date:new Date().toISOString(),manufacturer:mfr,frequencies:freqs,electrodeStatus:elSt,electrodeNotes:elNt,electrodeExcludedDuring:elExDur,referenceElectrode:refEl,paradigm:document.getElementById('paraI').value,toneDuration:parseInt(document.getElementById('dur1').value),pauseDuration:parseInt(document.getElementById('pau1').value),judgmentResults:jRes,balanceResults:bRes,volume:document.getElementById('vol2').value,manualLevels:manualLevels,presets:presets,playerSource:document.getElementById('plSrc').value,eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)};
+function resetAll(){const ch=confirm(t('resetConfirm'));if(!ch)return;
+  // Reset both sides completely
+  for(const s of SIDES){
+    sideData[s].manufacturer='medel';
+    sideData[s].nEl=MFR['medel'].n;
+    sideData[s].freqs=[...MFR['medel'].freqs];
+    sideData[s].elSt=new Array(sideData[s].nEl).fill(null);
+    sideData[s].elNt=new Array(sideData[s].nEl).fill('');
+    sideData[s].elExDur=new Array(sideData[s].nEl).fill(null);
+    sideData[s].elFreqOwn=new Array(sideData[s].nEl).fill(null);
+    sideData[s].manualLevels=new Array(sideData[s].nEl).fill(0);
+    sideData[s].refEl=Math.floor(sideData[s].nEl/2);
+    sideData[s].jRes=[];
+    sideData[s].bRes=[];
+    sideData[s].presets=[];
+    initSideData(s,'medel');
+  }
+  activeSide='left';
+  bindActiveSide();
+  document.getElementById('ciSideSelect').value='left';
+  document.getElementById('mfrSelect').value='medel';
+  document.getElementById('vol1').value='50';
+  document.getElementById('vol2').value='50';
+  document.getElementById('dur1').value='1000';
+  document.getElementById('dur2').value='1000';
+  document.getElementById('pau1').value='500';
+  document.getElementById('pau2').value='500';
+  document.getElementById('paraI').value='balance';
+  buildFreqTable();
+  buildLvGrid();
+  drawLvChart();
+  renderResults();
+  alert(t('resetDone'));
+}
+
+async function saveJson(){const d={version:'2.4',date:new Date().toLocaleString(lang==='de'?'de-DE':lang==='fr'?'fr-FR':lang==='es'?'es-ES':'en-US'),sides:{left:{manufacturer:sideData.left.manufacturer,frequencies:sideData.left.freqs,electrodeFreqOwn:sideData.left.elFreqOwn,electrodeStatus:sideData.left.elSt,electrodeNotes:sideData.left.elNt,electrodeExcludedDuring:sideData.left.elExDur,referenceElectrode:sideData.left.refEl,judgmentResults:sideData.left.jRes,balanceResults:sideData.left.bRes,manualLevels:sideData.left.manualLevels,presets:sideData.left.presets},right:{manufacturer:sideData.right.manufacturer,frequencies:sideData.right.freqs,electrodeFreqOwn:sideData.right.elFreqOwn,electrodeStatus:sideData.right.elSt,electrodeNotes:sideData.right.elNt,electrodeExcludedDuring:sideData.right.elExDur,referenceElectrode:sideData.right.refEl,judgmentResults:sideData.right.jRes,balanceResults:sideData.right.bRes,manualLevels:sideData.right.manualLevels,presets:sideData.right.presets}},currentSide:activeSide,paradigm:document.getElementById('paraI').value,toneDuration:parseInt(document.getElementById('dur1').value),pauseDuration:parseInt(document.getElementById('pau1').value),volume:document.getElementById('vol2').value,playerSource:(plSrcMeas&&plSrcLevels?'both':plSrcMeas?'measured':plSrcLevels?'levels':'none'),plSide:getPlayerSide(),eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
-  const now=new Date(),ds=now.toISOString().slice(0,10);
-  const fn=`loudness-balancing-v2.1-${ds}.json`;
+  const now=new Date(),ds=now.toISOString().slice(0,10),ts=now.toLocaleTimeString(lang==='de'?'de-DE':'en-US',{hour:'2-digit',minute:'2-digit',hour12:false}).replace(':','');
+  const fn=`loudness-balancing-v2.4-${ds}-${ts}.json`;
   if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:fn,types:[{description:'JSON',accept:{'application/json':['.json']}}]});const w=await h.createWritable();await w.write(blob);await w.close();return;}catch(e){if(e.name==='AbortError')return;}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();}
-function loadJson(file){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);
-  if(d.manufacturer&&MFR[d.manufacturer]){mfr=d.manufacturer;nEl=MFR[mfr].n;document.getElementById('mfrSelect').value=mfr;}
-  if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)elSt=d.electrodeStatus;if(d.electrodeNotes)elNt=d.electrodeNotes;
-  if(d.electrodeExcludedDuring)elExDur=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)refEl=d.referenceElectrode;
-  if(d.paradigm)document.getElementById('paraI').value=d.paradigm;
-  if(d.toneDuration){document.getElementById('dur1').value=d.toneDuration;document.getElementById('dur2').value=d.toneDuration;}
-  if(d.pauseDuration){document.getElementById('pau1').value=d.pauseDuration;document.getElementById('pau2').value=d.pauseDuration;}
-  if(d.judgmentResults)jRes=d.judgmentResults;if(d.balanceResults)bRes=d.balanceResults;
-  if(d.manualLevels)manualLevels=d.manualLevels;
-  if(d.presets)presets=d.presets;
-  if(d.playerSource)document.getElementById('plSrc').value=d.playerSource;
+
+// Vollständig korrigierte loadOldFormat
+function loadOldFormat(d, targetSide) {
+  console.log('loadOldFormat aufgerufen für', targetSide);
+  const s = sideData[targetSide];
+  
+  // Hersteller setzen
+  if (d.manufacturer && MFR[d.manufacturer]) {
+    s.manufacturer = d.manufacturer;
+  } else {
+    s.manufacturer = 'medel';
+  }
+  
+  // Anzahl Elektroden und Frequenzen
+  s.nEl = MFR[s.manufacturer].n;
+  s.freqs = d.frequencies ? [...d.frequencies] : [...MFR[s.manufacturer].freqs];
+  
+  // Falls die geladenen Frequenzen nicht zur Elektrodenanzahl passen, korrigieren
+  if (s.freqs.length !== s.nEl) {
+    console.warn('Frequenzanzahl passt nicht, verwende Standard');
+    s.freqs = [...MFR[s.manufacturer].freqs];
+  }
+  
+  // Arrays initialisieren
+  s.elSt = d.electrodeStatus ? [...d.electrodeStatus] : new Array(s.nEl).fill(null);
+  s.elNt = d.electrodeNotes ? [...d.electrodeNotes] : new Array(s.nEl).fill('');
+  s.elExDur = d.electrodeExcludedDuring ? [...d.electrodeExcludedDuring] : new Array(s.nEl).fill(null);
+  
+  // Migration: 'excluded' aus elSt in elExDur verschieben
+  for (let i = 0; i < s.elSt.length; i++) {
+    if (s.elSt[i] === 'excluded') {
+      s.elExDur[i] = s.elExDur[i] || Date.now();
+      s.elSt[i] = null;
+    }
+  }
+  
+  // Referenzelektrode
+  s.refEl = (d.referenceElectrode !== undefined && d.referenceElectrode < s.nEl) 
+    ? d.referenceElectrode 
+    : Math.floor(s.nEl / 2);
+  
+  // Messergebnisse
+  s.jRes = d.judgmentResults ? [...d.judgmentResults] : [];
+  s.bRes = d.balanceResults ? [...d.balanceResults] : [];
+  s.manualLevels = d.manualLevels ? [...d.manualLevels] : new Array(s.nEl).fill(0);
+  
+  // Presets
+  if (d.presets && Array.isArray(d.presets)) {
+    s.presets = d.presets;
+  } else {
+    const centerMap = { medel: 5.5, ab: 7.5, cochlear: 10.5 };
+    const defaultCenter = centerMap[s.manufacturer] || Math.floor(s.nEl / 2);
+    s.presets = PR_TYPES.map(tp => ({
+      type: tp,
+      on: false,
+      strength: 0,
+      center: defaultCenter,
+      width: Math.max(2, Math.floor(s.nEl / 4)),
+      cutoff: tp === 'bassboost' ? Math.floor(s.nEl / 3) : Math.floor(s.nEl * 2 / 3)
+    }));
+  }
+  // elFreqOwn: split loaded freqs vs defaults
+  if (d.electrodeFreqOwn) {
+    s.elFreqOwn = [...d.electrodeFreqOwn];
+  } else {
+    const defF = MFR[s.manufacturer].freqs;
+    s.elFreqOwn = s.freqs.map((f, i) => Math.round(f) === Math.round(defF[i] || 0) ? null : f);
+  }
+  // Deactivated: ensure elExDur is set
+  for (let _i = 0; _i < s.elSt.length; _i++) {
+    if (s.elSt[_i] === 'deactivated') { s.elExDur[_i] = s.elExDur[_i] || Date.now(); }
+  }
+  console.log('loadOldFormat fertig, nEl=', s.nEl, 'bRes.length=', s.bRes.length);
+}
+
+function loadJson(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+
+      // Neues Format (mit sides)
+      if (d.sides && d.sides.left && d.sides.right) {
+        loadSideData('left', d.sides.left);
+        loadSideData('right', d.sides.right);
+        activeSide = SIDES.includes(d.currentSide) ? d.currentSide : 'left';
+        applyLoadedData(d);
+      }
+      // Altes Format – Modal zur Seitenwahl anzeigen
+      else {
+        const overlay = document.getElementById('loadSideOverlay');
+        overlay.classList.add('active');
+        const doLoad = (side) => {
+          overlay.classList.remove('active');
+          loadOldFormat(d, side);
+          activeSide = side;
+          applyLoadedData(d);
+        };
+        document.getElementById('loadSideLeft').onclick = () => doLoad('left');
+        document.getElementById('loadSideRight').onclick = () => doLoad('right');
+        document.getElementById('loadSideCanc').onclick = () => {
+          overlay.classList.remove('active');
+          document.getElementById('fInput').value = '';
+        };
+      }
+    } catch(err) {
+      console.error('Fehler:', err);
+      alert('Fehler beim Laden: ' + err.message);
+    }
+  };
+  r.readAsText(file);
+}
+
+function applyLoadedData(d) {
+  bindActiveSide();
+  const gEl=id=>document.getElementById(id);
+  const setVal=(id,v)=>{const e=gEl(id);if(e)e.value=v;};
+  setVal('ciSideSelect',activeSide);
+  setVal('mfrSelect',mfr);
+  if(d.paradigm)setVal('paraI',d.paradigm);
+  if(d.toneDuration){setVal('dur1',d.toneDuration);setVal('dur2',d.toneDuration);}
+  if(d.pauseDuration){setVal('pau1',d.pauseDuration);setVal('pau2',d.pauseDuration);}
+  if(d.volume){setVal('vol1',d.volume);setVal('vol2',d.volume);}
   if(d.eqOn!==undefined){plEqOn=d.eqOn;updEqToggleBtn();}
-  if(d.eqStrength!==undefined)document.getElementById('plStr').value=d.eqStrength;
-  buildFreqTable();renderResults();switchTab('results');
-}catch(err){alert('Error: '+err.message);}};r.readAsText(file);}
-function clearRes(){const ch=confirm(t('delConfirmMeas'));if(!ch)return;jRes=[];bRes=[];renderResults();
-  if(confirm(t('delConfirmAll'))){manualLevels=new Array(nEl).fill(0);initPresets();initEl();}}
+  if(d.eqStrength!==undefined)setVal('plStr',d.eqStrength);
+  if(d.playerSource !== undefined){
+      plSrcMeas = d.playerSource==='measured' || d.playerSource==='both';
+      plSrcLevels = d.playerSource==='levels' || d.playerSource==='both';
+  } else {
+      plSrcMeas = true;
+      plSrcLevels = true;
+  }  buildFreqTable();
+  renderResults();
+  if(typeof buildLvGrid==='function')buildLvGrid();
+  if(typeof drawLvChart==='function')drawLvChart();
+  if(typeof updFClearBtn==='function')updFClearBtn();
+  if(pEqF&&pEqF.length>0)pUpdEQ();
+  updSideButtons();
+  const fi=gEl('fInput');if(fi)fi.value='';
+  const msgCount=(bRes&&bRes.length)||0;
+  const sideLabel=activeSide==='left'?'Links':'Rechts';
+  alert(`Geladen: ${msgCount} Messungen auf Seite ${sideLabel}`);
+}
+function clearRes(){const ch=confirm(t('delConfirmMeas'));if(!ch)return;sideData[activeSide].jRes.splice(0,sideData[activeSide].jRes.length);sideData[activeSide].bRes.splice(0,sideData[activeSide].bRes.length);jRes=sideData[activeSide].jRes;bRes=sideData[activeSide].bRes;renderResults();pUpdEQ();}
 
 function exportEasyEffects(){
-  const gains=getPlayerGains();
+  const gains=getPlayerGains();const mode=getPlayerSide();
+  const leftGains=Array.isArray(gains)?gains:(gains.left||[]);
+  const rightGains=Array.isArray(gains)?gains:(gains.right||gains.left||[]);
   const str=parseInt(document.getElementById('plStr').value)/100;
   const nhSim=document.getElementById('plNHSim').checked;
-  if(!gains.some(v=>v!==0)&&!plEqOn){alert(t('plNoData'));return;}
+  const hasGain=(arr)=>arr.some(v=>v!==0);
+  if(!(hasGain(leftGains)||hasGain(rightGains))&&!plEqOn){alert(t('plNoData'));return;}
   const bands=[];
   for(let i=0;i<nEl;i++){
-    const rawG=gains[i];const g=plEqOn?(nhSim?rawG*str:-rawG*str):0;
-    bands.push({frequency:freqs[i],gain:parseFloat(g.toFixed(1)),q:parseFloat(pCompQ(i).toFixed(2))});}
+    const rawGL=leftGains[i]||0;const rawGR=rightGains[i]||0;
+    const rawG=(mode==='both')?0:rawGL;
+    const g=plEqOn?(nhSim?rawG*str:-rawG*str):0;
+    bands.push({frequency:effFreq(i),gain:parseFloat(g.toFixed(1)),q:parseFloat(pCompQ(i).toFixed(2))});}
   const makeBand=(b)=>({"frequency":b.frequency,"gain":b.gain,"mode":"APO (DR)","mute":false,"q":b.q,"slope":"x1","solo":false,"type":"Bell","width":4.0});
   const left={},right={};
-  bands.forEach((b,i)=>{left['band'+i]=makeBand(b);right['band'+i]=makeBand(b);});
-  const preset={"output":{"blocklist":[],"equalizer#0":{"balance":0.0,"bypass":false,"input-gain":0.0,"left":left,"output-gain":0.0,"right":right,"split-channels":false,"num-bands":bands.length},"plugins_order":["equalizer#0"]}};
+  for(let i=0;i<nEl;i++){
+    const gl=Array.isArray(gains)?gains[i]:(leftGains[i]||0);
+    const gr=Array.isArray(gains)?gains[i]:(rightGains[i]||0);
+    const gL=plEqOn?(nhSim?gl*str:-gl*str):0;
+    const gR=plEqOn?(nhSim?gr*str:-gr*str):0;
+    left['band'+i]=makeBand({frequency:effFreq(i),gain:parseFloat(gL.toFixed(1)),q:parseFloat(pCompQ(i).toFixed(2))});
+    right['band'+i]=makeBand({frequency:effFreq(i),gain:parseFloat(gR.toFixed(1)),q:parseFloat(pCompQ(i).toFixed(2))});
+  }
+  const preset={"output":{"blocklist":[],"equalizer#0":{"balance":0.0,"bypass":false,"input-gain":0.0,"left":left,"output-gain":0.0,"right":right,"split-channels":mode==='both',"num-bands":nEl},"plugins_order":["equalizer#0"]}};
   const blob=new Blob([JSON.stringify(preset,null,4)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='ci-correction-easyeffects.json';a.click();}
 
@@ -967,8 +1315,28 @@ function switchTab(n){document.querySelectorAll('.tab').forEach(t=>t.classList.t
 // ============================================================
 // EQ TOGGLE BUTTON
 // ============================================================
+function updPlSrcButtons(){
+  const mBtn=document.getElementById('plSrcMeasBtn');
+  const lBtn=document.getElementById('plSrcLevelsBtn');
+  if(!mBtn||!lBtn)return;
+  const activeS='background:var(--success);color:#fff;border-color:var(--success)';
+  const inactS='';
+  mBtn.style.cssText=plSrcMeas?activeS:inactS;
+  lBtn.style.cssText=plSrcLevels?activeS:inactS;
+  // Sync hidden select
+  const sel=document.getElementById('plSrc');
+  if(sel){
+    if(plSrcMeas&&plSrcLevels)sel.value='both';
+    else if(plSrcMeas)sel.value='measured';
+    else if(plSrcLevels)sel.value='levels';
+    else sel.value='measured'; // fallback
+  }
+  updEqToggleBtn();
+}
 function updEqToggleBtn(){const btn=document.getElementById('plEqToggle');
-  if(plEqOn){btn.textContent=t('plEqOn');btn.style.background='var(--success)';btn.style.color='#fff';btn.style.borderColor='var(--success)';}
+  const bothOff=plEqOn&&!plSrcMeas&&!plSrcLevels;
+  if(plEqOn&&!bothOff){btn.textContent=t('plEqOn');btn.style.background='var(--success)';btn.style.color='#fff';btn.style.borderColor='var(--success)';}
+  else if(bothOff){btn.textContent=t('plEqOn');btn.style.background='var(--warning)';btn.style.color='#fff';btn.style.borderColor='var(--warning)';}
   else{btn.textContent=t('plEqOff');btn.style.background='#e5e7eb';btn.style.color='var(--text)';btn.style.borderColor='var(--border)';}}
 
 // ============================================================
@@ -977,12 +1345,17 @@ function updEqToggleBtn(){const btn=document.getElementById('plEqToggle');
 document.addEventListener('DOMContentLoaded',()=>{
   try{const sl=localStorage.getItem('ci-lb-lang');if(sl&&L[sl]){document.getElementById('langSelect').value=sl;lang=sl;}}catch(e){}
   applyLang();
+  updSideButtons();
+  updFClearBtn();
+  updPlSrcButtons();
   document.getElementById('langSelect').addEventListener('change',applyLang);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
-  document.getElementById('resetBtn').addEventListener('click',resetFreqs);
+  
   document.getElementById('sweepBtn').addEventListener('click',playSweep);
   document.getElementById('stopBtn').addEventListener('click',stopAll);
   document.getElementById('mfrSelect').addEventListener('change',e=>switchMfr(e.target.value));
+  // ciSideSelect hidden; side switching via sideLeftBtn/sideRightBtn onclick
+  document.getElementById('plSide').addEventListener('change',()=>{if(pBuf){pBuildEQ();if(pPlaying){pPause();pPlay();}}plCheck();});
   // Volume sync between setup and test (textboxes)
   document.getElementById('vol1').addEventListener('change',e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));e.target.value=v;document.getElementById('vol2').value=v;});
   document.getElementById('vol2').addEventListener('change',e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));e.target.value=v;document.getElementById('vol1').value=v;});
@@ -995,6 +1368,27 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('manPlayBtn').addEventListener('click',playManPair);
   document.getElementById('exclBtn').addEventListener('click',showExclDlg);
   document.getElementById('exclCanc').addEventListener('click',()=>{document.getElementById('exclDlg').classList.add('hidden');playCur();});
+  document.getElementById('swapBtn').addEventListener('click',()=>{
+    if(!testAct||testIdx>=testPairs.length)return;
+    stopAll();
+    const slVal=parseFloat(document.getElementById('balSl').value);
+    const totOff=curBase+slVal;
+    [curA,curB]=[curB,curA];
+    testPairs[testIdx]=[curA,curB];
+    curBase=0;
+    rstSlR();
+    const newSlVal=-totOff;
+    const s=document.getElementById('balSl');
+    s.min=Math.min(parseFloat(s.min),Math.floor(newSlVal)-1).toString();
+    s.max=Math.max(parseFloat(s.max),Math.ceil(newSlVal)+1).toString();
+    s.value=newSlVal;
+    document.getElementById('balV').textContent=newSlVal.toFixed(1)+' dB';
+    updBalAbs(newSlVal);
+    document.getElementById('tAL').innerHTML=`<span class="aba-label">A (Ref)</span>E${dEN(curA)}`;
+    document.getElementById('tBL').innerHTML=`<span class="aba-label">B (Slider)</span>E${dEN(curB)}`;
+    document.getElementById('pairF').textContent=`${Math.round(effFreq(curA))} Hz vs. ${Math.round(effFreq(curB))} Hz`;
+    playCur();
+  });
   const jH=r=>()=>{if(document.getElementById('pairType').value==='manual'){recJdg(r);afterManRes();}else recJdg(r);};
   document.getElementById('bAL').addEventListener('click',jH('a'));document.getElementById('bEq').addEventListener('click',jH('equal'));document.getElementById('bBL').addEventListener('click',jH('b'));
   document.getElementById('balSl').addEventListener('input',e=>{const v=parseFloat(e.target.value);document.getElementById('balV').textContent=v.toFixed(1)+' dB';updBalAbs(v);});
@@ -1005,49 +1399,342 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('fLoadBtn').addEventListener('click',()=>document.getElementById('fInput').click());
   document.getElementById('fInput').addEventListener('change',e=>{if(e.target.files[0])loadJson(e.target.files[0]);});
   document.getElementById('fSaveBtn').addEventListener('click',saveJson);
-  document.getElementById('fPrintBtn').addEventListener('click',()=>{
-    const ps=document.getElementById('printSection');ps.style.display='';
-    const pi=document.getElementById('printPlayerInfo');
-    const src=document.getElementById('plSrc').value;
-    const srcLbl={measured:t('plSrcMeas'),levels:t('plSrcLevels'),both:t('plSrcBoth')};
-    const str=document.getElementById('plStr').value;
-    const nhSim=document.getElementById('plNHSim').checked;
-    const gains=getPlayerGains();
-    const preCorr=document.getElementById('preCorrect').checked;
-    let html=`<p style="font-size:.86em;margin-bottom:8px"><b>${t('plSrcLabel')}</b> ${srcLbl[src]||src} · <b>${t('plEqStr')}</b> ${str}% · Equalizer: ${plEqOn?'ON':'OFF'}${nhSim?' · '+t('plNHLabel'):''}${preCorr?' · '+t('printPreCorrect'):''}</p>`;
-    const eff=getEffectiveLevels();const hasLv=eff.some(v=>v!==0);
-    if(hasLv){html+='<table class="results-table" style="font-size:.78em"><thead><tr><th>'+t('thEl')+'</th>';
-      for(let i=0;i<nEl;i++)html+='<th>E'+dEN(i)+'</th>';
-      html+='</tr></thead><tbody><tr><td style="font-size:.78em">Manual</td>';
-      for(let i=0;i<nEl;i++)html+=`<td>${manualLevels[i].toFixed(1)}</td>`;
-      html+='</tr><tr><td style="font-size:.78em">Effektiv</td>';
-      for(let i=0;i<nEl;i++)html+=`<td>${eff[i].toFixed(1)}</td>`;
-      html+='</tr></tbody></table>';}
-    html+='<p style="font-size:.82em;color:var(--text-muted);margin-top:8px;margin-bottom:4px"><b>Equalizer Gains ('+t('plEqTitle')+'):</b></p>';
-    html+='<table class="results-table" style="font-size:.78em"><thead><tr><th>'+t('thEl')+'</th>';
-    for(let i=0;i<nEl;i++)html+='<th>E'+dEN(i)+'</th>';
-    html+='</tr></thead><tbody><tr><td style="font-size:.78em">Gain</td>';
-    const eqS=parseInt(document.getElementById('plStr').value)/100;
-    for(let i=0;i<nEl;i++){const g=plEqOn?(nhSim?gains[i]*eqS:-gains[i]*eqS):0;html+=`<td>${g.toFixed(1)}</td>`;}
-    html+='</tr></tbody></table>';
-    pi.innerHTML=html;
-    setTimeout(()=>{window.print();ps.style.display='none';},100);});
+document.getElementById('fPrintBtn').addEventListener('click', async () => {
+  // Hilfsfunktionen
+  const getStatusText = (i, excl, st) => {
+    if (excl) return 'ausgeschlossen';
+    if (!st) return '';
+    const map = {
+      noisyHeavy: 'Starkes Rauschen',
+      noisyMore: 'Rauschen mit etwas Ton',
+      noisyLess: 'Ton mit Rauschen',
+      almostMute: 'fast stumm',
+      mute: 'stumm'
+    };
+    return map[st] || '';
+  };
+
+  const getResiduum = (i, srcFlag, bResLocal, elResLocal) => {
+    if (srcFlag === 'levels') return '';
+    const hasMeas = bResLocal.some(r => r.a === i || r.b === i);
+    if (!hasMeas) return '';
+    const r = elResLocal[i];
+    return (r !== undefined && r > 0) ? r.toFixed(1) + ' dB' : '';
+  };
+
+  // Formatierung für Preset-Parameter
+  const formatPresetParams = (pr, mfrLocal, nElLocal, dENfn) => {
+    const params = [];
+    if (pr.center !== undefined) {
+      const centerVal = pr.center;
+      if (Number.isInteger(centerVal)) {
+        params.push(`Center: E${dENfn(centerVal)}`);
+      } else {
+        const lower = Math.floor(centerVal);
+        const upper = lower + 1;
+        params.push(`Center: E${dENfn(lower)}–E${dENfn(upper)}`);
+      }
+    }
+    if (pr.width !== undefined) params.push(`Breite: ${pr.width}`);
+    if (pr.cutoff !== undefined) params.push(`Cutoff: E${dENfn(pr.cutoff)}`);
+    return params.length ? ` (${params.join(', ')})` : '';
+  };
+
+  // EQ-Graphen für eine Seite zeichnen (auf einem separaten Canvas)
+  const drawEqImageForSide = (side) => {
+    return withSide(side, () => {
+      // Temporäres Canvas erstellen
+      const canvas = document.createElement('canvas');
+      const width = 800, height = 300;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // Gains für diese Seite holen
+      const gains = computeGains();
+      const allE = allEl();
+      const act = new Set(actEl());
+      const str = parseInt(document.getElementById('plStr').value) / 100;
+      const nhSim = document.getElementById('plNHSim').checked;
+      const plEqOnLocal = plEqOn;
+
+      // Maximaler Gain für Skalierung
+      let maxAbs = 1;
+      for (const i of allE) {
+        if (!act.has(i)) continue;
+        const g = Math.abs(gains[i]) * str;
+        if (g > maxAbs) maxAbs = g;
+      }
+      maxAbs = Math.ceil(maxAbs / 2) * 2 + 2;
+
+      const pad = { left: 40, right: 14, top: 14, bottom: 26 };
+      const pW = width - pad.left - pad.right;
+      const pH = height - pad.top - pad.bottom;
+      const zY = pad.top + pH / 2;
+      const gW = pW / allE.length;
+
+      // Hintergrund
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 4]);
+
+      // Horizontale Hilfslinien
+      const steps = Math.min(4, Math.floor(maxAbs / 2));
+      for (let s = 1; s <= steps; s++) {
+        const dB = s * (maxAbs / steps);
+        const yO = (dB / maxAbs) * (pH / 2);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, zY - yO);
+        ctx.lineTo(width - pad.right, zY - yO);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pad.left, zY + yO);
+        ctx.lineTo(width - pad.right, zY + yO);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#999';
+        ctx.font = '9px Consolas,monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText('+' + dB.toFixed(0), pad.left - 4, zY - yO + 3);
+        ctx.fillText('-' + dB.toFixed(0), pad.left - 4, zY + yO + 3);
+        ctx.setLineDash([2, 4]);
+      }
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#999';
+      ctx.fillText('0', pad.left - 4, zY + 3);
+
+      // Null-Linie
+      ctx.strokeStyle = '#aaa';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, zY);
+      ctx.lineTo(width - pad.right, zY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Balken zeichnen
+      for (let j = 0; j < allE.length; j++) {
+        const i = allE[j];
+        const x = pad.left + j * gW;
+        const bW = Math.max(5, gW * 0.6);
+        const isExcluded = elExDur[i] !== null;
+        const isActive = act.has(i) && !isExcluded;
+        let ag = 0;
+        if (isActive && plEqOnLocal) {
+          ag = nhSim ? gains[i] * str : -gains[i] * str;
+        }
+        const bH = (Math.abs(ag) / maxAbs) * (pH / 2);
+        const y = ag >= 0 ? zY - bH : zY;
+
+        if (!isActive || isExcluded) {
+          ctx.fillStyle = '#d1d5db';
+          ctx.fillRect(x + (gW - bW) / 2, zY - 0.5, bW, 1);
+        } else {
+          ctx.fillStyle = ag === 0 ? '#ccc' : (ag > 0 ? '#16a34a' : '#dc2626');
+          if (bH > 0.5) {
+            ctx.fillRect(x + (gW - bW) / 2, y, bW, bH);
+          } else {
+            ctx.fillStyle = '#ccc';
+            ctx.fillRect(x + (gW - bW) / 2, zY - 0.5, bW, 1);
+          }
+        }
+
+        // Beschriftung
+        ctx.fillStyle = isActive ? '#666' : '#bbb';
+        ctx.font = '8px Segoe UI,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('E' + dEN(i), pad.left + j * gW + gW / 2, height - pad.bottom + 10);
+        ctx.font = '7px Consolas,monospace';
+        ctx.fillStyle = '#999';
+        const ef_ii=effFreq(i);ctx.fillText(ef_ii >= 1000 ? (ef_ii / 1000).toFixed(1) + 'k' : ef_ii, pad.left + j * gW + gW / 2, height - pad.bottom + 20);
+      }
+
+      return canvas.toDataURL('image/png');
+    });
+  };
+
+  // Aktuelle globale Einstellungen
+  const src = plSrcMeas&&plSrcLevels?'both':plSrcMeas?'measured':plSrcLevels?'levels':'measured';
+  const srcLabel = { measured: 'Gemessen', levels: 'Levels', both: 'Beide (addiert)', none: 'Keine' }[src] || src;
+  const strPercent = parseInt(document.getElementById('plStr').value) || 100;
+  const hersteller = MFR[mfr].name;
+  const ref = `E${dEN(refEl)}`;
+
+  // Daten für eine Seite sammeln
+  const collectSideData = (side) => {
+    return withSide(side, () => {
+      const gains = computeGains();
+      const { levels, elRes } = compWLS();
+      const activePresets = presets.filter(p => p.on && p.strength !== 0);
+      const activeManualLevels = [];
+      for (let i = 0; i < nEl; i++) {
+        if (manualLevels[i] !== 0) {
+          activeManualLevels.push({ electrode: i, value: manualLevels[i] });
+        }
+      }
+      return {
+        sideLabel: side === 'left' ? 'LINKS' : 'RECHTS',
+        nEl,
+        freqs: Array.from({length:nEl},(_,i)=>effFreq(i)),
+        gains,
+        levels,
+        elRes,
+        bResLocal: [...bRes],
+        elStLocal: [...elSt],
+        elExDurLocal: [...elExDur],
+        activePresets,
+        activeManualLevels,
+        dEN: (i) => dEN(i),
+        manufacturer: mfr
+      };
+    });
+  };
+
+  // HTML für eine Seite generieren
+  const generatePage = (data, eqImage) => {
+    const isLevelsOnly = (src === 'levels');
+    let rows = '';
+    for (let i = 0; i < data.nEl; i++) {
+      const gainVal = data.gains[i];
+      const gainStr = (gainVal === 0) ? '0.0' : (gainVal > 0 ? '+' + gainVal.toFixed(1) : gainVal.toFixed(1));
+      const residuum = getResiduum(i, isLevelsOnly, data.bResLocal, data.elRes);
+      const status = getStatusText(i, data.elExDurLocal[i] !== null, data.elStLocal[i]);
+      const isExcluded = data.elExDurLocal[i] !== null;
+      const rowStyle = isExcluded ? 'opacity: 0.5; background: #f9f9f9;' : '';
+      rows += `
+        <tr style="border-bottom: 1px solid #ddd; ${rowStyle}">
+          <td style="padding: 6px;">E${data.dEN(i)}</td>
+          <td style="padding: 6px;">${Math.round(data.freqs[i])}</td>
+          <td style="padding: 6px; color: ${gainVal > 0 ? '#16a34a' : (gainVal < 0 ? '#dc2626' : '#666')};">${gainStr}</td>
+          <td style="padding: 6px;">${residuum || '—'}</td>
+          <td style="padding: 6px;">${status || '—'}</td>
+        </tr>
+      `;
+    }
+
+    // Aktive Presets mit allen Parametern
+    let presetsHtml = '';
+    if (data.activePresets.length > 0) {
+      presetsHtml = `<p><strong>Aktive Presets:</strong> `;
+      presetsHtml += data.activePresets.map(p => {
+        const name = t(PR_NAMES[p.type]);
+        const params = formatPresetParams(p, data.manufacturer, data.nEl, data.dEN);
+        return `${name}: ${p.strength > 0 ? '+' : ''}${p.strength.toFixed(1)} dB${params}`;
+      }).join(' · ');
+      presetsHtml += `</p>`;
+    }
+
+    // Manuelle Levels (nur ≠ 0)
+    let manualHtml = '';
+    if (data.activeManualLevels.length > 0) {
+      manualHtml = `<p><strong>Manuelle Levels (≠0):</strong> `;
+      manualHtml += data.activeManualLevels.map(m => `E${data.dEN(m.electrode)}: ${m.value > 0 ? '+' : ''}${m.value.toFixed(1)} dB`).join(' · ');
+      manualHtml += `</p>`;
+    }
+
+    const eqImgTag = eqImage ? `<img src="${eqImage}" style="max-width: 100%; height: auto; border: 1px solid #ccc;" />` : '<p style="color: #999;">EQ-Graph konnte nicht geladen werden.</p>';
+
+    return `
+      <div style="page-break-after: always; margin-bottom: 20px; font-family: sans-serif;">
+        <h1 style="font-size: 1.8em; margin-bottom: 8px;">CI Sound Balancing – ${data.sideLabel}</h1>
+        <p style="color: #666; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
+          Ausgedruckt: ${new Date().toLocaleString()}
+        </p>
+
+        <h3 style="margin-top: 20px;">Equalizer-Kurve (angewandt)</h3>
+        <div style="margin: 10px 0 20px 0;">
+          ${eqImgTag}
+          <p style="font-size: 0.8em; color: #666; margin-top: 5px;">Grün = Anhebung, Rot = Absenkung, Grau = ausgeschlossen/keine Änderung</p>
+        </div>
+
+        <h3>Elektroden-Werte</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em; margin-bottom: 30px;">
+          <thead>
+            <tr style="background: #f0f0f0; border-bottom: 2px solid #ccc;">
+              <th style="padding: 8px; text-align: left;">Elektrode</th>
+              <th style="padding: 8px; text-align: left;">Mittenfrequenz (Hz)</th>
+              <th style="padding: 8px; text-align: left;">Änderung (dB)</th>
+              <th style="padding: 8px; text-align: left;">Residuum (dB)</th>
+              <th style="padding: 8px; text-align: left;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 30px; font-size: 0.7em; color: #666; border-top: 1px solid #ccc; padding-top: 12px;">
+          <p><strong>Einstellungen:</strong> EQ-Quelle: ${srcLabel} | EQ-Stärke: ${strPercent}% | CI-Hersteller: ${hersteller} | Referenz: ${ref}</p>
+          ${presetsHtml}
+          ${manualHtml}
+          <p>Tool: CI Sound Balancing v2.4 — https://github.com/mviereck/ci-loudness-balancing</p>
+        </div>
+      </div>
+    `;
+  };
+
+  // Daten und EQ-Bilder für beide Seiten sammeln
+  const leftData = collectSideData('left');
+  const rightData = collectSideData('right');
+  const leftImage = drawEqImageForSide('left');
+  const rightImage = drawEqImageForSide('right');
+
+  // Druck-HTML zusammenbauen
+  const printHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>CI Sound Balancing - Bericht</title>
+      <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; }
+        @media print {
+          body { margin: 0; padding: 0; }
+          .page-break { page-break-after: always; }
+        }
+      </style>
+    </head>
+    <body>
+      ${generatePage(leftData, leftImage)}
+      ${generatePage(rightData, rightImage)}
+    </body>
+    </html>
+  `;
+
+  // Druckfenster öffnen
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+});
   document.getElementById('fCopyBtn').addEventListener('click',copyRes);
+  document.getElementById('fResetBtn').addEventListener('click',resetAll);
   document.getElementById('fClearBtn').addEventListener('click',clearRes);
   document.getElementById('eeExportBtn').addEventListener('click',exportEasyEffects);
   // Levels tab
-  document.getElementById('lvResetBtn').addEventListener('click',function(){manualLevels=new Array(nEl).fill(0);buildLvGrid();lvOnChange();});
+  document.getElementById('lvResetBtn').addEventListener('click',function(){manualLevels.splice(0,manualLevels.length,...new Array(nEl).fill(0));buildLvGrid();lvOnChange();});
   ['lvChkMeas','lvChkMan','lvChkPre'].forEach(id=>document.getElementById(id).addEventListener('change',drawLvChart));
   // Player EQ toggle
   document.getElementById('plEqToggle').addEventListener('click',function(){plEqOn=!plEqOn;updEqToggleBtn();pUpdEQ();});
   updEqToggleBtn();
   // Player source
-  document.getElementById('plSrc').addEventListener('change',function(){if(pEqF.length>0)pUpdEQ();else plCheck();});
+  // EQ source toggle buttons
+document.getElementById('plSrcMeasBtn').addEventListener('click',function(){
+  plSrcMeas=!plSrcMeas;updPlSrcButtons();if(pEqF.length>0)pUpdEQ();else plCheck();
+});
+document.getElementById('plSrcLevelsBtn').addEventListener('click',function(){
+  plSrcLevels=!plSrcLevels;updPlSrcButtons();if(pEqF.length>0)pUpdEQ();else plCheck();
+});
   // Player EQ strength textbox
   document.getElementById('plStr').addEventListener('change',function(){let v=Math.max(0,Math.min(300,parseInt(this.value)||0));this.value=v;pUpdEQ();});
   document.getElementById('plStr').addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const st=e.shiftKey?5:1;let v=parseInt(this.value)||100;if(e.key==='ArrowRight'||e.key==='ArrowUp')v=Math.min(300,v+st);if(e.key==='ArrowLeft'||e.key==='ArrowDown')v=Math.max(0,v-st);this.value=v;pUpdEQ();}});
   document.querySelectorAll('.plStrBtn').forEach(b=>b.addEventListener('click',function(){const v=this.dataset.v;document.getElementById('plStr').value=v;pUpdEQ();}));
   document.getElementById('plNHSim').addEventListener('change',function(){document.getElementById('plNHInfo').classList.toggle('hidden',!this.checked);pUpdEQ();});
+  document.getElementById('balBalance').addEventListener('input',function(){const v=parseFloat(this.value)||0;document.getElementById('balValue').textContent=(v>=0?'+':'')+v.toFixed(1)+' dB';if(pBuf){pUpdEQ();}});
   document.getElementById('plMapOn').addEventListener('change',function(){document.getElementById('plMapInfo').classList.toggle('hidden',!this.checked);if(pBuf){pBuildEQ();if(pPlaying){pPause();pPlay();}}});
   document.getElementById('plMaplaw').addEventListener('change',function(){if(pBuf&&document.getElementById('plMapOn').checked){pBuildMapNode();if(pPlaying){pPause();pPlay();}}});
   // Player volume textbox
@@ -1074,17 +1761,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(testMode==='balance'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();const s=document.getElementById('balSl'),st=e.shiftKey?.1:.5;let v=parseFloat(s.value);if(e.key==='ArrowLeft')v=Math.max(parseFloat(s.min),+(v-st).toFixed(1));if(e.key==='ArrowRight')v=Math.min(parseFloat(s.max),+(v+st).toFixed(1));s.value=v;document.getElementById('balV').textContent=v.toFixed(1)+' dB';updBalAbs(v);}});
   // Load from localStorage
   try{const sv=localStorage.getItem('ci-lb-v4');if(sv){const d=JSON.parse(sv);
-    if(d.manufacturer&&MFR[d.manufacturer]){mfr=d.manufacturer;nEl=MFR[mfr].n;document.getElementById('mfrSelect').value=mfr;}
-    if(d.frequencies)freqs=d.frequencies;if(d.electrodeStatus)elSt=d.electrodeStatus;if(d.electrodeNotes)elNt=d.electrodeNotes;
-    if(d.electrodeExcludedDuring)elExDur=d.electrodeExcludedDuring;if(d.referenceElectrode!==undefined)refEl=d.referenceElectrode;
-    if(d.judgmentResults)jRes=d.judgmentResults;if(d.balanceResults)bRes=d.balanceResults;
-    if(d.manualLevels)manualLevels=d.manualLevels;
-    if(d.presets)presets=d.presets;
-    if(d.playerSource)document.getElementById('plSrc').value=d.playerSource;
+    if(d.sides){if(d.sides.left)loadSideData('left',d.sides.left);if(d.sides.right)loadSideData('right',d.sides.right);activeSide=SIDES.includes(d.currentSide)?d.currentSide:'left';bindActiveSide();document.getElementById('ciSideSelect').value=activeSide;document.getElementById('mfrSelect').value=mfr;}else{
+      loadSideData('left',d);activeSide='left';bindActiveSide();document.getElementById('ciSideSelect').value='left';document.getElementById('mfrSelect').value=mfr;}
+    if(d.playerSource){plSrcMeas=d.playerSource==='measured'||d.playerSource==='both';plSrcLevels=d.playerSource==='levels'||d.playerSource==='both';updPlSrcButtons();}
     if(d.eqOn!==undefined){plEqOn=d.eqOn;updEqToggleBtn();}
     if(d.eqStrength!==undefined)document.getElementById('plStr').value=d.eqStrength;
-    buildFreqTable();}}catch(e){}
-  setInterval(()=>{try{localStorage.setItem('ci-lb-v4',JSON.stringify({manufacturer:mfr,frequencies:freqs,electrodeStatus:elSt,electrodeNotes:elNt,electrodeExcludedDuring:elExDur,referenceElectrode:refEl,judgmentResults:jRes,balanceResults:bRes,manualLevels:manualLevels,presets:presets,playerSource:document.getElementById('plSrc').value,eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)}));}catch(e){}},5000);
+    buildFreqTable();updSideButtons();}}catch(e){}
+  setInterval(()=>{try{localStorage.setItem('ci-lb-v4',JSON.stringify({sides:{left:{manufacturer:sideData.left.manufacturer,frequencies:sideData.left.freqs,electrodeFreqOwn:sideData.left.elFreqOwn,electrodeStatus:sideData.left.elSt,electrodeNotes:sideData.left.elNt,electrodeExcludedDuring:sideData.left.elExDur,referenceElectrode:sideData.left.refEl,judgmentResults:sideData.left.jRes,balanceResults:sideData.left.bRes,manualLevels:sideData.left.manualLevels,presets:sideData.left.presets},right:{manufacturer:sideData.right.manufacturer,frequencies:sideData.right.freqs,electrodeFreqOwn:sideData.right.elFreqOwn,electrodeStatus:sideData.right.elSt,electrodeNotes:sideData.right.elNt,electrodeExcludedDuring:sideData.right.elExDur,referenceElectrode:sideData.right.refEl,judgmentResults:sideData.right.jRes,balanceResults:sideData.right.bRes,manualLevels:sideData.right.manualLevels,presets:sideData.right.presets}},currentSide:activeSide,playerSource:(plSrcMeas&&plSrcLevels?'both':plSrcMeas?'measured':plSrcLevels?'levels':'none'),eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)}));}catch(e){}},5000);
 });
 
 // ============================================================
@@ -1093,7 +1776,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 function buildLvGrid(){const g=document.getElementById('lvGrid');g.innerHTML='';
   const eff=getEffectiveLevels();const maxRange=20;
   for(let i=0;i<nEl;i++){const ex=false;
-    const lbl=document.createElement('div');lbl.className='lv-lbl';lbl.textContent=`E${dEN(i)} (${Math.round(freqs[i])} Hz)`;if(ex)lbl.style.opacity='.4';
+    const lbl=document.createElement('div');lbl.className='lv-lbl';lbl.textContent=`E${dEN(i)} (${Math.round(effFreq(i))} Hz)`;if(ex)lbl.style.opacity='.4';
     lbl.dataset.i=i;lbl.addEventListener('click',()=>{lvFocus=i;updLvFocus();const inp=document.querySelector(`.lv-num[data-i="${i}"]`);if(inp)inp.focus();});
     const bw=document.createElement('div');bw.className='lv-bar-wrap';bw.dataset.i=String(i);
     const bar=document.createElement('div');bar.className='lv-bar';
@@ -1121,16 +1804,32 @@ function updAllBars(){const eff=getEffectiveLevels();const maxRange=20;
   document.querySelectorAll('.lv-num').forEach(num=>{const i=+num.dataset.i;if(!isNaN(i))num.value=manualLevels[i].toFixed(1);});
   for(let i=0;i<nEl;i++){const val=document.getElementById('lvEff'+i);if(val){const e=eff[i];
     val.textContent=(e>=0?'+':'')+e.toFixed(1);val.style.color=e>0.05?'#2563eb':e<-0.05?'#dc2626':'#666';}}}
+function applyPresetDeltaOtherSide(pi,delta,currentPr){
+  if(!document.getElementById('prBothSides')?.checked)return;
+  if(Math.abs(delta)<0.001)return;
+  const otherSide=activeSide==='left'?'right':'left';
+  const op=sideData[otherSide].presets;
+  if(!op||!op[pi])return;
+  op[pi].strength=Math.max(-20,Math.min(20,+(op[pi].strength+delta).toFixed(1)));
+  // Mirror shape params too if same type
+  if(op[pi].type===currentPr.type){
+    if(currentPr.center!==undefined)op[pi].center=currentPr.center;
+    if(currentPr.width!==undefined)op[pi].width=currentPr.width;
+    if(currentPr.cutoff!==undefined)op[pi].cutoff=currentPr.cutoff;
+  }
+}
 function buildPrTbl(){const tbl=document.getElementById('prTbl');tbl.innerHTML='';
   const act=allEl();
   // Build center options with half positions
   let ctrOpts='';
   for(let i=0;i<nEl;i++){
-    ctrOpts+=`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`;
+    ctrOpts+=`<option value="${i}">E${dEN(i)}</option>`;
     if(i<nEl-1){const halfVal=i+0.5;const lbl=`E${dEN(i)}–E${dEN(i+1)}`;ctrOpts+=`<option value="${halfVal}">${lbl}</option>`;}
   }
-  const elOpts=act.map(i=>`<option value="${i}">E${dEN(i)} (${Math.round(freqs[i])} Hz)</option>`).join('');
+  const elOpts=act.map(i=>`<option value="${i}">E${dEN(i)}</option>`).join('');
   const widthOpts=Array.from({length:nEl},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  const centerMap={medel:5.5,ab:7.5,cochlear:10.5};
+  const defaultCenter=centerMap[mfr]||Math.floor(nEl/2);
   for(let pi=0;pi<presets.length;pi++){const pr=presets[pi];
     const tr=document.createElement('tr');tr.className=pr.on?'':'pr-row-off';
     let params='<div class="pr-param">';
@@ -1141,20 +1840,43 @@ function buildPrTbl(){const tbl=document.getElementById('prTbl');tbl.innerHTML='
     params+='</div>';
     tr.innerHTML=`<td><input type="checkbox" class="prOn" data-pi="${pi}" ${pr.on?'checked':''}></td><td class="pr-name">${t(PR_NAMES[pr.type])}</td><td>${params}</td>`;
     tbl.appendChild(tr);
-    const ctrSel=tr.querySelector('.prCtr');if(ctrSel)ctrSel.value=pr.center;
+    const ctrSel=tr.querySelector('.prCtr');if(ctrSel)ctrSel.value=pr.center!==undefined?pr.center:defaultCenter;
     const widSel=tr.querySelector('.prWid');if(widSel)widSel.value=pr.width;
     const cutSel=tr.querySelector('.prCut');if(cutSel)cutSel.value=pr.cutoff;
     const tr2=document.createElement('tr');tr2.className=pr.on?'':'pr-row-off';
     tr2.innerHTML=`<td></td><td colspan="2" style="font-size:.78em;color:var(--text-muted);padding-top:0">${t(PR_EXPL[pr.type])}</td>`;
     tbl.appendChild(tr2);}
   tbl.querySelectorAll('.prOn').forEach(cb=>cb.addEventListener('change',function(){
-    presets[+this.dataset.pi].on=this.checked;buildPrTbl();lvOnChange();
+    const pi=+this.dataset.pi;
+    const wasOn=presets[pi].on;
+    presets[pi].on=this.checked;
+    // Mirror on/off to other side if checkbox active
+    if(document.getElementById('prBothSides')?.checked){
+      const otherSide=activeSide==='left'?'right':'left';
+      const op=sideData[otherSide].presets;
+      if(op&&op[pi]){op[pi].on=this.checked;}
+    }
+    buildPrTbl();lvOnChange();
     if(this.checked){const strInp=tbl.querySelector(`.prStr[data-pi="${this.dataset.pi}"]`);if(strInp)strInp.focus();}}));
-  tbl.querySelectorAll('.prStr').forEach(inp=>{inp.addEventListener('change',function(){presets[+this.dataset.pi].strength=Math.max(-20,Math.min(20,parseFloat(this.value)||0));this.value=presets[+this.dataset.pi].strength.toFixed(1);lvOnChange();});
-    inp.addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();const pi=+this.dataset.pi,st=e.shiftKey?0.1:0.5;
-      if(e.key==='ArrowRight')presets[pi].strength=Math.min(20,+(presets[pi].strength+st).toFixed(1));
-      if(e.key==='ArrowLeft')presets[pi].strength=Math.max(-20,+(presets[pi].strength-st).toFixed(1));
-      this.value=presets[pi].strength.toFixed(1);lvOnChange();}});});
+  tbl.querySelectorAll('.prStr').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      const pi=+this.dataset.pi;
+      const oldVal=presets[pi].strength;
+      const newVal=Math.max(-20,Math.min(20,parseFloat(this.value)||0));
+      const delta=newVal-oldVal;
+      presets[pi].strength=newVal;this.value=newVal.toFixed(1);
+      applyPresetDeltaOtherSide(pi,delta,presets[pi]);
+      lvOnChange();
+    });
+    inp.addEventListener('keydown',function(e){if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();e.stopPropagation();
+      const pi=+this.dataset.pi,st=0.1;
+      const oldVal=presets[pi].strength;
+      if(e.key==='ArrowUp')presets[pi].strength=Math.min(20,+(presets[pi].strength+st).toFixed(1));
+      if(e.key==='ArrowDown')presets[pi].strength=Math.max(-20,+(presets[pi].strength-st).toFixed(1));
+      const delta=presets[pi].strength-oldVal;
+      this.value=presets[pi].strength.toFixed(1);
+      applyPresetDeltaOtherSide(pi,delta,presets[pi]);
+      lvOnChange();}});});
   tbl.querySelectorAll('.prCtr').forEach(sel=>sel.addEventListener('change',function(){presets[+this.dataset.pi].center=parseFloat(this.value);lvOnChange();}));
   tbl.querySelectorAll('.prWid').forEach(sel=>sel.addEventListener('change',function(){presets[+this.dataset.pi].width=+this.value;lvOnChange();}));
   tbl.querySelectorAll('.prCut').forEach(sel=>sel.addEventListener('change',function(){presets[+this.dataset.pi].cutoff=+this.value;lvOnChange();}));}
@@ -1190,40 +1912,49 @@ function drawLvChart(){
   drawLine(sumV,'#1a1a1a',2.5,null);
   for(let j=0;j<act.length;j++){ctx.fillStyle=act[j]===refEl?'#2563eb':'#555';ctx.font='9px Segoe UI,sans-serif';ctx.textAlign='center';
     ctx.fillText('E'+dEN(act[j]),tX(j),H-pad.bottom+12);ctx.font='7px Consolas,monospace';ctx.fillStyle='#999';
-    ctx.fillText(freqs[act[j]]>=1000?(freqs[act[j]]/1000).toFixed(1)+'k':freqs[act[j]],tX(j),H-pad.bottom+22);}}
+    const lvF=effFreq(act[j]);ctx.fillText(lvF>=1000?(lvF/1000).toFixed(1)+'k':lvF,tX(j),H-pad.bottom+22);}}
 
 
 // ============================================================
 // PLAYER
 // ============================================================
-let pCtx=null,pBuf=null,pSrc=null,pGain=null,pEqF=[],pMapNode=null,pPlaying=false,pOff=0,pT0=0;
+let pCtx=null,pBuf=null,pSourceBuf=null,pMonoBuf=null,pLeftOnlyBuf=null,pRightOnlyBuf=null,pSrc=null,pGain=null,pEqF=[],pEqFLeft=[],pEqFRight=[],pChannelSplitter=null,pChannelMerger=null,pChannelLeftGain=null,pChannelRightGain=null,pMapNode=null,pPlaying=false,pOff=0,pT0=0;
 function gPC(){if(!pCtx)pCtx=new(window.AudioContext||window.webkitAudioContext)();if(pCtx.state==='suspended')pCtx.resume();return pCtx;}
+function createMonoBuffer(buf){const c=gPC();if(buf.numberOfChannels===1)return buf;const m=c.createBuffer(1,buf.length,buf.sampleRate);const md=m.getChannelData(0);for(let s=0;s<buf.length;s++){let sum=0;for(let ch=0;ch<buf.numberOfChannels;ch++)sum+=buf.getChannelData(ch)[s];md[s]=sum/buf.numberOfChannels;}return m;}
+function createLeftOnlyBuffer(buf){const c=gPC();if(buf.numberOfChannels<1)return buf;const m=c.createBuffer(1,buf.length,buf.sampleRate);const md=m.getChannelData(0);const srcData=buf.getChannelData(0);for(let s=0;s<buf.length;s++)md[s]=srcData[s];return m;}
+function createRightOnlyBuffer(buf){const c=gPC();if(buf.numberOfChannels<2)return createMonoBuffer(buf);const m=c.createBuffer(1,buf.length,buf.sampleRate);const md=m.getChannelData(0);const srcData=buf.getChannelData(1);for(let s=0;s<buf.length;s++)md[s]=srcData[s];return m;}
+function getPlaybackBuffer(){const mode=getPlayerSide();if(mode==='left')return pLeftOnlyBuf||pMonoBuf||pSourceBuf;if(mode==='right')return pRightOnlyBuf||pMonoBuf||pSourceBuf;if(mode==='both'&&pSourceBuf&&pSourceBuf.numberOfChannels>1)return pSourceBuf;return pMonoBuf||pSourceBuf;}
+function computeGains(){const{levels}=compWLS();const eff=getEffectiveLevels();const g=new Array(nEl).fill(0);for(let i=0;i<nEl;i++){const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');const addMeas=plSrcMeas&&hd?levels[i]:0;const addLvls=plSrcLevels?-eff[i]:0;g[i]=addMeas+addLvls;}return g;}
+function getPlayerGains(){const mode=getPlayerSide();if(mode==='left')return withSide('left',computeGains);if(mode==='right')return withSide('right',computeGains);return {left:withSide('left',computeGains),right:withSide('right',computeGains)};}
+function documentHasStereoAudio(){return pSourceBuf&&pSourceBuf.numberOfChannels>1;}
 document.getElementById('plAudio').addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;
-  try{const c=gPC(),buf=await f.arrayBuffer();pBuf=await c.decodeAudioData(buf);
-    if(pBuf.numberOfChannels>1){const m=c.createBuffer(1,pBuf.length,pBuf.sampleRate),md=m.getChannelData(0);for(let s=0;s<pBuf.length;s++){let sm=0;for(let ch=0;ch<pBuf.numberOfChannels;ch++)sm+=pBuf.getChannelData(ch)[s];md[s]=sm/pBuf.numberOfChannels;}pBuf=m;}
+  try{const c=gPC(),buf=await f.arrayBuffer();pSourceBuf=await c.decodeAudioData(buf);pMonoBuf=createMonoBuffer(pSourceBuf);pLeftOnlyBuf=createLeftOnlyBuffer(pSourceBuf);pRightOnlyBuf=createRightOnlyBuffer(pSourceBuf);pBuf=getPlaybackBuffer();
     // Reset playback position for new file
     pOff=0;if(pPlaying){pPause();}
     document.getElementById('plTot').textContent=pFmt(pBuf.duration);document.getElementById('plCur').textContent='0:00';document.getElementById('plTL').value=0;
     document.getElementById('plCtrl').style.display='';
     pBuildEQ();pDrawEQ();pBuildTbl();document.getElementById('plEqViz').style.display='';
   }catch(err){alert('Error: '+err.message);}});
-function pCompQ(i){let fL,fH;if(i===0){fL=freqs[0]*freqs[0]/(freqs[1]||freqs[0]);fH=freqs[1]||freqs[0];}else if(i===nEl-1){fL=freqs[i-1];fH=freqs[i]*freqs[i]/freqs[i-1];}else{fL=freqs[i-1];fH=freqs[i+1];}const bw=Math.log2(Math.sqrt(freqs[i]*fH))-Math.log2(Math.sqrt(fL*freqs[i]));return freqs[i]/(freqs[i]*(Math.pow(2,bw/2)-Math.pow(2,-bw/2)));}
-function getPlayerGains(){
-  const src=document.getElementById('plSrc').value;
-  const{levels}=compWLS();const eff=getEffectiveLevels();const g=new Array(nEl).fill(0);
-  for(let i=0;i<nEl;i++){
-    const hd=bRes.some(r=>(r.a===i||r.b===i)&&elSt[r.a]!=='excluded'&&elSt[r.a]!=='mute'&&elSt[r.b]!=='excluded'&&elSt[r.b]!=='mute');
-    if(src==='measured')g[i]=hd?levels[i]:0;
-    else if(src==='levels')g[i]=-eff[i];
-    else g[i]=(hd?levels[i]:0)+(-eff[i]);
-  }return g;}
-function pBuildEQ(){const c=gPC();pEqF.forEach(f=>f.disconnect());pEqF=[];
+function pCompQ(i){const ef=effFreq(i),ef0=effFreq(0),ef1=effFreq(Math.min(1,nEl-1)),efN=effFreq(nEl-1),efNm1=effFreq(Math.max(0,nEl-2));let fL,fH;if(i===0){fL=ef0*ef0/(ef1||ef0);fH=ef1||ef0;}else if(i===nEl-1){fL=efNm1;fH=ef*ef/efNm1;}else{fL=effFreq(i-1);fH=effFreq(i+1);}const bw=Math.log2(Math.sqrt(ef*fH))-Math.log2(Math.sqrt(fL*ef));return ef/(ef*(Math.pow(2,bw/2)-Math.pow(2,-bw/2)));}
+function pBuildEQ(){const c=gPC();pEqF.forEach(f=>f.disconnect());pEqF=[];pEqFLeft.forEach(f=>f.disconnect());pEqFLeft=[];pEqFRight.forEach(f=>f.disconnect());pEqFRight=[];pChannelSplitter&&pChannelSplitter.disconnect();pChannelSplitter=null;pChannelMerger&&pChannelMerger.disconnect();pChannelMerger=null;pChannelLeftGain&&pChannelLeftGain.disconnect();pChannelLeftGain=null;pChannelRightGain&&pChannelRightGain.disconnect();pChannelRightGain=null;
   if(!pGain){pGain=c.createGain();pGain.gain.value=parseInt(document.getElementById('plVol').value)/100;pGain.connect(c.destination);}
-  const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
-  const nhSim=document.getElementById('plNHSim').checked;
-  for(let i=0;i<nEl;i++){const f=c.createBiquadFilter();f.type='peaking';f.frequency.value=freqs[i];f.Q.value=pCompQ(i);
-    if(plEqOn){f.gain.value=nhSim?gains[i]*str:-gains[i]*str;}else{f.gain.value=0;}pEqF.push(f);}
-  for(let i=0;i<pEqF.length-1;i++)pEqF[i].connect(pEqF[i+1]);
+  pBuf=getPlaybackBuffer();const mode=getPlayerSide();const str=parseInt(document.getElementById('plStr').value)/100;const nhSim=document.getElementById('plNHSim').checked;
+  if(mode==='both'&&documentHasStereoAudio()){
+    const leftGains=withSide('left',computeGains);const rightGains=withSide('right',computeGains);
+    pChannelSplitter=c.createChannelSplitter(2);pChannelMerger=c.createChannelMerger(2);
+    for(let i=0;i<nEl;i++){const lf=c.createBiquadFilter();lf.type='peaking';lf.frequency.value=effFreq(i);lf.Q.value=pCompQ(i);lf.gain.value=0; if(plEqOn){lf.gain.value=nhSim?leftGains[i]*str:-leftGains[i]*str;}pEqFLeft.push(lf);
+      const rf=c.createBiquadFilter();rf.type='peaking';rf.frequency.value=effFreq(i);rf.Q.value=pCompQ(i);rf.gain.value=0; if(plEqOn){rf.gain.value=nhSim?rightGains[i]*str:-rightGains[i]*str;}pEqFRight.push(rf);}
+    for(let i=0;i<pEqFLeft.length-1;i++){pEqFLeft[i].connect(pEqFLeft[i+1]);pEqFRight[i].connect(pEqFRight[i+1]);}
+    pChannelSplitter.connect(pEqFLeft[0],0);pChannelSplitter.connect(pEqFRight[0],1);
+    pChannelLeftGain=c.createGain();pChannelRightGain=c.createGain();
+    const balance=getPlayerBalance();pChannelLeftGain.gain.value=dB2G(balance);pChannelRightGain.gain.value=dB2G(-balance);
+    pEqFLeft[pEqFLeft.length-1].connect(pChannelLeftGain);pEqFRight[pEqFRight.length-1].connect(pChannelRightGain);
+    pChannelLeftGain.connect(pChannelMerger,0,0);pChannelRightGain.connect(pChannelMerger,0,1);pEqF.push(pChannelMerger);
+  } else {
+    const gains=(mode==='left'||mode==='right')?withSide(mode,computeGains):withSide('left',computeGains);
+    for(let i=0;i<nEl;i++){const f=c.createBiquadFilter();f.type='peaking';f.frequency.value=effFreq(i);f.Q.value=pCompQ(i);f.gain.value=0; if(plEqOn){f.gain.value=nhSim?gains[i]*str:-gains[i]*str;}pEqF.push(f);}
+    for(let i=0;i<pEqF.length-1;i++)pEqF[i].connect(pEqF[i+1]);
+  }
   pBuildMapNode();}
 function pBuildMapNode(){const c=gPC();if(pMapNode){pMapNode.disconnect();pMapNode=null;}
   if(!document.getElementById('plMapOn').checked)return;
@@ -1231,15 +1962,15 @@ function pBuildMapNode(){const c=gPC();if(pMapNode){pMapNode.disconnect();pMapNo
   const ws=c.createWaveShaper();const n=4096,curve=new Float32Array(n);
   for(let i=0;i<n;i++){const x=(i/(n-1))*2-1;const xn=(x+1)/2;const yn=Math.log(1+cv*xn)/Math.log(1+cv);curve[i]=yn*2-1;}
   ws.curve=curve;ws.oversample='4x';pMapNode=ws;}
-function pUpdEQ(){const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
-  const nhSim=document.getElementById('plNHSim').checked;
-  for(let i=0;i<pEqF.length;i++){
-    if(plEqOn){pEqF[i].gain.value=nhSim?gains[i]*str:-gains[i]*str;}else{pEqF[i].gain.value=0;}}
+function pUpdEQ(){const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;const nhSim=document.getElementById('plNHSim').checked;
+  if(typeof gains.left!=='undefined'){for(let i=0;i<pEqFLeft.length;i++){pEqFLeft[i].gain.value=plEqOn?(nhSim?gains.left[i]*str:-gains.left[i]*str):0;}for(let i=0;i<pEqFRight.length;i++){pEqFRight[i].gain.value=plEqOn?(nhSim?gains.right[i]*str:-gains.right[i]*str):0;}if(pChannelLeftGain) pChannelLeftGain.gain.value=dB2G(getPlayerBalance());if(pChannelRightGain) pChannelRightGain.gain.value=dB2G(-getPlayerBalance());}
+  else{for(let i=0;i<pEqF.length;i++){const g=gains[i]||0;if(plEqOn){pEqF[i].gain.value=nhSim?g*str:-g*str;}else{pEqF[i].gain.value=0;}}}
   pBuildMapNode();pDrawEQ();pBuildTbl();}
 function pToggle(){if(!pBuf)return;if(pCtx.state==='suspended')pCtx.resume();if(pPlaying)pPause();else pPlay();}
 function pPlay(){if(pSrc){try{pSrc.stop();}catch(e){}}const c=gPC();pSrc=c.createBufferSource();pSrc.buffer=pBuf;
-  let firstNode=pEqF.length>0?pEqF[0]:pGain;
-  let lastEq=pEqF.length>0?pEqF[pEqF.length-1]:null;
+  const mode=getPlayerSide();const stereoMode=(mode==='both'&&documentHasStereoAudio()&&pChannelSplitter);
+  const firstNode=stereoMode?pChannelSplitter:(pEqF.length>0?pEqF[0]:pGain);
+  const lastEq=stereoMode?pChannelMerger:(pEqF.length>0?pEqF[pEqF.length-1]:null);
   if(pMapNode){pSrc.connect(pMapNode);pMapNode.connect(firstNode);}else{pSrc.connect(firstNode);}
   if(lastEq)lastEq.connect(pGain);
   pSrc.onended=function(){if(pPlaying){pPlaying=false;pOff=0;pUpdBtn();pUpdTL();}};
@@ -1250,9 +1981,9 @@ function pTick(){if(!pPlaying)return;pUpdTL();requestAnimationFrame(pTick);}
 function pUpdTL(){if(!pBuf)return;const c=pPlaying?pCtx.currentTime-pT0:pOff,cl=Math.min(c,pBuf.duration);document.getElementById('plCur').textContent=pFmt(cl);document.getElementById('plTL').value=(cl/pBuf.duration)*1000;}
 function pUpdBtn(){document.getElementById('plPlay').textContent=pPlaying?'\u23F8':'\u25B6';}
 function pFmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
-function plCheck(){const src=document.getElementById('plSrc').value;
+function plCheck(){
   const hMeas=bRes.length>0;const hLv=manualLevels.some(v=>v!==0)||presets.some(p=>p.on&&p.strength!==0);
-  const hasData=(src==='measured'&&hMeas)||(src==='levels'&&hLv)||(src==='both'&&(hMeas||hLv));
+  const hasData=(plSrcMeas&&hMeas)||(plSrcLevels&&hLv);
   document.getElementById('plNoD').classList.toggle('hidden',hasData||hMeas||hLv);
   if(pEqF.length>0)pUpdEQ();else{pDrawEQ();pBuildTbl();}
   document.getElementById('plEqViz').style.display='';
@@ -1263,7 +1994,7 @@ document.getElementById('plTL').addEventListener('input',function(){if(!pBuf)ret
 
 function pDrawEQ(){const cv=document.getElementById('plEqCv');if(!cv)return;const wp=cv.parentElement,dpr=window.devicePixelRatio||1,W=wp.clientWidth,H=wp.clientHeight;
   cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
-  const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
+  let gains=getPlayerGains();if(typeof gains.left!=='undefined'){gains=gains.left;}const str=parseInt(document.getElementById('plStr').value)/100;
   const nhSim=document.getElementById('plNHSim').checked;const allE=allEl();const act=new Set(actEl());
   let mxA=1;for(const i of allE){if(!act.has(i))continue;const g=Math.abs(gains[i])*str;if(g>mxA)mxA=g;}mxA=Math.ceil(mxA/2)*2+2;
   const pad={left:40,right:14,top:14,bottom:26},pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom,zY=pad.top+pH/2;
@@ -1278,8 +2009,8 @@ function pDrawEQ(){const cv=document.getElementById('plEqCv');if(!cv)return;cons
     if(!isAct){ctx.fillStyle='#d1d5db';ctx.fillRect(x,zY-.5,bW,1);}
     else{ctx.fillStyle=ag===0?'#ccc':ag>=0?'#16a34a':'#dc2626';if(bH>.5)ctx.fillRect(x,y,bW,bH);else{ctx.fillStyle='#ccc';ctx.fillRect(x,zY-.5,bW,1);}}
     ctx.fillStyle=isAct?'#666':'#bbb';ctx.font='8px Segoe UI,sans-serif';ctx.textAlign='center';ctx.fillText('E'+dEN(i),pad.left+j*gW+gW/2,H-pad.bottom+10);
-    ctx.font='7px Consolas,monospace';ctx.fillStyle='#999';ctx.fillText(freqs[i]>=1000?(freqs[i]/1000).toFixed(1)+'k':freqs[i],pad.left+j*gW+gW/2,H-pad.bottom+20);}}
-function pBuildTbl(){const gains=getPlayerGains();const str=parseInt(document.getElementById('plStr').value)/100;
+    ctx.font='7px Consolas,monospace';ctx.fillStyle='#999';const ef_i=effFreq(i);ctx.fillText(ef_i>=1000?(ef_i/1000).toFixed(1)+'k':ef_i,pad.left+j*gW+gW/2,H-pad.bottom+20);}}
+function pBuildTbl(){let gains=getPlayerGains();if(typeof gains.left!=='undefined'){gains=gains.left;}const str=parseInt(document.getElementById('plStr').value)/100;
   const nhSim=document.getElementById('plNHSim').checked;
   const h=document.getElementById('plEqH'),lv=document.getElementById('plEqLv'),gn=document.getElementById('plEqGn');
   h.innerHTML='<th></th>';lv.innerHTML='<td style="color:var(--text-muted);font-size:.78em">Pegel</td>';gn.innerHTML='<td style="color:var(--text-muted);font-size:.78em">Gain</td>';
