@@ -148,11 +148,61 @@ select:disabled{opacity:.4;cursor:not-allowed}
       <p style="font-size:.84em;color:var(--text-muted);margin-bottom:8px" id="freqHint"></p>
       <div id="freqDeactHintEl" class="explain explain-warn" style="margin-bottom:12px"></div>
       <div id="freqAbfHintEl" class="explain explain-warn" style="margin-bottom:12px"></div>
-      <div class="controls-row">
+
+      <!-- Hersteller -->
+      <div class="controls-row" style="margin-bottom:6px">
         <div class="control-group"><label id="lblMfr"></label>
           <select id="mfrSelect"><option value="medel">MED-EL (12)</option><option value="ab">Advanced Bionics (16)</option><option value="cochlear">Cochlear (22)</option></select>
         </div>
       </div>
+
+      <!-- Audioprozessor -->
+      <div class="controls-row" style="margin-bottom:6px">
+        <div class="control-group">
+          <label id="lblImplProc"></label>
+          <select id="implProcSelect" style="min-width:200px"></select>
+        </div>
+      </div>
+
+      <!-- Implantat-Modell + Generation (Cochlear) -->
+      <div class="controls-row" style="margin-bottom:6px">
+        <div class="control-group">
+          <label id="lblImplModel"></label>
+          <select id="implModelSelect" style="min-width:220px"></select>
+        </div>
+        <div class="control-group" id="implGenGroup" style="display:none">
+          <label id="lblImplGen"></label>
+          <span id="implGenDisplay" style="font-family:var(--mono);font-size:.88em"></span>
+        </div>
+      </div>
+
+      <!-- MED-EL: c-Wert -->
+      <div class="controls-row" id="implMedelParams" style="display:none;margin-bottom:6px">
+        <div class="control-group">
+          <label id="lblImplC"></label>
+          <input type="number" id="implC" min="0" max="8000" step="1" style="width:80px" placeholder="500">
+        </div>
+      </div>
+
+      <!-- AB: IDR -->
+      <div class="controls-row" id="implAbParams" style="display:none;margin-bottom:6px">
+        <div class="control-group">
+          <label id="lblImplIDR"></label>
+          <input type="number" id="implIDR" min="20" max="80" step="1" style="width:80px" placeholder="60"> dB
+        </div>
+      </div>
+
+      <!-- Cochlear: IIDR -->
+      <div class="controls-row" id="implCochParams" style="display:none;margin-bottom:6px">
+        <div class="control-group">
+          <label id="lblImplIIDR"></label>
+          <input type="number" id="implIIDR" min="20" max="80" step="1" style="width:80px" placeholder="40"> dB
+        </div>
+      </div>
+
+      <p style="font-size:.84em;color:var(--text-muted);margin-top:8px;margin-bottom:4px" id="implIntro"></p>
+      <div class="explain explain-warn" id="implBilateralHintEl" style="margin-top:6px;margin-bottom:10px;display:none"></div>
+
       <div style="overflow-x:auto"><table class="freq-table" id="freqTable"><thead><tr id="freqTH"></tr></thead><tbody id="freqTB"></tbody></table></div>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn" id="sweepBtn"></button>
@@ -162,6 +212,8 @@ select:disabled{opacity:.4;cursor:not-allowed}
         </label>
       </div>
     </div>
+
+
     <div class="card">
       <h2 id="toneTitle"></h2>
       <div class="controls-row">
@@ -252,12 +304,128 @@ select:disabled{opacity:.4;cursor:not-allowed}
 
   <!-- ===== BALANCE ===== -->
   <div id="panel-balance" class="panel">
+
+    <!-- Results overview (oben) -->
+    <div class="card" id="lrResultsCard" style="display:none">
+      <h2 id="lrResTitle">Ergebnisse L/R-Vergleich</h2>
+      <div id="lrMedianDisplay" style="text-align:center;margin:12px 0 16px;padding:14px;background:var(--accent-light);border-radius:8px;border:2px solid var(--accent)">
+        <div style="font-size:.8em;color:var(--text-muted);margin-bottom:4px" id="lrMedianLabel">Empfohlener Balance-Offset (Median)</div>
+        <div id="lrMedianValue" style="font-size:2.2em;font-weight:700;font-family:var(--mono);color:var(--accent)">0.0 dB</div>
+        <div id="lrMedianHint" style="font-size:.8em;color:var(--text-muted);margin-top:4px"></div>
+      </div>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:8px" id="lrResDesc">Positiv = Rechts lauter als Links (rechts abschwächen oder links anheben). Negativ = Links lauter.</p>
+      <div id="lrResChartWrap" style="position:relative;width:100%;height:240px;background:var(--bg);border-radius:8px;overflow:hidden;margin-bottom:12px">
+        <canvas id="lrResChart" style="width:100%;height:100%;display:block"></canvas>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="results-table" id="lrResTable">
+          <thead><tr id="lrResTH"></tr></thead>
+          <tbody id="lrResTB"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-sm" id="lrClearBtn" style="color:var(--danger)">🗑 Ergebnisse löschen</button>
+      </div>
+      <div class="explain" style="margin-top:12px" id="lrResNote">
+        Der empfohlene Globalwert (Median) wird automatisch als Stereo-Balance-Offset oben eingetragen.
+      </div>
+    </div>
+
+    <!-- LR comparison test -->
+    <div class="card">
+      <h2 id="lrTitle">L/R-Elektrodenvergleich</h2>
+      <p style="font-size:.84em;color:var(--text-muted);margin-bottom:12px" id="lrDesc">Vergleicht linkes und rechtes CI Elektrode für Elektrode. Die Töne werden mit den Meßergebnissen aus dem Reiter „Messung" korrigiert (ohne Levels). Stellen Sie den Slider so ein, daß beide Seiten gleich laut klingen, und bestätigen Sie.</p>
+      <div id="lrNoData" class="info-box" style="margin-bottom:12px">Keine oder nur einseitige Meßergebnisse – Korrekturen werden nur für Seiten mit Meßdaten angewandt. Ohne Meßdaten klingen die Töne unkorrigiert. Einsatz möglich z.B. für CI vs. gesundes Ohr.</div>
+
+      <div class="controls-row" style="margin-bottom:12px">
+        <div class="control-group">
+          <label id="lrOrderLbl">Reihenfolge:</label>
+          <select id="lrOrderMode">
+            <option value="random">Zufällig</option>
+            <option value="ascending">Apikal → Basal</option>
+            <option value="descending">Basal → Apikal</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label id="lrSideLbl">Seitenfolge:</label>
+          <select id="lrSideMode">
+            <option value="random">Zufällig</option>
+            <option value="lr">L → R</option>
+            <option value="rl">R → L</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label style="font-size:.85em;color:var(--text-muted)">Lautstärke:</label>
+          <input type="number" id="lrVol" value="50" min="0" max="100" step="1" style="width:55px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em">%
+        </div>
+        <div class="control-group">
+          <label style="font-size:.85em;color:var(--text-muted)">Dauer:</label>
+          <input type="number" id="lrDur" value="1000" min="100" max="3000" step="50" style="width:65px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em"> ms
+        </div>
+        <div class="control-group">
+          <label style="font-size:.85em;color:var(--text-muted)">Pause:</label>
+          <input type="number" id="lrPau" value="400" min="100" max="1000" step="50" style="width:65px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em"> ms
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin-bottom:16px">
+        <button class="btn btn-primary btn-large" id="lrStartBtn">▶ Vergleich starten</button>
+        <button class="btn btn-large" id="lrStopBtn" disabled>■ Stopp</button>
+      </div>
+
+      <!-- Active test area -->
+      <div id="lrTestArea" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:.9em;color:var(--text-muted)" id="lrProgLbl"></span>
+          <button class="btn btn-sm" id="lrUndoBtn" disabled>◀ Zurück</button>
+        </div>
+
+        <!-- Electrode display -->
+        <div style="text-align:center;margin-bottom:12px">
+          <div class="pair-indicator" style="justify-content:center">
+            <span id="lrElLabel" style="padding:8px 24px;border-radius:8px;background:#dbeafe;color:#1e40af;font-size:1.4em;font-weight:700">E—</span>
+          </div>
+          <div style="font-size:.85em;color:var(--text-muted);margin-top:4px" id="lrFreqLabel"></div>
+        </div>
+
+        <!-- Side indicators -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:24px;margin-bottom:16px">
+          <div id="lrIndL" style="padding:8px 20px;border-radius:8px;border:2px solid var(--border);font-weight:700;font-size:1.1em;transition:all .15s">LINKS</div>
+          <div style="font-size:.8em;color:var(--text-muted)">vs.</div>
+          <div id="lrIndR" style="padding:8px 20px;border-radius:8px;border:2px solid var(--border);font-weight:700;font-size:1.1em;transition:all .15s">RECHTS</div>
+        </div>
+
+        <!-- Replay -->
+        <div style="text-align:center;margin-bottom:14px">
+          <button class="btn btn-large" id="lrReplayBtn">▶ Nochmal <span class="kbd">Leertaste</span></button>
+          <button class="btn" id="lrSwapBtn" style="margin-left:8px">⇄ Seiten tauschen</button>
+        </div>
+      </div>
+
+      <!-- Balance slider (immer sichtbar, unten) -->
+      <div class="balance-slider-wrap" style="margin-top:16px">
+        <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px">
+          <button class="btn btn-sm lrSlModeBtn" data-mode="right" id="lrModeRight" style="min-width:80px">Rechts</button>
+          <button class="btn btn-sm lrSlModeBtn" data-mode="left" id="lrModeLeft" style="min-width:80px">Links</button>
+          <button class="btn btn-sm lrSlModeBtn" data-mode="both" id="lrModeBoth" style="min-width:80px">Balance</button>
+        </div>
+        <p style="font-size:.84em;color:var(--text-muted);margin-bottom:3px" id="lrSlHint"></p>
+        <input type="range" id="lrSl" min="-60" max="60" step="0.1" value="0">
+        <div class="balance-value" id="lrSlV">0.0 dB</div>
+        <div id="lrPrevHint" style="font-size:.82em;color:var(--text-muted);text-align:center;margin-top:2px;display:none"></div>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-primary btn-large" id="lrConfBtn">Bestätigen <span class="kbd">Enter</span></button>
+      </div>
+    </div>
+
+    <!-- Global balance slider (used by player) -->
     <div class="card">
       <h2 data-t="balTitle"></h2>
       <p style="font-size:.84em;color:var(--text-muted);margin-bottom:14px" data-t="balDesc"></p>
       <div class="control-group" style="margin-bottom:14px">
         <label data-t="balLabel"></label>
-        <input type="range" id="balBalance" min="-12" max="12" step="0.1" value="0" style="width:100%;margin-left:8px">
+        <input type="range" id="balBalance" min="-60" max="60" step="0.1" value="0" style="width:100%;margin-left:8px">
       </div>
       <div class="balance-value" id="balValue">0.0 dB</div>
     </div>
@@ -349,6 +517,7 @@ select:disabled{opacity:.4;cursor:not-allowed}
         <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plBothSides"> <span data-t="plBothLabel"></span></label></div>
         <div class="control-group" id="plMonoEQRow" style="display:none"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plMonoEQ"> <span data-t="plMonoEQLabel"></span></label></div>
         <div class="control-group"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="plNHSim"> <span data-t="plNHLabel"></span></label></div>
+        <div class="control-group"><button id="plBalApplyBtn" class="btn btn-sm" style="font-weight:600;min-width:180px;border-radius:6px" data-t="plBalApply"></button></div>
       </div>
       <div id="plNHInfo" class="explain explain-warn hidden" data-t="plNHExpl"></div>
     </div>
@@ -433,7 +602,7 @@ select:disabled{opacity:.4;cursor:not-allowed}
 // ============================================================
 const L={
 de:{
-subtitle:'CI Sound Balancing Tool · v2.5',
+subtitle:'CI Sound Balancing Tool · v2.6',
 sideLeft:'LINKS',
 sideRight:'RECHTS',
 tabIntro:'Einführung',tabFreq:'Implantat',tabTest:'Messung',tabResults:'Meßergebnisse',tabFile:'Laden/Speichern',
@@ -448,7 +617,7 @@ introAudio:'Für Ihren Audiologen',
 tabPlayer:'Player',tabBalance:'Stereo-Balance',
 introAudioDesc:'Die Ergebnisse können ausgedruckt werden. Der Ausdruck enthält die Meßergebnisse, Ihre gewünschten Korrekturen und die resultierenden Equalizer-Werte.',
 freqTitle:'Hersteller, Elektrodenfrequenzen & Status',lblSide:'Seite:',lblMfr:'Hersteller:',
-freqHint:'Wählen Sie den Hersteller Ihres CI aus. Markieren Sie problematische Elektroden unter „Status“. Status „Deaktiviert“ = Elektrode im CI selbst abgeschaltet, wird automatisch ausgeschlossen. Standardwerte nach bicial; eigene FAT-Werte in „Hz eigene“ eintragen. ▶ = Einzelton, ◼ = Dauerton.',
+freqHint:'Wählen Sie den Hersteller Ihres CI aus. Markieren Sie problematische Elektroden unter „Status“. Status „Deaktiviert“ = Elektrode im CI selbst abgeschaltet, wird automatisch ausgeschlossen. ▶ = Einzelton, ◼ = Dauerton.',
 freqDeactHint:'<b>Wichtig – deaktivierte Elektroden:</b> Wenn in Ihrem CI Elektroden deaktiviert sind, verteilt das Implantat den Frequenzbereich auf die verbleibenden aktiven Elektroden. Die Mittenfrequenzen aller anderen Elektroden verschieben sich dadurch – die hier voreingestellten Standardwerte gelten dann nicht mehr.<br>Markieren Sie deaktivierte Elektroden unter „Status“ und tragen Sie die aktuellen Mittenfrequenzen aus Ihrer Anpassung ein. Ohne korrekte Frequenzen sind Messung und Player-Equalizer nicht aussagekräftig.',
 thEl:'El.',thHzStd:'Hz Standard',thHzOwn:'Hz eigene',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Notiz',thExclCb:'Ausschließen',
 stDeactivated:'Deaktiviert im CI',
@@ -496,6 +665,7 @@ plEqOn:'Equalizer AN',plEqOff:'Equalizer AUS',
 plEqStr:'Equalizer-Stärke:',plEqTitle:'Equalizer-Kurve (angewandt)',
 plNotice:'Der Equalizer korrigiert das Audiosignal vor der CI-Verarbeitung. Das ist nicht identisch mit einer MCL-Anpassung, gibt aber einen Anhaltspunkt.',
 plNHLabel:'Simulation für Normalhörende',
+plBalApply:'Stereo-Balance anwenden',plBalApplyOn:'✓ Stereo-Balance AN',plBalApplyOff:'Stereo-Balance AUS',
 plNHExpl:'Veranschaulicht die Fehleinstellung, die ohne Korrektur vorliegt: die gemessenen Lautstärkeunterschiede werden auf das Originalsignal angewandt (nicht invertiert). Einschränkung: Dies zeigt nur die Lautstärkebalance, nicht die CI-typischen Artefakte.',
 plMapLabel:'MAPLAW-Simulation',
 plMapExpl:'Simuliert die MED-EL MAPLAW-Kompression (logarithmisch).',
@@ -531,9 +701,46 @@ freqAbfHint:'<b>Wichtig – Anatomy Based Fitting (ABF) und FAT:</b> Auch bei An
 plFileTitle:'Audiodatei',
 printPlayerTitle:'Player-Einstellungen',
 printPreCorrect:'Feinjustierung mit Vorkorrektur: aktiv',
+implTitle:'Implantat-Daten',
+implIntro:'Erfragen Sie bei Ihrem Audiologen die Werte der FAT (Frequency Allocation Table) mit Mittelfrequenzen (in Hz) für jede Elektrode und tragen Sie diese oben ein. Erfragen Sie auch MCL (MED-EL), T-Level/C-Level (Cochlear) oder T-Level/M-Level (Advanced Bionics) – diese Werte stehen in der Anpaß-Software des Audiologen und werden für die Berechnung der Anpassungswerte im Ausdruck benötigt. Sie können das Tool auch ohne diese Werte nutzen, mit den Werten werden die Ergebnisse aber präziser.',
+implBilateralHint:'Bei zwei CIs müssen die Werte für Links und Rechts getrennt eingegeben werden. Wechseln Sie mit den Seiten-Buttons oben.',
+lblImplModel:'Implantat-Modell:',
+lblImplProc:'Audioprozessor:',
+lblImplC:'c-Wert (MAPLAW):',
+lblImplIDR:'IDR (dB):',
+lblImplIIDR:'IIDR (dB):',
+lblImplGen:'Generation:',
+implPerElTitle:'Pro-Elektroden-Werte (vom Audiologen)',
+implPerElHint:'Tragen Sie THR und MCL (MED-EL) bzw. T-Level/C-Level (Cochlear) bzw. T-Level/M-Level (Advanced Bionics) ein. Diese Werte stehen in der Anpaß-Software Ihres Audiologen.',
+implThHdr:'THR',implMclHdr:'MCL (qu)',implTLvlHdr:'T-Level',implCLvlHdr:'C-Level (CL)',implMLvlHdr:'M-Level (CU)',
+implUnknown:'Unbekannt',
+implSelectPleaseHdr:'— bitte wählen —',
+implGenA:'Generation A (0,176 dB/CL)',
+implGenB:'Generation B (0,157 dB/CL)',
+implGenUnknown:'—',
+implPrintHeader:'Implantat',
+implPrintProcessor:'Prozessor',
+implPrintCVal:'c-Wert',
+implPrintIDR:'IDR',
+implPrintIIDR:'IIDR',
+implPrintGen:'Generation',
+implPrintColDelta:'Δ dB (Tool)',
+implPrintColCurrent:'Aktuell',
+implPrintColDeltaUnit:'Δ (Einheit)',
+implPrintColNew:'Neuer Wert',
+implPrintColStatus:'Status',
+implPrintNA:'N/A',
+implPrintNotesTitle:'Hinweise für den Audiologen',
+implPrintNote1:'Die gezeigten Korrekturwerte sind Approximationen aus akustischen Lautstärkemessungen mit psychoakustischem Paarvergleich. Sie ersetzen keine direkte stimulationsbasierte Anpassung.',
+implPrintNote2:'Empfohlene Vorgehensweise: Werte als Startpunkt verwenden · mit Balancing-Funktion gegen Nachbarelektroden prüfen · Patient bestätigt subjektive Gleichheit · bei Diskrepanzen Tool-Werten nicht folgen.',
+implPrintNote2b:'Vorzeichen: Positive Δ-Werte bedeuten, daß MCL/C/M-Level angehoben werden soll (Elektrode wurde als zu leise gemessen). Negative Werte = absenken.',
+implPrintNote3Missing:'Folgende Werte fehlen und konnten nicht berechnet werden: {list}. Bitte teilen Sie diese Werte dem Klienten mit, damit das Tool künftig vollständige Empfehlungen liefern kann.',
+implPrintNote4IDR:'IDR wurde nicht angegeben. Berechnung erfolgte mit Standardwert 60 dB. Falls Ihr eingestellter IDR abweicht, sind die Δ-Werte entsprechend zu skalieren.',
+implPrintNote5Large:'Bei Korrekturen über ±5 dB pro Elektrode: Compliance-Grenzen prüfen · Loudness-Growth-Function kann sich verändern · stimulationsbasierte Verifikation zwingend.',
+implPrintModelMissing:'Bitte Implantat-Modell wählen – Generation unbekannt, Berechnung nicht möglich.',
 },
 en:{
-subtitle:'CI Sound Balancing Tool · v2.5',
+subtitle:'CI Sound Balancing Tool · v2.6',
 sideLeft:'LEFT',
 sideRight:'RIGHT',
 tabIntro:'Introduction',tabFreq:'Implant',tabTest:'Measurement',tabResults:'Results',tabFile:'Load/Save',
@@ -548,7 +755,7 @@ introAudio:'For your audiologist',
 tabPlayer:'Player',tabBalance:'Stereo-Balance',
 introAudioDesc:'The results can be printed out. The printout includes the measurement results, your requested corrections, and the resulting equalizer values. This allows your audiologist to see exactly where adjustments are needed.<br>Project Homepage: <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
 freqTitle:'Manufacturer, electrode frequencies & status',lblSide:'Side:',lblMfr:'Manufacturer:',
-freqHint:'Select your CI manufacturer. Mark problematic electrodes under "Status". Status "Deactivated" = electrode switched off in the CI itself, will be automatically excluded. Default Hz values from bicial; enter your own FAT values in "Hz custom". ▶ = single tone, ◼ = sustained tone.',
+freqHint:'Select your CI manufacturer. Mark problematic electrodes under "Status". Status "Deactivated" = electrode switched off in the CI itself, will be automatically excluded. ▶ = single tone, ◼ = sustained tone.',
 freqDeactHint:'<b>Important – deactivated electrodes:</b> When electrodes in your CI are deactivated, the implant redistributes the frequency range across the remaining active electrodes. The centre frequencies of all other electrodes shift as a result – the pre-set default values no longer apply.<br>Mark deactivated electrodes under “Status” and enter the current centre frequencies from your fitting. Without correct frequencies, measurements and the player equalizer will not be meaningful.',
 thEl:'El.',thHzStd:'Hz default',thHzOwn:'Hz custom',thPlay:'▶',thHold:'◼',thSt:'Status',thNote:'Note',thExclCb:'Exclude',
 stDeactivated:'Deactivated in CI',
@@ -592,6 +799,7 @@ plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',
 plEqStr:'Equalizer strength:',plEqTitle:'Equalizer curve (applied)',
 plNotice:'The equalizer corrects the audio signal before CI processing. Not identical to MCL adjustment but an indication.',
 plNHLabel:'Normal hearing simulation',plNHExpl:'Illustrates the distortion present without correction: measured loudness differences are applied (not inverted).',
+plBalApply:'Apply Stereo Balance',plBalApplyOn:'✓ Stereo Balance ON',plBalApplyOff:'Stereo Balance OFF',
 plMapLabel:'MAPLAW simulation',plMapExpl:'Simulates MED-EL MAPLAW compression.',
 balTitle:'Stereo balance',balDesc:'Adjust the relative loudness between left and right correction. Works in the player with stereo audio.',balLabel:'Balance:',
 fileTitle:'Load / Save',fileDesc:'All settings and results saved as JSON.',
@@ -621,39 +829,217 @@ recommend:'Recommendation: <br> - Set the volume to a level that borders on bein
 plFileTitle:'Audio file',
 printPlayerTitle:'Player settings',
 printPreCorrect:'Fine-tuning with pre-correction: active',
+implTitle:'Implant data',
+implIntro:'Ask your audiologist for the FAT (Frequency Allocation Table) with centre frequencies (in Hz) for each electrode and enter them above. Also ask for MCL (MED-EL), T-Level/C-Level (Cochlear) or T-Level/M-Level (Advanced Bionics) – these values are in the audiologist\'s fitting software and are needed to calculate the fitting recommendations in the printout. You can use the tool without these values, but results will be more precise with them.',
+implBilateralHint:'For two CIs, values for left and right must be entered separately. Switch sides using the buttons above.',
+lblImplModel:'Implant model:',
+lblImplProc:'Audio processor:',
+lblImplC:'c value (MAPLAW):',
+lblImplIDR:'IDR (dB):',
+lblImplIIDR:'IIDR (dB):',
+lblImplGen:'Generation:',
+implPerElTitle:'Per-electrode values (from audiologist)',
+implPerElHint:'Enter THR and MCL (MED-EL), T-Level/C-Level (Cochlear), or T-Level/M-Level (Advanced Bionics). These values are available in your audiologist\'s fitting software.',
+implThHdr:'THR',implMclHdr:'MCL (qu)',implTLvlHdr:'T-Level',implCLvlHdr:'C-Level (CL)',implMLvlHdr:'M-Level (CU)',
+implUnknown:'Unknown',
+implSelectPleaseHdr:'— please select —',
+implGenA:'Generation A (0.176 dB/CL)',
+implGenB:'Generation B (0.157 dB/CL)',
+implGenUnknown:'—',
+implPrintHeader:'Implant',
+implPrintProcessor:'Processor',
+implPrintCVal:'c value',
+implPrintIDR:'IDR',
+implPrintIIDR:'IIDR',
+implPrintGen:'Generation',
+implPrintColDelta:'Δ dB (tool)',
+implPrintColCurrent:'Current',
+implPrintColDeltaUnit:'Δ (unit)',
+implPrintColNew:'New value',
+implPrintColStatus:'Status',
+implPrintNA:'N/A',
+implPrintNotesTitle:'Notes for the audiologist',
+implPrintNote1:'The correction values shown are approximations derived from acoustic loudness measurements using psychoacoustic paired comparison. They do not replace direct stimulation-based fitting.',
+implPrintNote2:'Recommended approach: use values as a starting point · verify against neighbouring electrodes with the balancing function · patient confirms subjective equality · if discrepancies arise, do not follow the tool values.',
+implPrintNote2b:'Sign convention: positive Δ values mean MCL/C/M-level should be raised (electrode was measured as too quiet). Negative values = lower.',
+implPrintNote3Missing:'The following values are missing and could not be calculated: {list}. Please share these values with the client so the tool can provide complete recommendations in the future.',
+implPrintNote4IDR:'IDR was not specified. Calculation used default value of 60 dB. If your configured IDR differs, the Δ values should be scaled accordingly.',
+implPrintNote5Large:'For corrections exceeding ±5 dB per electrode: check compliance limits · loudness growth function may change · stimulation-based verification mandatory.',
+implPrintModelMissing:'Please select implant model – generation unknown, calculation not possible.',
 },
-fr:{subtitle:'CI Sound Balancing Tool · v2.5',sideLeft:'LEFT',
+fr:{subtitle:'CI Sound Balancing Tool · v2.6',sideLeft:'LEFT',
 sideRight:'RIGHT',
 sideLeft:'GAUCHE',
 sideRight:'DROITE',
 tabIntro:'Introduction',tabFreq:'Implant',tabTest:'Mesure',tabResults:'Résultats',tabFile:'Charger/Sauver',
 introTitle:'CI Sound Balancing Tool',introDesc:'Cet outil aide les porteurs d\'IC à comparer systématiquement le volume perçu de leurs électrodes et à créer une courbe de correction individuelle. L\'objectif est d\'obtenir un volume exactement égal pour toutes les électrodes – la base fondamentale d\'une bonne audition avec IC. Ce réglage est optimal pour la musique et les sons naturels. Des ajustements pour la compréhension de la parole ou des effets comme le renforcement des basses sont également possibles.',introWhat:'Quel est le déroulement?',introWhatDesc:'',introFlow:'',introFlowDesc:'<b>1. Côté</b> – Sélectionnez, dans le coin supérieur droit, le côté sur lequel vous portez votre implant cochléaire. Si vous portez deux implants, effectuez la mesure (Étape 3) pour chacun d\'eux.<br><b>2. Implant</b> – Sélectionnez le fabricant de votre implant cochléaire. Si vous les connaissez, ajustez les valeurs de fréquence indiquées pour chaque électrode ; des valeurs standard sont préconfigurées par défaut.<br><b>Important :</b> Les électrodes désactivées doivent être marquées sous «Statut».<br><b>3. Mesure</b> – Lancez une séquence de test. L\'outil diffuse des paires de sons ; ajustez les réglages jusqu\'à ce que les deux sons vous semblent avoir exactement le même volume. Recommandation : réglez le volume à un niveau frisant l\'inconfort.<br><b>4. Lecteur</b> – Chargez un fichier musical et écoutez la différence, avec et sans l\'application de la correction.<br><b>5. Niveaux</b> – Facultatif : Appliquez des réglages globaux (par ex. accentuation de la parole, renforcement des basses) et écoutez simultanément la différence en direct dans le lecteur.',introWarn:'Si possible, utilisez un programme d\'implant cochléaire sans filtre vocal qui corresponde par ailleurs à votre programme principal. Les filtres vocaux ont tendance à déformer les sons. Connectez votre implant cochléaire via Bluetooth pour obtenir le son le plus clair possible.',introAudio:'Pour votre audiologiste',tabPlayer:'Player',tabBalance:'Stereo-Balance',introAudioDesc:'Les résultats peuvent être imprimés. Le document contient les résultats de mesure, vos corrections souhaitées et les valeurs égaliseur. Cela permet à votre audiologiste de voir directement où un ajustement est nécessaire.<br>Page d\'accueil du projet : <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
-freqTitle:'Fabricant, fréquences & statut',lblMfr:'Fabricant:',freqHint:'Sélectionnez le fabricant de votre IC. Marquez les électrodes problématiques sous «Statut». Statut «Désactivé» = électrode éteinte dans l’IC lui-même, sera automatiquement exclue. Valeurs Hz par défaut selon bicial; entrez vos propres valeurs FAT dans «Hz propres». ▶ = son, ◼ = son continu.',
+freqTitle:'Fabricant, fréquences & statut',lblMfr:'Fabricant:',freqHint:'Sélectionnez le fabricant de votre IC. Marquez les électrodes problématiques sous «Statut». Statut «Désactivé» = électrode éteinte dans l’IC lui-même, sera automatiquement exclue. ▶ = son, ◼ = son continu.',
 freqDeactHint:'<b>Important – électrodes désactivées :</b> Lorsque des électrodes de votre IC sont désactivées, l’implant redistribue la plage de fréquences sur les électrodes actives restantes. Les fréquences centrales de toutes les autres électrodes se déplacent en conséquence – les valeurs standard préconfigurées ne s’appliquent alors plus.<br>Marquez les électrodes désactivées sous «Statut» et saisissez les fréquences centrales actuelles de votre réglage. Sans fréquences correctes, les mesures et l’égaliseur du lecteur ne seront pas significatifs.',thEl:'Él.',thHzStd:'Hz standard',thHzOwn:'Hz propres',thPlay:'▶',thHold:'◼',thSt:'Statut',thNote:'Note',thExclCb:'Exclure',
 stDeactivated:'Désactivé dans IC',
-warnDeactivated:'Attention : tableau de fréquences probablement pas à jour. Vous avez marqué des électrode(s) comme désactivées, mais les valeurs de fréquence correspondent encore aux valeurs standard. Lorsque des électrodes sont désactivées dans l’IC, les bandes de fréquence se redistribuent sur les électrodes actives. Veuillez demander à votre audiologiste les fréquences centrales actuelles et les saisir ici – sinon les mesures et l’égaliseur ne seront pas significatifs.',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',lblLevels:'Appliquer les niveaux',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optCF:'Convergence',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires d\'électrodes sont comparées en tours. Dans chaque tour, chaque électrode est comparée exactement une fois. A et B attribués aléatoirement. Méthode la plus précise. Recommandé comme premier passage.',runExplCF:'Re-test des paires les plus incertaines. Répétable à volonté.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: <br> - Réglez le volume à un niveau qui frôle l\'inconfort.<br> - Utilisez autant que possible une connexion Bluetooth pour la diffusion.<br> - D\'abord «Complet», puis «Convergence». Si les réglages sont fondamentalement corrects, cochez «Ajustement fin» et répétez «Convergence». Dans l\'onglet Résultats, évaluez la qualité par les couleurs. Toutes les mesures peuvent être répétées à volonté et améliorent le résultat. Les résultats sont toujours conservés.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',testLockedInfo:'Impossible de quitter cet onglet pendant qu\'un test est en cours.',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',kEnter:'Entrée',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Bruit fort',stNoisyMore:'Bruit avec ton',stNoisyLess:'Ton avec bruit',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',fClear:'Supprimer résultats',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Ce lecteur simule comment la musique ou la parole pourrait sonner si la courbe de volume IC était corrigée.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetBoth:'Appliquer les changements aux deux côtés',
+warnDeactivated:'Attention : tableau de fréquences probablement pas à jour. Vous avez marqué des électrode(s) comme désactivées, mais les valeurs de fréquence correspondent encore aux valeurs standard. Lorsque des électrodes sont désactivées dans l’IC, les bandes de fréquence se redistribuent sur les électrodes actives. Veuillez demander à votre audiologiste les fréquences centrales actuelles et les saisir ici – sinon les mesures et l’égaliseur ne seront pas significatifs.',resetFreq:'Réinitialiser',sweep:'▶ Balayage',stop:'■ Stop',lblCorr:'Correction',lblLevels:'Appliquer les niveaux',toneTitle:'Paramètres',lblVol:'Volume:',lblDur:'Durée:',lblPau:'Pause:',testTitle:'Paramètres de test',lblMode:'Mode:',optBal:'Équilibrage (dB)',optJdg:'Jugement',lblRun:'Type:',optFull:'Complet',optCF:'Convergence',optMan:'Manuel',lblRef:'Réf.:',lblVol2:'Volume:',lblDur2:'Durée:',lblPau2:'Pause:',preCorrectLabel:'Ajustement fin avec valeurs pré-corrigées',runExplFull:'Toutes les paires d\'électrodes sont comparées en tours. Dans chaque tour, chaque électrode est comparée exactement une fois. A et B attribués aléatoirement. Méthode la plus précise. Recommandé comme premier passage.',runExplCF:'Re-test des paires les plus incertaines. Répétable à volonté.',runExplMan:'Choisir deux électrodes.',recommend:'Recommandé: <br> - Réglez le volume à un niveau qui frôle l\'inconfort.<br> - Utilisez autant que possible une connexion Bluetooth pour la diffusion.<br> - D\'abord «Complet», puis «Convergence». Si les réglages sont fondamentalement corrects, cochez «Ajustement fin» et répétez «Convergence». Dans l\'onglet Résultats, évaluez la qualité par les couleurs. Toutes les mesures peuvent être répétées à volonté et améliorent le résultat. Les résultats sont toujours conservés.',startTest:'▶ Démarrer',stopTest:'■ Arrêter',testLockedInfo:'Impossible de quitter cet onglet pendant qu\'un test est en cours.',bBack:'Retour',bReplay:'Rejouer',kSpace:'Espace',kEnter:'Entrée',bExcl:'Exclure',bLoud:'plus fort',bLoud2:'plus fort',bEqual:'Égal',slHint:'Ajuster B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmer',bCanc:'Annuler',exclTitle:'Exclure quelle électrode?',resTitle:'Résultats',noRes:'Pas de mesures.',comp:'Comparaison',of:'de',round:'Tour',chartExplB:'Volume perçu relatif. Barres d\'erreur = résidu moyen.',chartExplJ:'Score = jugements.',thOff:'Offset',thMes:'Mesures',thRes:'Résidu',thWgt:'Poids',thStR:'Statut',thSc:'Score',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Bruit fort',stNoisyMore:'Bruit avec ton',stNoisyLess:'Ton avec bruit',stAlmMute:'presque muet',stMute:'muet',stExcl:'exclure',total:'Total',prev:'précédent',excluded:'exclu',copyDone:'Copié.',fClear:'Supprimer résultats',delConfirmMeas:'Supprimer les mesures?',delConfirmAll:'Aussi réinitialiser?',manComp:'Manuel',pairsRem:'restantes',exclDuring:'exclu',plTitle:'Lecteur audio avec correction',plDesc:'Ce lecteur simule comment la musique ou la parole pourrait sonner si la courbe de volume IC était corrigée.',plNoData:'Pas de données.',plFile:'Fichier audio',plFileTitle:'Fichier audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Force Equalizer:',plEqTitle:'Courbe Equalizer',plNotice:'Simulation de correction.',plNHLabel:'Simulation audition normale',plNHExpl:'Rend la distorsion audible pour les normo-entendants.',
+plBalApply:'Appliquer balance stéréo',plBalApplyOn:'✓ Balance stéréo ON',plBalApplyOff:'Balance stéréo OFF',plMapLabel:'Simulation MAPLAW',plMapExpl:'Simulation compression MED-EL.',fileTitle:'Charger / Sauver',fileDesc:'Paramètres et résultats en JSON.',fLoad:'Charger',fSave:'Sauver',fPrint:'Imprimer',fCopy:'Copier',fExplain:'Les réglages du lecteur sont inclus dans l\'impression.',eeDesc:'Export EasyEffects pour PipeWire.',eeExport:'Exporter EasyEffects',eeHowTo:'Copier dans ~/.config/easyeffects/output/ et activer.',eePlayerHint:'L\'export utilise les réglages actuels du lecteur.',tabLevels:'Levels',lvTitle:'Levels manuels',lvExpl:'Ajuster manuellement le volume de chaque électrode. Clavier: ↑↓ changer, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Aucun',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Parole (SII)',lvPrScurve:'Courbe S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centre:',lvPrWidth:'Largeur:',lvPrCutoff:'Limite:',lvPrStr:'Force:',lvReset:'Réinitialiser',lvPrExplTilt:'Pente linéaire. Correspond à Tilt MAESTRO.',lvPrExplPivot:'Centre accentué. Correspond à Pivot MAESTRO.',lvPrExplSpeech:'Pondération ANSI S3.5.',lvPrExplScurve:'Transition douce au centre.',lvPrExplGauss:'Courbe en cloche.',lvPrExplBass:'Renforcer les basses.',lvPrExplHigh:'Renforcer les aigus.',lvPresetTitle:'Presets',lvPresetBoth:'Appliquer les changements aux deux côtés',
 lvPresetDesc:'Courbes prédéfinies. Tilt/Pivot = outils MAESTRO. Le préréglage Parole pondère les fréquences selon leur importance pour la compréhension de la parole (ANSI S3.5). Clavier: ↑↓ ajuste les valeurs dans le champ de saisie.',lvChartTitle:'Aperçu',lvChartMan:'Manuel',lvChartSum:'Somme',plSrcLabel:'Source Equalizer:',plSrcMeas:'Mesuré',plSrcLevels:'Levels',plSrcBoth:'Les deux',
 plBothLabel:'Les deux côtés',
 plMonoEQLabel:'Appliquer l\'EQ du côté actif aux deux canaux Gauche+Droite',
 freqAbfHint:'<b>Important – Anatomy Based Fitting (ABF) et FAT :</b> Avec l\'Anatomy Based Fitting (ABF), d\'autres fréquences centrales s\'appliquent également aux électrodes. En général : demandez à votre audiologiste la FAT (Frequency Allocation Table) de votre IC pour connaître toutes les fréquences attribuées aux électrodes.',
 recommend:'Recommandé : <br> - Réglez le volume à un niveau qui frôle l\'inconfort.<br> - Utilisez autant que possible une connexion Bluetooth.<br> - D\'abord «Complet», puis «Convergence». Les deux sont répétables à volonté.<br> - «Complet» est divisé en tours. Dans chaque tour, chaque électrode est comparée exactement une fois. Les premières estimations fiables apparaissent après trois ou quatre tours complets ; valeurs sûres seulement après tous les tours.<br> - En cas d\'arrêt, le prochain démarrage de «Complet» reprend où vous vous êtes arrêté.<br> - Si les réglages sont fondamentalement corrects, cochez «Ajustement fin» et répétez «Convergence».<br> - Dans l\'onglet Résultats, évaluez la qualité par les couleurs.',
-printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif',reliabilityTitle:'Fiabilité des mesures',glossTitle:'Glossaire',glossResiduum:'<b>Résidu</b>: Indique l\'incohérence de vos jugements pour une électrode. Barres courtes = jugements cohérents, barres longues = jugements variables.',glossErrBar:'<b>Barres d\'erreur</b> (traits verticaux sur les barres): Indiquent la taille du résidu.',glossAnpassung:'<b>Correction</b>: De combien de dB cette électrode est réglée plus fort (+) ou moins fort (−) que la référence.',glossFarbe:'<b>Couleurs</b>: Vert = fiable, Jaune = limite, Rouge = incertain, Gris = pas encore mesuré. La couleur indique la qualité de mesure, pas l\'amplitude de la correction.',glossRef:'<b>Électrode de référence</b>: Le point fixe de la mesure. Sa correction est toujours 0 dB.',glossLS:'<b>Least Squares</b>: Méthode mathématique qui calcule simultanément les meilleures valeurs d\'offset à partir de toutes les comparaisons de paires. Les erreurs de mesure individuelles ont peu d\'influence. Les électrodes marquées comme problématiques dans l\'onglet «Implantat» contribuent avec un poids réduit.',preCorrHint:'Valeur précédente: {v} dB de l\'estimation'},
-es:{subtitle:'CI Sound Balancing Tool · v2.5',sideLeft:'IZQUIERDA',
+printPlayerTitle:'Réglages lecteur',printPreCorrect:'Ajustement fin avec pré-correction: actif',reliabilityTitle:'Fiabilité des mesures',glossTitle:'Glossaire',glossResiduum:'<b>Résidu</b>: Indique l\'incohérence de vos jugements pour une électrode. Barres courtes = jugements cohérents, barres longues = jugements variables.',glossErrBar:'<b>Barres d\'erreur</b> (traits verticaux sur les barres): Indiquent la taille du résidu.',glossAnpassung:'<b>Correction</b>: De combien de dB cette électrode est réglée plus fort (+) ou moins fort (−) que la référence.',glossFarbe:'<b>Couleurs</b>: Vert = fiable, Jaune = limite, Rouge = incertain, Gris = pas encore mesuré. La couleur indique la qualité de mesure, pas l\'amplitude de la correction.',glossRef:'<b>Électrode de référence</b>: Le point fixe de la mesure. Sa correction est toujours 0 dB.',glossLS:'<b>Least Squares</b>: Méthode mathématique qui calcule simultanément les meilleures valeurs d\'offset à partir de toutes les comparaisons de paires. Les erreurs de mesure individuelles ont peu d\'influence. Les électrodes marquées comme problématiques dans l\'onglet «Implantat» contribuent avec un poids réduit.',preCorrHint:'Valeur précédente: {v} dB de l\'estimation',
+implTitle:'Données d\'implant',
+implIntro:'Demandez à votre audiologiste les valeurs de la FAT (Frequency Allocation Table) avec les fréquences centrales (en Hz) pour chaque électrode et saisissez-les ci-dessus. Demandez aussi le MCL (MED-EL), T-Level/C-Level (Cochlear) ou T-Level/M-Level (Advanced Bionics) – ces valeurs se trouvent dans le logiciel de réglage de l\'audiologiste et sont nécessaires pour calculer les recommandations d\'ajustement dans l\'impression. Vous pouvez utiliser l\'outil sans ces valeurs, mais les résultats seront plus précis avec elles.',
+implBilateralHint:'Pour deux IC, les valeurs pour la gauche et la droite doivent être saisies séparément. Changez de côté avec les boutons ci-dessus.',
+lblImplModel:'Modèle d\'implant:',lblImplProc:'Processeur audio:',lblImplC:'Valeur c (MAPLAW):',lblImplIDR:'IDR (dB):',lblImplIIDR:'IIDR (dB):',lblImplGen:'Génération:',
+implPerElTitle:'Valeurs par électrode (de l\'audiologiste)',
+implPerElHint:'Saisir THR et MCL (MED-EL), T-Level/C-Level (Cochlear) ou T-Level/M-Level (Advanced Bionics). Ces valeurs sont disponibles dans le logiciel de réglage de votre audiologiste.',
+implThHdr:'THR',implMclHdr:'MCL (qu)',implTLvlHdr:'T-Level',implCLvlHdr:'C-Level (CL)',implMLvlHdr:'M-Level (CU)',
+implUnknown:'Inconnu',implSelectPleaseHdr:'— veuillez sélectionner —',
+implGenA:'Génération A (0,176 dB/CL)',implGenB:'Génération B (0,157 dB/CL)',implGenUnknown:'—',
+implPrintHeader:'Implant',implPrintProcessor:'Processeur',implPrintCVal:'Valeur c',implPrintIDR:'IDR',implPrintIIDR:'IIDR',implPrintGen:'Génération',
+implPrintColDelta:'Δ dB (outil)',implPrintColCurrent:'Actuel',implPrintColDeltaUnit:'Δ (unité)',implPrintColNew:'Nouvelle valeur',implPrintColStatus:'Statut',implPrintNA:'N/A',
+implPrintNotesTitle:'Notes pour l\'audiologiste',
+implPrintNote1:'Les valeurs de correction sont des approximations issues de mesures acoustiques de sonie par comparaison par paires. Elles ne remplacent pas un réglage direct basé sur la stimulation.',
+implPrintNote2:'Procédure recommandée : utiliser les valeurs comme point de départ · vérifier avec la fonction de balance contre les électrodes voisines · le patient confirme l\'égalité subjective · en cas de divergence, ne pas suivre les valeurs de l\'outil.',
+implPrintNote2b:'Signe : les valeurs Δ positives signifient que le MCL/C/M-level doit être augmenté (l\'électrode a été mesurée comme trop silencieuse). Valeurs négatives = diminuer.',
+implPrintNote3Missing:'Les valeurs suivantes sont manquantes et n\'ont pas pu être calculées : {list}. Veuillez communiquer ces valeurs au client afin que l\'outil puisse fournir des recommandations complètes.',
+implPrintNote4IDR:'L\'IDR n\'a pas été indiqué. Le calcul a utilisé la valeur par défaut de 60 dB. Si votre IDR configuré diffère, les valeurs Δ doivent être ajustées en conséquence.',
+implPrintNote5Large:'Pour les corrections supérieures à ±5 dB par électrode : vérifier les limites de conformité · la fonction de croissance de sonie peut changer · vérification par stimulation obligatoire.',
+implPrintModelMissing:'Veuillez sélectionner le modèle d\'implant – génération inconnue, calcul impossible.'},
+es:{subtitle:'CI Sound Balancing Tool · v2.6',sideLeft:'IZQUIERDA',
 sideRight:'DERECHA',
 tabIntro:'Introducción',tabFreq:'Implante',tabTest:'Medición',tabResults:'Resultados',tabFile:'Cargar/Guardar',
 introTitle:'CI Sound Balancing Tool',introDesc:'Esta herramienta ayuda a los usuarios de IC a comparar sistemáticamente el volumen percibido de sus electrodos y crear una curva de corrección individual. El objetivo es ajustar exactamente el mismo volumen en todos los electrodos – la base fundamental para una buena audición con IC. Este ajuste es óptimo para música y sonidos naturales. Los ajustes para la comprensión del habla o efectos como el realce de graves también son posibles.',introWhat:'¿Cuál es el procedimiento?',introWhatDesc:'',introFlow:'',introFlowDesc:'<b>1. Lado</b> – Seleccione, en la esquina superior derecha, el lado en el que lleva su IC. Si utiliza dos IC, realice la medición (Paso 3) para ambos.<br><b>2. Implante</b> – Seleccione su fabricante. Si conoce los datos específicos, ajuste los valores de frecuencia listados para cada electrodo; los valores estándar vienen preconfigurados por defecto.<br><b>Importante:</b> Los electrodos desactivados deben marcarse en «Estado».<br><b>3. Medición</b> – Inicie una secuencia de prueba. La herramienta reproduce pares de tonos; ajuste la configuración hasta que ambos tonos suenen con la misma intensidad. Recomendación: Ajuste el volumen a un nivel que roce lo incómodo.<br><b>4. Reproductor</b> – Cargue un archivo de música y escuche la diferencia con y sin la corrección aplicada.<br><b>5. Niveles</b> – Opcional: Aplique ajustes globales (p. ej., énfasis en el habla, refuerzo de graves) y escuche la diferencia en directo en el reproductor de forma simultánea.',introWarn:'Si es posible, utilice un programa de su implante coclear sin filtro de voz que, por lo demás, corresponda a su programa principal. Los filtros de voz tienden a distorsionar los sonidos. Conecte su implante coclear mediante Bluetooth para obtener el sonido más nítido posible.',introAudio:'Para su audiólogo',tabPlayer:'Player',tabBalance:'Balance Estéreo',introAudioDesc:'Los resultados se pueden imprimir. El documento contiene los resultados de medición, sus correcciones deseadas y los valores de ecualizador resultantes. Esto permite al audiólogo ver exactamente dónde son necesarios los ajustes.<br>Página web del proyecto: <a href="https://github.com/mviereck/ci-loudness-balancing" target="_blank" style="color:var(--accent)">https://github.com/mviereck/ci-loudness-balancing</a>',
-freqTitle:'Fabricante, frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Seleccione el fabricante de su IC. Marque los electrodos problemáticos en «Estado». Estado «Desactivado» = electrodo apagado en el propio IC, será excluido automáticamente. Valores Hz por defecto según bicial; introduzca valores FAT propios en «Hz propios». ▶ = tono, ◼ = tono continuo.',
+freqTitle:'Fabricante, frecuencias y estado',lblMfr:'Fabricante:',freqHint:'Seleccione el fabricante de su IC. Marque los electrodos problemáticos en «Estado». Estado «Desactivado» = electrodo apagado en el propio IC, será excluido automáticamente. ▶ = tono, ◼ = tono continuo.',
 freqDeactHint:'<b>Importante – electrodos desactivados:</b> Cuando los electrodos de su IC están desactivados, el implante redistribuye el rango de frecuencias entre los electrodos activos restantes. Las frecuencias centrales de todos los demás electrodos se desplazan en consecuencia – los valores estándar preconfigurados ya no son válidos.<br>Marque los electrodos desactivados en «Estado» e introduzca las frecuencias centrales actuales de su ajuste. Sin frecuencias correctas, las mediciones y el ecualizador del reproductor no serán significativos.',thEl:'El.',thHzStd:'Hz estándar',thHzOwn:'Hz propios',thPlay:'▶',thHold:'◼',thSt:'Estado',thNote:'Nota',thExclCb:'Excluir',
 stDeactivated:'Desactivado en IC',
-warnDeactivated:'Atención: la tabla de frecuencias probablemente no está actualizada. Ha marcado electrodo(s) como desactivados, pero los valores de frecuencia corresponden aún a los valores estándar. Cuando los electrodos están desactivados en el IC, las bandas de frecuencia se redistribuyen entre los electrodos activos. Por favor, pregunte a su audiólogo las frecuencias centrales actuales e intródzcalas aquí, de lo contrario las mediciones y el ecualizador no serán significativos.',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',lblLevels:'Aplicar Levels',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optCF:'Convergencia',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares de electrodos se comparan en rondas. En cada ronda, cada electrodo se compara exactamente una vez. A y B se asignan aleatoriamente por par. Método más preciso, lleva más tiempo. Recomendado como primera pasada.',runExplCF:'Re-test de los pares más inciertos. Repetible a voluntad.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: <br> - Ajuste el volumen a un nivel que raye en lo incómodo.<br> - Utilice una conexión Bluetooth para la transmisión si es posible.<br> - Primero «Completo», luego «Convergencia». Si la configuración es fundamentalmente sólida, marque «Ajuste fino» y repita «Convergencia». En la pestaña Resultados, evalúe la calidad por los colores. Todas las mediciones pueden repetirse tantas veces como se desee y mejoran el resultado. Los resultados siempre se conservan.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',testLockedInfo:'No puede abandonar esta pestaña mientras se ejecuta una prueba.',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',kEnter:'Intro',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Ruido fuerte',stNoisyMore:'Ruido con tono',stNoisyLess:'Tono con ruido',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',fClear:'Eliminar resultados',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Este reproductor simula cómo podría sonar la música o el habla si se corrigiera la curva de volumen del IC.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetBoth:'Aplicar cambios a ambos lados',
+warnDeactivated:'Atención: la tabla de frecuencias probablemente no está actualizada. Ha marcado electrodo(s) como desactivados, pero los valores de frecuencia corresponden aún a los valores estándar. Cuando los electrodos están desactivados en el IC, las bandas de frecuencia se redistribuyen entre los electrodos activos. Por favor, pregunte a su audiólogo las frecuencias centrales actuales e intródzcalas aquí, de lo contrario las mediciones y el ecualizador no serán significativos.',resetFreq:'Restablecer',sweep:'▶ Barrido',stop:'■ Parar',lblCorr:'Corrección',lblLevels:'Aplicar Levels',toneTitle:'Parámetros',lblVol:'Volumen:',lblDur:'Duración:',lblPau:'Pausa:',testTitle:'Configuración',lblMode:'Modo:',optBal:'Equilibrio (dB)',optJdg:'Juicio',lblRun:'Tipo:',optFull:'Completo',optCF:'Convergencia',optMan:'Manual',lblRef:'Ref.:',lblVol2:'Volumen:',lblDur2:'Duración:',lblPau2:'Pausa:',preCorrectLabel:'Ajuste fino con valores precorregidos',runExplFull:'Todos los pares de electrodos se comparan en rondas. En cada ronda, cada electrodo se compara exactamente una vez. A y B se asignan aleatoriamente por par. Método más preciso, lleva más tiempo. Recomendado como primera pasada.',runExplCF:'Re-test de los pares más inciertos. Repetible a voluntad.',runExplMan:'Elegir dos electrodos.',recommend:'Recomendado: <br> - Ajuste el volumen a un nivel que raye en lo incómodo.<br> - Utilice una conexión Bluetooth para la transmisión si es posible.<br> - Primero «Completo», luego «Convergencia». Si la configuración es fundamentalmente sólida, marque «Ajuste fino» y repita «Convergencia». En la pestaña Resultados, evalúe la calidad por los colores. Todas las mediciones pueden repetirse tantas veces como se desee y mejoran el resultado. Los resultados siempre se conservan.',startTest:'▶ Iniciar',stopTest:'■ Finalizar',testLockedInfo:'No puede abandonar esta pestaña mientras se ejecuta una prueba.',bBack:'Atrás',bReplay:'Repetir',kSpace:'Espacio',kEnter:'Intro',bExcl:'Excluir',bLoud:'más alto',bLoud2:'más alto',bEqual:'Igual',slHint:'Ajustar B. ◀▶ ±0,5 dB · Shift ±0,1 dB',bExtend:'±40 dB',bConf:'Confirmar',bCanc:'Cancelar',exclTitle:'¿Excluir cuál?',resTitle:'Resultados',noRes:'Sin mediciones.',comp:'Comparación',of:'de',round:'Ronda',chartExplB:'Volumen percibido relativo.',chartExplJ:'Puntuación = juicios.',thOff:'Offset',thMes:'Mediciones',thRes:'Residuo',thWgt:'Peso',thStR:'Estado',thSc:'Punt.',thComp:'Comp.',resExplain:'',apikal:'apical',basal:'basal',stNoisyHeavy:'Ruido fuerte',stNoisyMore:'Ruido con tono',stNoisyLess:'Tono con ruido',stAlmMute:'casi mudo',stMute:'mudo',stExcl:'excluir',total:'Total',prev:'anterior',excluded:'excluido',copyDone:'Copiado.',fClear:'Eliminar resultados',delConfirmMeas:'¿Eliminar mediciones?',delConfirmAll:'¿También restablecer?',manComp:'Manual',pairsRem:'restantes',exclDuring:'excluido',plTitle:'Reproductor con corrección',plDesc:'Este reproductor simula cómo podría sonar la música o el habla si se corrigiera la curva de volumen del IC.',plNoData:'Sin datos.',plFile:'Archivo de audio',plFileTitle:'Archivo de audio',plEqOn:'Equalizer ON',plEqOff:'Equalizer OFF',plEqStr:'Fuerza Equalizer:',plEqTitle:'Curva Equalizer',plNotice:'Simulación de corrección.',plNHLabel:'Simulación audición normal',plNHExpl:'Hace audible la distorsión.',
+plBalApply:'Aplicar balance estéreo',plBalApplyOn:'✓ Balance estéreo ON',plBalApplyOff:'Balance estéreo OFF',plMapLabel:'Simulación MAPLAW',plMapExpl:'Simulación compresión MED-EL.',fileTitle:'Cargar / Guardar',fileDesc:'Configuración y resultados en JSON.',fLoad:'Cargar',fSave:'Guardar',fPrint:'Imprimir',fCopy:'Copiar',fExplain:'La configuración del reproductor se incluye en la impresión.',eeDesc:'Export EasyEffects para PipeWire.',eeExport:'Exportar EasyEffects',eeHowTo:'Copiar a ~/.config/easyeffects/output/ y activar.',eePlayerHint:'El export usa la configuración actual.',tabLevels:'Levels',lvTitle:'Levels manuales',lvExpl:'Ajustar manualmente el volumen de cada electrodo. Teclado: ↑↓ cambiar, ←→ ±0,5 dB, Shift ±0,1 dB.',lvPreset:'Preset:',lvPrNone:'Ninguno',lvPrTilt:'Tilt',lvPrPivot:'Pivot',lvPrSpeech:'Habla (SII)',lvPrScurve:'Curva S',lvPrGauss:'Gauss',lvPrBass:'Bass Boost',lvPrHigh:'High Boost',lvPrCenter:'Centro:',lvPrWidth:'Ancho:',lvPrCutoff:'Límite:',lvPrStr:'Fuerza:',lvReset:'Restablecer',lvPrExplTilt:'Pendiente lineal. Corresponde a Tilt MAESTRO.',lvPrExplPivot:'Centro enfatizado. Corresponde a Pivot MAESTRO.',lvPrExplSpeech:'Ponderación ANSI S3.5.',lvPrExplScurve:'Transición suave en el centro.',lvPrExplGauss:'Curva gaussiana.',lvPrExplBass:'Reforzar graves.',lvPrExplHigh:'Reforzar agudos.',lvPresetTitle:'Presets',lvPresetBoth:'Aplicar cambios a ambos lados',
 lvPresetDesc:'Curvas predefinidas. Tilt/Pivot = herramientas MAESTRO. El preset Habla pondera las frecuencias según su importancia para la inteligibilidad del habla (ANSI S3.5). Teclado: ↑↓ ajusta valores en el campo de entrada.',lvChartTitle:'Resumen',lvChartMan:'Manual',lvChartSum:'Suma',plSrcLabel:'Fuente Equalizer:',plSrcMeas:'Medido',plSrcLevels:'Levels',plSrcBoth:'Ambos',
 plBothLabel:'Ambos lados',
 plMonoEQLabel:'Aplicar EQ del lado activo a ambos canales Izq+Der',
 freqAbfHint:'<b>Importante – Anatomy Based Fitting (ABF) y FAT:</b> Con el Anatomy Based Fitting (ABF) también se aplican otras frecuencias centrales a los electrodos. En general: pregunte a su audiólogo la FAT (Frequency Allocation Table) de su IC para conocer todas las frecuencias asignadas a los electrodos.',
 recommend:'Recomendado: <br> - Ajuste el volumen a un nivel que raye en lo incómodo.<br> - Utilice una conexión Bluetooth si es posible.<br> - Primero «Completo», luego «Convergencia». Ambos son repetibles a voluntad.<br> - «Completo» se divide en rondas. En cada ronda, cada electrodo se compara exactamente una vez. Las primeras estimaciones fiables aparecen tras unas tres o cuatro rondas completas; valores seguros sólo tras completar todas las rondas.<br> - Si se interrumpe, el siguiente inicio de «Completo» retoma donde se dejó.<br> - Si la configuración es fundamentalmente sólida, marque «Ajuste fino» y repita «Convergencia».<br> - En la pestaña Resultados, evalúe la calidad por los colores.',
-printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo',reliabilityTitle:'Fiabilidad de las mediciones',glossTitle:'Glosario',glossResiduum:'<b>Residuo</b>: Indica la inconsistencia de sus juicios para un electrodo. Barras cortas = juicios coherentes, barras largas = juicios variables.',glossErrBar:'<b>Barras de error</b> (líneas verticales en las barras): Muestran el tamaño del residuo.',glossAnpassung:'<b>Ajuste</b>: Cuántos dB más fuerte (+) o más suave (−) se configura este electrodo respecto a la referencia.',glossFarbe:'<b>Colores semáforo</b>: Verde = fiable, Amarillo = límite, Rojo = incierto, Gris = sin medición. El color indica la calidad de medición, no la magnitud del ajuste.',glossRef:'<b>Electrodo de referencia</b>: El punto fijo de la medición. Su ajuste es siempre 0 dB.',glossLS:'<b>Least Squares</b>: Método matemático que calcula simultáneamente los mejores valores de offset a partir de todas las comparaciones de pares. Los errores de medición individuales tienen poca influencia. Los electrodos marcados como problemáticos en la pestaña «Implante» contribuyen con peso reducido.',preCorrHint:'Valor anterior: {v} dB de la estimación'}
+printPlayerTitle:'Config. reproductor',printPreCorrect:'Ajuste fino con precorrección: activo',reliabilityTitle:'Fiabilidad de las mediciones',glossTitle:'Glosario',glossResiduum:'<b>Residuo</b>: Indica la inconsistencia de sus juicios para un electrodo. Barras cortas = juicios coherentes, barras largas = juicios variables.',glossErrBar:'<b>Barras de error</b> (líneas verticales en las barras): Muestran el tamaño del residuo.',glossAnpassung:'<b>Ajuste</b>: Cuántos dB más fuerte (+) o más suave (−) se configura este electrodo respecto a la referencia.',glossFarbe:'<b>Colores semáforo</b>: Verde = fiable, Amarillo = límite, Rojo = incierto, Gris = sin medición. El color indica la calidad de medición, no la magnitud del ajuste.',glossRef:'<b>Electrodo de referencia</b>: El punto fijo de la medición. Su ajuste es siempre 0 dB.',glossLS:'<b>Least Squares</b>: Método matemático que calcula simultáneamente los mejores valores de offset a partir de todas las comparaciones de pares. Los errores de medición individuales tienen poca influencia. Los electrodos marcados como problemáticos en la pestaña «Implante» contribuyen con peso reducido.',preCorrHint:'Valor anterior: {v} dB de la estimación',
+implTitle:'Datos del implante',
+implIntro:'Solicite a su audiólogo los valores de la FAT (Frequency Allocation Table) con las frecuencias centrales (en Hz) de cada electrodo e introdúzcalos arriba. Solicite también MCL (MED-EL), T-Level/C-Level (Cochlear) o T-Level/M-Level (Advanced Bionics) – estos valores se encuentran en el software de ajuste del audiólogo y son necesarios para calcular las recomendaciones de ajuste en la impresión. Puede usar la herramienta sin estos valores, pero los resultados serán más precisos con ellos.',
+implBilateralHint:'Para dos IC, los valores para izquierda y derecha deben introducirse por separado. Cambie de lado con los botones de arriba.',
+lblImplModel:'Modelo de implante:',lblImplProc:'Procesador de audio:',lblImplC:'Valor c (MAPLAW):',lblImplIDR:'IDR (dB):',lblImplIIDR:'IIDR (dB):',lblImplGen:'Generación:',
+implPerElTitle:'Valores por electrodo (del audiólogo)',
+implPerElHint:'Introduzca THR y MCL (MED-EL), T-Level/C-Level (Cochlear) o T-Level/M-Level (Advanced Bionics). Estos valores están disponibles en el software de ajuste de su audiólogo.',
+implThHdr:'THR',implMclHdr:'MCL (qu)',implTLvlHdr:'T-Level',implCLvlHdr:'C-Level (CL)',implMLvlHdr:'M-Level (CU)',
+implUnknown:'Desconocido',implSelectPleaseHdr:'— por favor seleccione —',
+implGenA:'Generación A (0,176 dB/CL)',implGenB:'Generación B (0,157 dB/CL)',implGenUnknown:'—',
+implPrintHeader:'Implante',implPrintProcessor:'Procesador',implPrintCVal:'Valor c',implPrintIDR:'IDR',implPrintIIDR:'IIDR',implPrintGen:'Generación',
+implPrintColDelta:'Δ dB (herramienta)',implPrintColCurrent:'Actual',implPrintColDeltaUnit:'Δ (unidad)',implPrintColNew:'Nuevo valor',implPrintColStatus:'Estado',implPrintNA:'N/A',
+implPrintNotesTitle:'Notas para el audiólogo',
+implPrintNote1:'Los valores de corrección mostrados son aproximaciones derivadas de mediciones acústicas de sonoridad mediante comparación por pares. No sustituyen un ajuste directo basado en estimulación.',
+implPrintNote2:'Procedimiento recomendado: usar valores como punto de partida · verificar con función de balance frente a electrodos vecinos · el paciente confirma la igualdad subjetiva · ante discrepancias, no seguir los valores de la herramienta.',
+implPrintNote2b:'Signo: los valores Δ positivos indican que el MCL/C/M-level debe aumentarse (el electrodo se midió como demasiado silencioso). Valores negativos = reducir.',
+implPrintNote3Missing:'Los siguientes valores faltan y no pudieron calcularse: {list}. Por favor, comunique estos valores al cliente para que la herramienta pueda proporcionar recomendaciones completas en el futuro.',
+implPrintNote4IDR:'No se especificó IDR. El cálculo usó el valor predeterminado de 60 dB. Si su IDR configurado difiere, los valores Δ deben escalarse en consecuencia.',
+implPrintNote5Large:'Para correcciones superiores a ±5 dB por electrodo: verificar límites de cumplimiento · la función de crecimiento de sonoridad puede cambiar · verificación basada en estimulación obligatoria.',
+implPrintModelMissing:'Seleccione el modelo de implante – generación desconocida, cálculo no posible.'}
 };
 let lang='de';
+// ============================================================
+// IMPLANT & PROCESSOR LISTS
+// ============================================================
+const IMPLANTS={
+  medel:[
+    {model:'SYNCHRONY 2',tech:'Mi1200',year:2020},
+    {model:'SYNCHRONY',  tech:'Mi1200',year:2013},
+    {model:'CONCERTO',   tech:'Mi1000',year:2009},
+    {model:'SONATA',     tech:'Mi1000',year:2006},
+    {model:'PULSAR',     tech:'Mi1000',year:2004},
+    {model:'COMBI 40+',  tech:'C40+',  year:1999},
+    {model:'COMBI 40',   tech:'C40',   year:1997}
+  ],
+  cochlear:[
+    {model:'CI632 (Profile Plus, Slim Modiolar)',     gen:'B',year:2020},
+    {model:'CI624 (Profile Plus)',                    gen:'B',year:2020},
+    {model:'CI622 (Profile Plus, Slim Straight)',     gen:'B',year:2020},
+    {model:'CI612 (Profile Plus, Contour Advance)',   gen:'B',year:2020},
+    {model:'CI532 (Profile, Slim Modiolar)',          gen:'B',year:2014},
+    {model:'CI522 (Profile, Slim Straight)',          gen:'B',year:2014},
+    {model:'CI512 (Profile, Contour Advance)',        gen:'B',year:2014},
+    {model:'CI24RE (Freedom)',                        gen:'B',year:2005},
+    {model:'CI24R',                                   gen:'A',year:2002},
+    {model:'CI24M',                                   gen:'A',year:1998},
+    {model:'CI22M (Nucleus 22)',                      gen:'A',year:1985}
+  ],
+  ab:[
+    {model:'HiRes Ultra 3D',      tech:'CI-1601',year:2017},
+    {model:'HiRes Ultra',         tech:'CI-1600',year:2013},
+    {model:'HiRes 90K Advantage', tech:'CI-1500',year:2013},
+    {model:'HiRes 90K',           tech:'CI-1400',year:2003},
+    {model:'Clarion CII',         tech:'AB-5100H',year:2001},
+    {model:'Clarion 1.2',         tech:'AB-5100', year:1999},
+    {model:'Clarion 1.0',         tech:'MMT-5100',year:1996}
+  ]
+};
+const PROCESSORS={
+  medel:[
+    {model:'SONNET 3', form:'BTE',year:2023},
+    {model:'RONDO 3',  form:'OTE',year:2020},
+    {model:'SONNET 2', form:'BTE',year:2018},
+    {model:'RONDO 2',  form:'OTE',year:2016},
+    {model:'SONNET',   form:'BTE',year:2014},
+    {model:'RONDO',    form:'OTE',year:2011},
+    {model:'OPUS 2',   form:'BTE',year:2007},
+    {model:'TEMPO+',   form:'BTE',year:2003}
+  ],
+  cochlear:[
+    {model:'Kanso 3 Nexa (CP1175)',          form:'OTE',year:2024},
+    {model:'Kanso 3 (CP1170)',               form:'OTE',year:2023},
+    {model:'Nucleus 8',                      form:'BTE',year:2022},
+    {model:'Kanso 2',                        form:'OTE',year:2020},
+    {model:'Nucleus 7',                      form:'BTE',year:2017},
+    {model:'Kanso (CP950)',                  form:'OTE',year:2016},
+    {model:'Nucleus 6 (CP910/CP920)',        form:'BTE',year:2013},
+    {model:'Nucleus 5 (CP810)',              form:'BTE',year:2010},
+    {model:'Freedom',                        form:'BTE',year:2005},
+    {model:'ESPrit 3G',                      form:'BTE',year:2002}
+  ],
+  ab:[
+    {model:'Naída CI M / Sky CI M', form:'BTE', year:2020},
+    {model:'Naída CI Q90',          form:'BTE', year:2016},
+    {model:'Naída CI Q70',          form:'BTE', year:2012},
+    {model:'Neptune',               form:'Body',year:2011},
+    {model:'Harmony',               form:'BTE', year:2007},
+    {model:'Auria',                 form:'BTE', year:2004},
+    {model:'Platinum Series',       form:'Body',year:2000}
+  ]
+};
+
+// ============================================================
+// CALCULATION FUNCTIONS (dB → manufacturer unit)
+// ============================================================
+function detectCochlearGen(modelStr){
+  const entry=IMPLANTS.cochlear.find(x=>x.model===modelStr);
+  return entry?entry.gen:null;
+}
+// MED-EL: ΔMCL [qu] = MCL_alt · (10^(ΔdB/20) − 1)
+function calcMedel(dB,mclOld){
+  if(mclOld===null||mclOld===undefined||isNaN(mclOld))return{delta:null,absolute:null};
+  const newMcl=mclOld*Math.pow(10,dB/20);
+  return{delta:newMcl-mclOld,absolute:newMcl};
+}
+// Cochlear: ΔC [CL] = ΔdB / step
+function calcCochlear(dB,cOld,generation){
+  const step=generation==='A'?0.176:generation==='B'?0.157:null;
+  if(step===null)return{delta:null,absolute:null};
+  const delta=dB/step;
+  return{delta,absolute:(cOld!==null&&cOld!==undefined&&!isNaN(cOld)?cOld+delta:null)};
+}
+// AB: ΔM [CU] = ((M−T)/IDR) · ΔdB
+function calcAB(dB,mOld,tOld,idr){
+  const idrUse=(idr!==null&&idr!==undefined&&!isNaN(idr))?idr:60;
+  const assumedIDR=(idr===null||idr===undefined||isNaN(idr));
+  if(mOld===null||mOld===undefined||isNaN(mOld)||tOld===null||tOld===undefined||isNaN(tOld))
+    return{delta:null,absolute:null,idrUsed:idrUse,assumedDefaults:true,assumedIDR};
+  const delta=((mOld-tOld)/idrUse)*dB;
+  return{delta,absolute:mOld+delta,idrUsed:idrUse,assumedDefaults:false,assumedIDR};
+}
+
+
 function t(k){return(L[lang]&&L[lang][k])||(L.de[k])||k;}
 function updateMfrSelectLabels(){
   const labels={de:'Elektroden',en:'electrodes',fr:'électrodes',es:'electrodos'};
@@ -678,9 +1064,10 @@ function applyLang(){lang=document.getElementById('langSelect').value;
   s('lblRef','lblRef');s('lblVol2','lblVol2');s('lblDur2','lblDur2');s('lblPau2','lblPau2');s('balLabel','balLabel');
   s('startBtn','startTest');s('stopTBtn','stopTest');s('resTitle','resTitle');
   updEqToggleBtn();
-  updPlSrcButtons();
+  updBalApplyBtn();
   updSideButtons();
   updateRunExplain();buildFreqTable();
+  if(typeof buildImplantCard==='function')buildImplantCard();
   if(document.getElementById('resC').style.display!=='none')renderResults();
   try{localStorage.setItem('ci-lb-lang',lang);}catch(e){}
 }
@@ -709,7 +1096,7 @@ let presets=[];
 let fullSweepRound=null,fullSweepDonePairs=[];
 function initPresets(){const centerMap={medel:5.5,ab:7.5,cochlear:10.5};const defaultCenter=centerMap[mfr]||Math.floor(nEl/2);presets=PR_TYPES.map(tp=>({type:tp,on:false,strength:0,center:defaultCenter,width:Math.max(2,Math.floor(nEl/4)),cutoff:tp==='bassboost'?Math.floor(nEl/3):Math.floor(nEl*2/3)}));}
 function bindActiveSide(){const s=sideData[activeSide];mfr=s.manufacturer;nEl=s.nEl;freqs=s.freqs;elFreqOwn=s.elFreqOwn;elSt=s.elSt;elNt=s.elNt;elExDur=s.elExDur;manualLevels=s.manualLevels;presets=s.presets;refEl=s.refEl;jRes=s.jRes;bRes=s.bRes;fullSweepRound=s.fullSweepRound!==undefined?s.fullSweepRound:null;fullSweepDonePairs=s.fullSweepDonePairs||[];}
-function initSideData(side,m){const s=sideData[side];s.manufacturer=m||'medel';s.nEl=MFR[s.manufacturer].n;s.freqs=[...MFR[s.manufacturer].freqs];s.elSt=new Array(s.nEl).fill(null);s.elNt=new Array(s.nEl).fill('');s.elExDur=new Array(s.nEl).fill(null);s.elFreqOwn=new Array(s.nEl).fill(null);s.manualLevels=new Array(s.nEl).fill(0);s.refEl=Math.floor(s.nEl/2);s.jRes=[];s.bRes=[];s.fullSweepRound=null;s.fullSweepDonePairs=[];activeSide=side;bindActiveSide();initPresets();s.presets=presets;}
+function initSideData(side,m){const s=sideData[side];s.manufacturer=m||'medel';s.nEl=MFR[s.manufacturer].n;s.freqs=[...MFR[s.manufacturer].freqs];s.elSt=new Array(s.nEl).fill(null);s.elNt=new Array(s.nEl).fill('');s.elExDur=new Array(s.nEl).fill(null);s.elFreqOwn=new Array(s.nEl).fill(null);s.manualLevels=new Array(s.nEl).fill(0);s.refEl=Math.floor(s.nEl/2);s.jRes=[];s.bRes=[];s.fullSweepRound=null;s.fullSweepDonePairs=[];s.implant={model:'',processor:'',cValue:null,idr:null,iidr:null,generation:null,mcl:new Array(s.nEl).fill(null),thr:new Array(s.nEl).fill(null),upperLevel:new Array(s.nEl).fill(null)};activeSide=side;bindActiveSide();initPresets();s.presets=presets;}
 function updSideButtons(){
   const L=document.getElementById('sideLeftBtn'),R=document.getElementById('sideRightBtn');
   if(!L||!R)return;
@@ -726,12 +1113,94 @@ function updFClearBtn(){
   const sideLabel=activeSide==='left'?'LINKS':'RECHTS';
   btn.innerHTML='&#128465; Messergebnisse '+sideLabel+' löschen';
 }
+// ============================================================
+// IMPLANT CARD UI
+// ============================================================
+function buildImplantCard(){
+  const s=sideData[activeSide];
+  if(!s.implant)s.implant={model:'',processor:'',cValue:null,idr:null,iidr:null,generation:null,mcl:new Array(s.nEl).fill(null),thr:new Array(s.nEl).fill(null),upperLevel:new Array(s.nEl).fill(null)};
+  const im=s.implant;
+  const m=s.manufacturer;
+
+  // i18n
+  const implTitleEl=document.getElementById('implTitle');if(implTitleEl)implTitleEl.textContent=t('implTitle');
+  document.getElementById('implIntro').textContent=t('implIntro');
+  document.getElementById('implBilateralHintEl').innerHTML=t('implBilateralHint');
+  document.getElementById('implBilateralHintEl').style.display='block';
+  document.getElementById('lblImplModel').textContent=t('lblImplModel');
+  document.getElementById('lblImplProc').textContent=t('lblImplProc');
+  document.getElementById('lblImplC').textContent=t('lblImplC');
+  document.getElementById('lblImplIDR').textContent=t('lblImplIDR');
+  document.getElementById('lblImplIIDR').textContent=t('lblImplIIDR');
+  const genLbl=document.getElementById('lblImplGen');if(genLbl)genLbl.textContent=t('lblImplGen');
+
+  // Show/hide manufacturer-specific params
+  document.getElementById('implMedelParams').style.display=m==='medel'?'':'none';
+  document.getElementById('implAbParams').style.display=m==='ab'?'':'none';
+  document.getElementById('implCochParams').style.display=m==='cochlear'?'':'none';
+  const genGrp=document.getElementById('implGenGroup');
+  if(genGrp)genGrp.style.display=m==='cochlear'?'':'none';
+
+  // Fill model dropdown
+  const mdSel=document.getElementById('implModelSelect');
+  const prevModel=im.model;
+  mdSel.innerHTML='';
+  const optPls=document.createElement('option');optPls.value='';optPls.textContent=t('implSelectPleaseHdr');mdSel.appendChild(optPls);
+  const optUnk=document.createElement('option');optUnk.value='unknown';optUnk.textContent=t('implUnknown');mdSel.appendChild(optUnk);
+  (IMPLANTS[m]||[]).forEach(entry=>{
+    const o=document.createElement('option');o.value=entry.model;o.textContent=entry.model+(entry.year?' ('+entry.year+')':'');mdSel.appendChild(o);
+  });
+  mdSel.value=prevModel||'';
+  if(!mdSel.value&&prevModel)mdSel.value='';
+
+  // Fill processor dropdown
+  const prSel=document.getElementById('implProcSelect');
+  const prevProc=im.processor;
+  prSel.innerHTML='';
+  const optPls2=document.createElement('option');optPls2.value='';optPls2.textContent=t('implSelectPleaseHdr');prSel.appendChild(optPls2);
+  const optUnk2=document.createElement('option');optUnk2.value='unknown';optUnk2.textContent=t('implUnknown');prSel.appendChild(optUnk2);
+  (PROCESSORS[m]||[]).forEach(entry=>{
+    const o=document.createElement('option');o.value=entry.model;o.textContent=entry.model+(entry.year?' ('+entry.year+')':'');prSel.appendChild(o);
+  });
+  prSel.value=prevProc||'';
+
+  // Global params
+  if(m==='medel'){const ci=document.getElementById('implC');if(ci)ci.value=im.cValue!==null?im.cValue:'';}
+  if(m==='ab'){const ii=document.getElementById('implIDR');if(ii)ii.value=im.idr!==null?im.idr:'';}
+  if(m==='cochlear'){const ii=document.getElementById('implIIDR');if(ii)ii.value=im.iidr!==null?im.iidr:'';updCochlearGen();}
+
+  // Attach dropdown change events
+  mdSel.onchange=function(){
+    sideData[activeSide].implant.model=this.value;
+    if(sideData[activeSide].manufacturer==='cochlear')updCochlearGen();
+  };
+  prSel.onchange=function(){sideData[activeSide].implant.processor=this.value;};
+  const ci=document.getElementById('implC');
+  if(ci)ci.onchange=function(){sideData[activeSide].implant.cValue=this.value!==''?parseFloat(this.value):null;};
+  const ii=document.getElementById('implIDR');
+  if(ii)ii.onchange=function(){sideData[activeSide].implant.idr=this.value!==''?parseFloat(this.value):null;};
+  const iii=document.getElementById('implIIDR');
+  if(iii)iii.onchange=function(){sideData[activeSide].implant.iidr=this.value!==''?parseFloat(this.value):null;};
+}
+
+function updCochlearGen(){
+  const s=sideData[activeSide];
+  const model=s.implant?s.implant.model:'';
+  const gen=detectCochlearGen(model);
+  s.implant.generation=gen;
+  const disp=document.getElementById('implGenDisplay');
+  if(!disp)return;
+  if(gen==='A')disp.textContent=t('implGenA');
+  else if(gen==='B')disp.textContent=t('implGenB');
+  else disp.textContent=t('implGenUnknown');
+}
+
 function setActiveSide(side){
   if(!SIDES.includes(side))return;
   activeSide=side;bindActiveSide();
   document.getElementById('ciSideSelect').value=side;
   document.getElementById('mfrSelect').value=mfr;
-  buildFreqTable();buildLvGrid();drawLvChart();renderResults();
+  buildFreqTable();buildLvGrid();drawLvChart();renderResults();buildImplantCard();
   updSideButtons();
   updFClearBtn();
   updPlSrcButtons();
@@ -750,6 +1219,24 @@ s.fullSweepDonePairs=(d.fullSweepDonePairs!==undefined?d.fullSweepDonePairs:[]);
 // Load elFreqOwn: if present use it; else split loaded freqs vs defaults
 if(d.electrodeFreqOwn){s.elFreqOwn=[...d.electrodeFreqOwn];}
 else{const defF=MFR[s.manufacturer].freqs;s.elFreqOwn=s.freqs.map((f,i)=>Math.round(f)===Math.round(defF[i])?null:f);}
+// Load implant data (v2.6+)
+const di=d.implant||{};
+s.implant={
+  model:di.model||'',
+  processor:di.processor||'',
+  cValue:(di.cValue!==undefined&&di.cValue!==null)?di.cValue:null,
+  idr:(di.idr!==undefined&&di.idr!==null)?di.idr:null,
+  iidr:(di.iidr!==undefined&&di.iidr!==null)?di.iidr:null,
+  generation:di.generation||null,
+  mcl:di.mcl||(new Array(s.nEl).fill(null)),
+  thr:di.thr||(new Array(s.nEl).fill(null)),
+  upperLevel:di.upperLevel||(new Array(s.nEl).fill(null))
+};
+// Ensure arrays are correct length
+['mcl','thr','upperLevel'].forEach(k=>{
+  while(s.implant[k].length<s.nEl)s.implant[k].push(null);
+  s.implant[k]=s.implant[k].slice(0,s.nEl);
+});
 }
 function getPlayerSide(){
   const cb=document.getElementById('plBothSides');
@@ -760,7 +1247,7 @@ function getPlayerSide(){
   }
   return activeSide;
 }
-function getPlayerBalance(){return parseFloat(document.getElementById('balBalance')?.value)||0;}
+function getPlayerBalance(){if(!plApplyBalance)return 0;return parseFloat(document.getElementById('balBalance')?.value)||0;}
 function withSide(side,fn){const prevSide=activeSide;const prev={mfr,nEl,freqs,elSt,elNt,elExDur,manualLevels,presets,refEl,jRes,bRes};activeSide=side;bindActiveSide();try{return fn();}finally{activeSide=prevSide;bindActiveSide();}}
 function dEN(i){return MFR[mfr].apFirst?i+1:nEl-i;}
 initSideData('left','medel');initSideData('right','medel');activeSide='left';bindActiveSide();updateMfrSelectLabels();
@@ -824,6 +1311,7 @@ const ROUND_ROBIN={
   ],
 };
 let plEqOn=true; // EQ toggle state
+let plApplyBalance=true; // Stereo-Balance anwenden
 let plSrcMeas=true,plSrcLevels=true; // EQ source toggles
 
 // SII Band Importance Function (ANSI S3.5-1997)
@@ -863,7 +1351,7 @@ function gDur(){return parseInt((testAct?document.getElementById('dur2'):documen
 function gPau(){return parseInt((testAct?document.getElementById('pau2'):document.getElementById('pau1')).value)||500;}
 function dB2G(d){return Math.pow(10,d/20);}
 function stopAll(){if(curOsc){try{curOsc.stop();}catch(e){}curOsc=null;}if(playTO){clearTimeout(playTO);playTO=null;}sweepAct=false;isPlay=false;holdIdx=-1;updInd(-1);}
-function playTone(hz,vol,ms,ramp=20){return new Promise(r=>{const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+ramp/1000);g.gain.setValueAtTime(Math.max(0,vol),c.currentTime+(ms-ramp)/1000);g.gain.linearRampToValueAtTime(0,c.currentTime+ms/1000);o.connect(g);g.connect(c.destination);curOsc=o;o.start();o.stop(c.currentTime+ms/1000+.01);o.onended=()=>{curOsc=null;r();};});}
+function playTone(hz,vol,ms,ramp=20){return new Promise(r=>{const c=gAC(),o=c.createOscillator(),g=c.createGain(),p=c.createStereoPanner();o.type='sine';o.frequency.value=hz;const pan=activeSide==='left'?-1:1;p.pan.value=pan;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+ramp/1000);g.gain.setValueAtTime(Math.max(0,vol),c.currentTime+(ms-ramp)/1000);g.gain.linearRampToValueAtTime(0,c.currentTime+ms/1000);o.connect(g);g.connect(p);p.connect(c.destination);curOsc=o;o.start();o.stop(c.currentTime+ms/1000+.01);o.onended=()=>{curOsc=null;r();};});}
 function playHold(hz,vol){stopAll();const c=gAC(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(Math.max(0,vol),c.currentTime+.02);o.connect(g);g.connect(c.destination);curOsc=o;o.start();}
 function corrG(i){if(!document.getElementById('corrToggle').checked||bRes.length===0)return 1;const{levels}=compWLS();return dB2G(-levels[i]);}
 async function playSingle(i){if(isPlay&&holdIdx===-1){stopAll();return;}stopAll();isPlay=true;updInd(i);await playTone(effFreq(i),gVol()*corrG(i),gDur());isPlay=false;updInd(-1);}
@@ -881,19 +1369,28 @@ function updInd(i,w){document.querySelectorAll('.freq-table .pbtn[data-a="play"]
 // FREQUENCY TABLE
 // ============================================================
 function buildFreqTable(){
-  document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHzStd')}</th><th>${t('thHzOwn')}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th style="white-space:nowrap">${t('thExclCb')}</th><th>${t('thNote')}</th>`;
+  const im=sideData[activeSide].implant||{};
+  const isMedel=mfr==='medel', isAB=mfr==='ab', isCoch=mfr==='cochlear';
+  const upperHdr=isMedel?t('implMclHdr'):isCoch?t('implCLvlHdr'):t('implMLvlHdr');
+  document.getElementById('freqTH').innerHTML=`<th>${t('thEl')}</th><th>${t('thHzStd')}</th><th>${t('thHzOwn')}</th><th>${t('implThHdr')}</th><th>${upperHdr}</th><th>${t('thPlay')}</th><th>${t('thHold')}</th><th>${t('thSt')}</th><th style="white-space:nowrap">${t('thExclCb')}</th><th>${t('thNote')}</th>`;
   const tb=document.getElementById('freqTB');tb.innerHTML='';
   const so=`<option value="">ok</option><option value="noisyLess">${t('stNoisyLess')}</option><option value="noisyMore">${t('stNoisyMore')}</option><option value="noisyHeavy">${t('stNoisyHeavy')}</option><option value="almostMute">${t('stAlmMute')}</option><option value="mute">${t('stMute')}</option><option value="deactivated" style="font-weight:700;color:#dc2626;text-transform:uppercase">${t('stDeactivated').toUpperCase()}</option>`;
+  const inpStyle='width:60px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em';
   for(let i=0;i<nEl;i++){const tr=document.createElement('tr');
     let ex='';if(i===0)ex=` <span class="el-extra">(${t('apikal')})</span>`;if(i===nEl-1)ex=` <span class="el-extra">(${t('basal')})</span>`;
     const isExcl=elExDur[i]!==null;
     const isDeact=elSt[i]==='deactivated';
     const stdHz=Math.round(freqs[i]);
     const ownVal=elFreqOwn[i]!=null?Math.round(elFreqOwn[i]):'';
+    const thrVal=(im.thr&&im.thr[i]!==null&&im.thr[i]!==undefined)?im.thr[i]:'';
+    const upperVal=isMedel?(im.mcl&&im.mcl[i]!==null&&im.mcl[i]!==undefined?im.mcl[i]:'')
+                          :(im.upperLevel&&im.upperLevel[i]!==null&&im.upperLevel[i]!==undefined?im.upperLevel[i]:'');
     if(isDeact||isExcl)tr.style.opacity='0.55';
     tr.innerHTML=`<td style="font-weight:600">${dEN(i)}${ex}</td>`+
       `<td style="color:#999;font-family:var(--mono);font-size:.86em;padding:4px 6px">${stdHz}</td>`+
       `<td><input type="number" class="fo" data-i="${i}" value="${ownVal}" min="20" max="20000" style="width:70px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:center;font-family:var(--mono);font-size:.88em"></td>`+
+      `<td><input type="number" class="it" data-i="${i}" value="${thrVal}" min="0" max="500" step="1" style="${inpStyle}" placeholder="—"></td>`+
+      `<td><input type="number" class="iu" data-i="${i}" value="${upperVal}" min="0" max="1000" step="1" style="${inpStyle}" placeholder="—"></td>`+
       `<td><button class="pbtn" data-a="play" data-i="${i}">&#9654;</button></td>`+
       `<td><button class="pbtn" data-a="hold" data-i="${i}">&#9724;</button></td>`+
       `<td><select class="ss" data-i="${i}">${so}</select></td>`+
@@ -905,7 +1402,21 @@ function buildFreqTable(){
     const i=+e.target.dataset.i,v=parseFloat(e.target.value);
     if(e.target.value===''||isNaN(v)){elFreqOwn[i]=null;e.target.value='';}
     else if(v>=20&&v<=20000){elFreqOwn[i]=v;}
-    else{e.target.value=elFreqOwn[i]!=null?Math.round(elFreqOwn[i]):'';}
+    else{e.target.value=elFreqOwn[i]!=null?Math.round(elFreqOwn[i]): '';}
+  }));
+  // THR inputs
+  tb.querySelectorAll('.it').forEach(inp=>inp.addEventListener('change',e=>{
+    const idx=+e.target.dataset.i;
+    const v=e.target.value!==''?parseFloat(e.target.value):null;
+    if(!sideData[activeSide].implant)return;
+    sideData[activeSide].implant.thr[idx]=v;
+  }));
+  // Upper (MCL/C/M) inputs
+  tb.querySelectorAll('.iu').forEach(inp=>inp.addEventListener('change',e=>{
+    const idx=+e.target.dataset.i;
+    const v=e.target.value!==''?parseFloat(e.target.value):null;
+    const im2=sideData[activeSide].implant;if(!im2)return;
+    if(mfr==='medel')im2.mcl[idx]=v;else im2.upperLevel[idx]=v;
   }));
   tb.querySelectorAll('.pbtn[data-a="play"]').forEach(b=>b.addEventListener('click',()=>playSingle(+b.dataset.i)));
   tb.querySelectorAll('.pbtn[data-a="hold"]').forEach(b=>b.addEventListener('click',()=>toggleHold(+b.dataset.i)));
@@ -953,11 +1464,17 @@ function switchMfr(m){
   s.manualLevels=new Array(s.nEl).fill(0);
   s.refEl=Math.floor(s.nEl/2);
   s.jRes=[];s.bRes=[];
+  // Reset implant arrays to new electrode count, preserve global params
+  if(!s.implant)s.implant={model:'',processor:'',cValue:null,idr:null,iidr:null,generation:null,mcl:[],thr:[],upperLevel:[]};
+  s.implant.model='';s.implant.processor='';s.implant.generation=null;
+  s.implant.mcl=new Array(s.nEl).fill(null);
+  s.implant.thr=new Array(s.nEl).fill(null);
+  s.implant.upperLevel=new Array(s.nEl).fill(null);
   bindActiveSide();
   initPresets();s.presets=presets;
   jRes.splice(0,jRes.length);bRes.splice(0,bRes.length);
   refEl=Math.floor(nEl/2);
-  buildFreqTable();
+  buildFreqTable();buildImplantCard();
 }
 function resetFreqs(){freqs=[...MFR[mfr].freqs];elFreqOwn.fill(null);buildFreqTable();}
 
@@ -1301,10 +1818,10 @@ function resetAll(){const ch=confirm(t('resetConfirm'));if(!ch)return;
   alert(t('resetDone'));
 }
 
-async function saveJson(){const d={version:'2.5',date:new Date().toLocaleString(lang==='de'?'de-DE':lang==='fr'?'fr-FR':lang==='es'?'es-ES':'en-US'),sides:{left:{manufacturer:sideData.left.manufacturer,frequencies:sideData.left.freqs,electrodeFreqOwn:sideData.left.elFreqOwn,electrodeStatus:sideData.left.elSt,electrodeNotes:sideData.left.elNt,electrodeExcludedDuring:sideData.left.elExDur,referenceElectrode:sideData.left.refEl,judgmentResults:sideData.left.jRes,balanceResults:sideData.left.bRes,manualLevels:sideData.left.manualLevels,presets:sideData.left.presets,fullSweepRound:sideData.left.fullSweepRound,fullSweepDonePairs:sideData.left.fullSweepDonePairs},right:{manufacturer:sideData.right.manufacturer,frequencies:sideData.right.freqs,electrodeFreqOwn:sideData.right.elFreqOwn,electrodeStatus:sideData.right.elSt,electrodeNotes:sideData.right.elNt,electrodeExcludedDuring:sideData.right.elExDur,referenceElectrode:sideData.right.refEl,judgmentResults:sideData.right.jRes,balanceResults:sideData.right.bRes,manualLevels:sideData.right.manualLevels,presets:sideData.right.presets,fullSweepRound:sideData.right.fullSweepRound,fullSweepDonePairs:sideData.right.fullSweepDonePairs}},currentSide:activeSide,paradigm:document.getElementById('paraI').value,toneDuration:parseInt(document.getElementById('dur1').value),pauseDuration:parseInt(document.getElementById('pau1').value),volume:document.getElementById('vol2').value,playerSource:(plSrcMeas&&plSrcLevels?'both':plSrcMeas?'measured':plSrcLevels?'levels':'none'),plSide:getPlayerSide(),eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)};
+async function saveJson(){const d={version:'2.6',date:new Date().toLocaleString(lang==='de'?'de-DE':lang==='fr'?'fr-FR':lang==='es'?'es-ES':'en-US'),sides:{left:{manufacturer:sideData.left.manufacturer,frequencies:sideData.left.freqs,electrodeFreqOwn:sideData.left.elFreqOwn,electrodeStatus:sideData.left.elSt,electrodeNotes:sideData.left.elNt,electrodeExcludedDuring:sideData.left.elExDur,referenceElectrode:sideData.left.refEl,judgmentResults:sideData.left.jRes,balanceResults:sideData.left.bRes,manualLevels:sideData.left.manualLevels,presets:sideData.left.presets,fullSweepRound:sideData.left.fullSweepRound,fullSweepDonePairs:sideData.left.fullSweepDonePairs,implant:sideData.left.implant},right:{manufacturer:sideData.right.manufacturer,frequencies:sideData.right.freqs,electrodeFreqOwn:sideData.right.elFreqOwn,electrodeStatus:sideData.right.elSt,electrodeNotes:sideData.right.elNt,electrodeExcludedDuring:sideData.right.elExDur,referenceElectrode:sideData.right.refEl,judgmentResults:sideData.right.jRes,balanceResults:sideData.right.bRes,manualLevels:sideData.right.manualLevels,presets:sideData.right.presets,fullSweepRound:sideData.right.fullSweepRound,fullSweepDonePairs:sideData.right.fullSweepDonePairs,implant:sideData.right.implant}},currentSide:activeSide,paradigm:document.getElementById('paraI').value,toneDuration:parseInt(document.getElementById('dur1').value),pauseDuration:parseInt(document.getElementById('pau1').value),volume:document.getElementById('vol2').value,playerSource:(plSrcMeas&&plSrcLevels?'both':plSrcMeas?'measured':plSrcLevels?'levels':'none'),plSide:getPlayerSide(),eqOn:plEqOn,eqStrength:parseInt(document.getElementById('plStr').value)};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const now=new Date(),ds=now.toISOString().slice(0,10),ts=now.toLocaleTimeString(lang==='de'?'de-DE':'en-US',{hour:'2-digit',minute:'2-digit',hour12:false}).replace(':','');
-  const fn=`loudness-balancing-v2.5-${ds}-${ts}.json`;
+  const fn=`loudness-balancing-v2.6-${ds}-${ts}.json`;
   if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:fn,types:[{description:'JSON',accept:{'application/json':['.json']}}]});const w=await h.createWritable();await w.write(blob);await w.close();return;}catch(e){if(e.name==='AbortError')return;}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();}
 
@@ -1443,6 +1960,7 @@ function applyLoadedData(d) {
   if(typeof buildLvGrid==='function')buildLvGrid();
   if(typeof drawLvChart==='function')drawLvChart();
   if(typeof updFClearBtn==='function')updFClearBtn();
+  if(typeof buildImplantCard==='function')buildImplantCard();
   if(pEqF&&pEqF.length>0)pUpdEQ();
   updSideButtons();
   const fi=gEl('fInput');if(fi)fi.value='';
@@ -1535,6 +2053,10 @@ function updEqToggleBtn(){const btn=document.getElementById('plEqToggle');
   else if(bothOff){btn.textContent=t('plEqOn');btn.style.background='var(--warning)';btn.style.color='#fff';btn.style.borderColor='var(--warning)';}
   else{btn.textContent=t('plEqOff');btn.style.background='#e5e7eb';btn.style.color='var(--text)';btn.style.borderColor='var(--border)';}}
 
+function updBalApplyBtn(){const btn=document.getElementById('plBalApplyBtn');if(!btn)return;
+  if(plApplyBalance){btn.textContent=t('plBalApplyOn');btn.style.background='var(--success)';btn.style.color='#fff';btn.style.borderColor='var(--success)';}
+  else{btn.textContent=t('plBalApplyOff');btn.style.background='#e5e7eb';btn.style.color='var(--text)';btn.style.borderColor='var(--border)';}}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -1544,6 +2066,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   updSideButtons();
   updFClearBtn();
   updPlSrcButtons();
+  buildImplantCard();
   document.getElementById('langSelect').addEventListener('change',applyLang);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
   
@@ -1782,6 +2305,7 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
           activeManualLevels.push({ electrode: i, value: v });
         }
       }
+      const implant = sideData[side].implant || {};
       return {
         sideLabel: side === 'left' ? 'LINKS' : 'RECHTS',
         nEl,
@@ -1795,7 +2319,18 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
         activePresets,
         activeManualLevels,
         dEN: (i) => dEN(i),
-        manufacturer: mfr
+        manufacturer: mfr,
+        implant: {
+          model: implant.model||'',
+          processor: implant.processor||'',
+          cValue: implant.cValue,
+          idr: implant.idr,
+          iidr: implant.iidr,
+          generation: implant.generation,
+          mcl: implant.mcl||[],
+          thr: implant.thr||[],
+          upperLevel: implant.upperLevel||[]
+        }
       };
     });
   };
@@ -1803,24 +2338,115 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
   // HTML für eine Seite generieren
   const generatePage = (data, eqImage) => {
     const isLevelsOnly = (src === 'levels');
+    // Per-electrode unit conversion
+    const im = data.implant || {};
+    const isMedel = data.manufacturer === 'medel';
+    const isAB    = data.manufacturer === 'ab';
+    const isCoch  = data.manufacturer === 'cochlear';
+    const NA = t('implPrintNA');
+    const fmtVal = v => (v===null||v===undefined||isNaN(v)) ? NA : v.toFixed(1);
+    const fmtInt = v => (v===null||v===undefined||isNaN(v)) ? NA : Math.round(v).toString();
+
+    // AB: track if IDR was assumed
+    let abIDRAssumed = false;
+    // Track missing electrodes (those with N/A unit results despite having dB correction)
+    const missingEls = [];
+    // Track large corrections
+    let hasLarge = false;
+
     let rows = '';
     for (let i = 0; i < data.nEl; i++) {
       const gainVal = data.gains[i];
-      const gainStr = (gainVal === 0) ? '0.0' : (gainVal > 0 ? '+' + gainVal.toFixed(1) : gainVal.toFixed(1));
+      const corrVal = -gainVal;  // Vorzeichen umkehren: gainVal ist EQ-Gain (Kompensation), corrVal ist die gewünschte Änderung an der Elektrode selbst
+      const gainStr = (corrVal === 0) ? '0.0' : (corrVal > 0 ? '+' + corrVal.toFixed(1) : corrVal.toFixed(1));
       const residuum = getResiduum(i, isLevelsOnly, data.bResLocal, data.elRes);
       const status = getStatusText(i, data.elExDurLocal[i] !== null, data.elStLocal[i]);
       const isExcluded = data.elExDurLocal[i] !== null;
       const rowStyle = isExcluded ? 'opacity: 0.5; background: #f9f9f9;' : '';
+      if(Math.abs(corrVal) > 5) hasLarge = true;
+
+      // Unit calculation
+      let currentStr = NA, deltaUnitStr = NA, newValStr = NA;
+      let extraCol = ''; // for AB: T-Level column
+
+      if(isMedel){
+        const mclOld = im.mcl ? im.mcl[i] : null;
+        const r = calcMedel(corrVal, mclOld);
+        currentStr = fmtInt(mclOld);
+        if(r.delta !== null){ deltaUnitStr = (r.delta>=0?'+':'')+r.delta.toFixed(1)+' qu'; newValStr = r.absolute.toFixed(1)+' qu'; }
+        else if(corrVal !== 0) missingEls.push('E'+data.dEN(i)+' MCL');
+      } else if(isCoch){
+        const gen = im.generation || null;
+        const cOld = im.upperLevel ? im.upperLevel[i] : null;
+        const r = calcCochlear(corrVal, cOld, gen);
+        currentStr = fmtInt(cOld);
+        if(r.delta !== null){ deltaUnitStr = (r.delta>=0?'+':'')+Math.round(r.delta)+' CL'; newValStr = r.absolute !== null ? Math.round(r.absolute)+' CL' : NA; }
+        else if(corrVal !== 0 && !gen) missingEls.push('E'+data.dEN(i)+' C');
+      } else if(isAB){
+        const mOld = im.upperLevel ? im.upperLevel[i] : null;
+        const tOld = im.thr ? im.thr[i] : null;
+        const r = calcAB(corrVal, mOld, tOld, im.idr);
+        if(r.assumedIDR) abIDRAssumed = true;
+        currentStr = fmtInt(mOld);
+        extraCol = `<td style="padding:5px 6px;">${fmtInt(tOld)}</td>`;
+        if(r.delta !== null){ deltaUnitStr = (r.delta>=0?'+':'')+Math.round(r.delta)+' CU'; newValStr = Math.round(r.absolute)+' CU'; }
+        else if(corrVal !== 0) missingEls.push('E'+data.dEN(i)+' M');
+      }
+
       rows += `
         <tr style="border-bottom: 1px solid #ddd; ${rowStyle}">
-          <td style="padding: 6px;">E${data.dEN(i)}</td>
-          <td style="padding: 6px;">${Math.round(data.freqs[i])}</td>
-          <td style="padding: 6px; color: ${gainVal > 0 ? '#16a34a' : (gainVal < 0 ? '#dc2626' : '#666')};">${gainStr}</td>
-          <td style="padding: 6px;">${residuum || '—'}</td>
-          <td style="padding: 6px;">${status || '—'}</td>
+          <td style="padding:5px 6px; font-weight:600;">E${data.dEN(i)}</td>
+          <td style="padding:5px 6px;">${Math.round(data.freqs[i])}</td>
+          <td style="padding:5px 6px; color:${corrVal > 0 ? '#16a34a' : (corrVal < 0 ? '#dc2626' : '#666')}; font-family:monospace;">${gainStr} dB</td>
+          ${extraCol}
+          <td style="padding:5px 6px; font-family:monospace;">${currentStr}</td>
+          <td style="padding:5px 6px; font-family:monospace; color:${deltaUnitStr!==NA?(corrVal>0?'#16a34a':(corrVal<0?'#dc2626':'#666')):'#aaa'};">${deltaUnitStr}</td>
+          <td style="padding:5px 6px; font-family:monospace;">${newValStr}</td>
+          <td style="padding:5px 6px; font-size:0.8em; color:#888;">${residuum ? residuum : ''}${status ? (residuum?' · ':'')+status : ''}</td>
         </tr>
       `;
     }
+
+    // Column headers
+    const thStyle = 'padding:7px 6px; text-align:left; background:#f0f0f0; border-bottom:2px solid #ccc; font-size:0.82em; white-space:nowrap;';
+    const colEl = `<th style="${thStyle}">El.</th>`;
+    const colHz = `<th style="${thStyle}">Hz</th>`;
+    const colDelta = `<th style="${thStyle}">${t('implPrintColDelta')}</th>`;
+    const colCurrent = `<th style="${thStyle}">${isMedel?'MCL (qu)':isCoch?'C-Level (CL)':'M-Level (CU)'}</th>`;
+    const colT = isAB ? `<th style="${thStyle}">T-Level (CU)</th>` : '';
+    const colDeltaUnit = `<th style="${thStyle}">${t('implPrintColDeltaUnit')}</th>`;
+    const colNew = `<th style="${thStyle}">${t('implPrintColNew')}</th>`;
+    const colStatus = `<th style="${thStyle}">${t('implPrintColStatus')}</th>`;
+    const thHtml = colEl+colHz+colDelta+colT+colCurrent+colDeltaUnit+colNew+colStatus;
+
+    // Implant header block
+    const mfrName = MFR[data.manufacturer].name;
+    const modelStr = im.model && im.model !== 'unknown' ? im.model : (im.model==='unknown' ? t('implUnknown') : '—');
+    const procStr = im.processor && im.processor !== 'unknown' ? im.processor : (im.processor==='unknown' ? t('implUnknown') : '—');
+    let globalParamsHtml = '';
+    if(isMedel && im.cValue !== null && im.cValue !== undefined)
+      globalParamsHtml = `<span style="margin-left:16px">${t('implPrintCVal')}: ${im.cValue}</span>`;
+    if(isAB && im.idr !== null && im.idr !== undefined)
+      globalParamsHtml = `<span style="margin-left:16px">${t('implPrintIDR')}: ${im.idr} dB</span>`;
+    if(isCoch){
+      if(im.iidr !== null && im.iidr !== undefined)
+        globalParamsHtml += `<span style="margin-left:16px">${t('implPrintIIDR')}: ${im.iidr} dB</span>`;
+      if(im.generation)
+        globalParamsHtml += `<span style="margin-left:16px">${t('implPrintGen')}: ${im.generation==='A'?t('implGenA'):t('implGenB')}</span>`;
+    }
+    const implHeaderHtml = `
+      <div style="background:#f8f8f8;border:1px solid #ddd;border-radius:4px;padding:10px 14px;margin-bottom:16px;font-size:0.88em;">
+        <strong>${mfrName}</strong> &nbsp;·&nbsp;
+        ${t('implPrintHeader')}: <strong>${modelStr}</strong> &nbsp;·&nbsp;
+        ${t('implPrintProcessor')}: <strong>${procStr}</strong>
+        ${globalParamsHtml}
+      </div>`;
+
+    // Cochlear model missing warning
+    const cochGenMissing = isCoch && !im.generation && im.model !== 'unknown';
+    const cochMissingHtml = cochGenMissing
+      ? `<p style="color:#d97706;font-size:0.82em;margin-bottom:8px;">⚠ ${t('implPrintModelMissing')}</p>`
+      : '';
 
     // Aktive Presets mit allen Parametern
     let presetsHtml = '';
@@ -1844,41 +2470,59 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
 
     const eqImgTag = eqImage ? `<img src="${eqImage}" style="max-width: 100%; height: auto; border: 1px solid #ccc;" />` : '<p style="color: #999;">EQ-Graph konnte nicht geladen werden.</p>';
 
+    // Audiologen-Hinweistext
+    const noteStyle = 'margin-bottom:6px;';
+    let notesHtml = `<div style="margin-top:28px;border-top:2px solid #333;padding-top:12px;font-size:0.82em;color:#333;">
+      <strong style="font-size:1.05em;">${t('implPrintNotesTitle')}</strong>
+      <ol style="margin:8px 0 0 16px;padding:0;">
+        <li style="${noteStyle}">${t('implPrintNote1')}</li>
+        <li style="${noteStyle}">${t('implPrintNote2')}</li>
+        <li style="${noteStyle}">${t('implPrintNote2b')}</li>`;
+    const dedupMissing = [...new Set(missingEls)];
+    if(dedupMissing.length > 0){
+      notesHtml += `<li style="${noteStyle}">${t('implPrintNote3Missing').replace('{list}', dedupMissing.join(', '))}</li>`;
+    }
+    if(abIDRAssumed){
+      notesHtml += `<li style="${noteStyle}">${t('implPrintNote4IDR')}</li>`;
+    }
+    if(hasLarge){
+      notesHtml += `<li style="${noteStyle}">${t('implPrintNote5Large')}</li>`;
+    }
+    notesHtml += `</ol></div>`;
+
     return `
       <div style="page-break-after: always; margin-bottom: 20px; font-family: sans-serif;">
         <h1 style="font-size: 1.8em; margin-bottom: 8px;">CI Sound Balancing – ${data.sideLabel}</h1>
-        <p style="color: #666; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
-          Ausgedruckt: ${new Date().toLocaleString()}
+        <p style="color: #666; margin-bottom: 16px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
+          Ausgedruckt: ${new Date().toLocaleString()} &nbsp;·&nbsp; Tool: CI Sound Balancing v2.6
         </p>
 
-        <h3 style="margin-top: 20px;">Equalizer-Kurve (angewandt)</h3>
-        <div style="margin: 10px 0 20px 0;">
+        ${implHeaderHtml}
+
+        <h3 style="margin-top: 20px; margin-bottom:8px;">Equalizer-Kurve (angewandt)</h3>
+        <div style="margin: 0 0 16px 0;">
           ${eqImgTag}
           <p style="font-size: 0.8em; color: #666; margin-top: 5px;">Grün = Anhebung, Rot = Absenkung, Grau = ausgeschlossen/keine Änderung</p>
         </div>
 
-        <h3>Elektroden-Werte</h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em; margin-bottom: 30px;">
+        <h3 style="margin-bottom:6px;">Elektroden-Korrekturwerte</h3>
+        ${cochMissingHtml}
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em; margin-bottom: 16px;">
           <thead>
-            <tr style="background: #f0f0f0; border-bottom: 2px solid #ccc;">
-              <th style="padding: 8px; text-align: left;">Elektrode</th>
-              <th style="padding: 8px; text-align: left;">Mittenfrequenz (Hz)</th>
-              <th style="padding: 8px; text-align: left;">Änderung (dB)</th>
-              <th style="padding: 8px; text-align: left;">Residuum (dB)</th>
-              <th style="padding: 8px; text-align: left;">Status</th>
-            </tr>
+            <tr>${thHtml}</tr>
           </thead>
           <tbody>
             ${rows}
           </tbody>
         </table>
 
-        <div style="margin-top: 30px; font-size: 0.7em; color: #666; border-top: 1px solid #ccc; padding-top: 12px;">
+        <div style="margin-top: 16px; font-size: 0.78em; color: #555; border-top: 1px solid #ccc; padding-top: 10px;">
           <p><strong>Einstellungen:</strong> EQ-Quelle: ${srcLabel} | EQ-Stärke: ${strPercent}% | CI-Hersteller: ${hersteller} | Referenz: ${ref}</p>
           ${presetsHtml}
           ${manualHtml}
-          <p>Tool: CI Sound Balancing v2.4 — https://github.com/mviereck/ci-loudness-balancing</p>
         </div>
+
+        ${notesHtml}
       </div>
     `;
   };
@@ -1917,6 +2561,7 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
   printWindow.document.close();
   printWindow.focus();
   printWindow.print();
+
 });
   document.getElementById('fCopyBtn').addEventListener('click',copyRes);
   document.getElementById('fResetBtn').addEventListener('click',resetAll);
@@ -1927,8 +2572,9 @@ document.getElementById('fPrintBtn').addEventListener('click', async () => {
   ['lvChkMeas','lvChkMan','lvChkPre'].forEach(id=>document.getElementById(id).addEventListener('change',drawLvChart));
   // Player EQ toggle
   document.getElementById('plEqToggle').addEventListener('click',function(){plEqOn=!plEqOn;updEqToggleBtn();pUpdEQ();});
+  document.getElementById('plBalApplyBtn').addEventListener('click',function(){plApplyBalance=!plApplyBalance;updBalApplyBtn();pUpdEQ();});
   updEqToggleBtn();
-  // Player source
+  updBalApplyBtn();
   // EQ source toggle buttons
 document.getElementById('plSrcMeasBtn').addEventListener('click',function(){
   plSrcMeas=!plSrcMeas;updPlSrcButtons();if(pEqF.length>0)pUpdEQ();else plCheck();
@@ -2347,7 +2993,511 @@ const v=gains[i];lv.innerHTML+=`<td style="color:${v>.05?'#2563eb':v<-.05?'#dc26
 const g=plEqOn?(nhSim?v*str:-v*str):0;gn.innerHTML+=`<td style="color:${g>.05?'#16a34a':g<-.05?'#dc2626':'#666'}">${g>=0?'+':''}${g.toFixed(1)}</td>`;}}
 
 window.addEventListener('resize',()=>{if(bRes.length>0){pDrawEQ();if(document.getElementById('resC').style.display!=='none')renderResults();}
-  if(document.getElementById('panel-levels').classList.contains('active'))drawLvChart();});
+  if(document.getElementById('panel-levels').classList.contains('active'))drawLvChart();
+  if(document.getElementById('panel-balance').classList.contains('active'))lrDrawChart();});
+
+// ============================================================
+// LR BALANCE COMPARISON
+// ============================================================
+
+// State
+let lrResults = {};       // {elIdx: offset_dB}  positive = right louder
+let lrSeq = [];           // sequence of electrode indices to test
+let lrSeqIdx = 0;
+let lrCurrentEl = null;   // current electrode index (left side numbering)
+let lrFlipped = false;    // if true, first tone is R then L
+let lrRunning = false;
+let lrUndoStack = [];     // [{el, prev}]
+let lrSliderMode = 'right';  // 'right' | 'left' | 'both'
+let lrPlayTO = null;
+let lrIsPlay = false;
+
+// Audio: plays a single tone with stereo pan
+function lrPlayTone(hz, vol, ms, pan) {
+  return new Promise(res => {
+    const c = gAC();
+    const o = c.createOscillator();
+    const g = c.createGain();
+    const p = c.createStereoPanner();
+    o.type = 'sine';
+    o.frequency.value = hz;
+    p.pan.value = Math.max(-1, Math.min(1, pan));
+    g.gain.setValueAtTime(0, c.currentTime);
+    g.gain.linearRampToValueAtTime(Math.max(0, vol), c.currentTime + 0.02);
+    g.gain.setValueAtTime(Math.max(0, vol), c.currentTime + (ms - 20) / 1000);
+    g.gain.linearRampToValueAtTime(0, c.currentTime + ms / 1000);
+    o.connect(g); g.connect(p); p.connect(c.destination);
+    curOsc = o;
+    o.start();
+    o.stop(c.currentTime + ms / 1000 + 0.01);
+    o.onended = () => { curOsc = null; res(); };
+  });
+}
+
+function lrGVol() {
+  return Math.pow(parseInt(document.getElementById('lrVol').value) / 100, 2);
+}
+function lrGDur() { return parseInt(document.getElementById('lrDur').value) || 1000; }
+function lrGPau() { return parseInt(document.getElementById('lrPau').value) || 400; }
+
+// Get corrected volume gain for electrode i on given side (WLS levels only, no manual levels)
+function lrCorrGain(side, elIdx) {
+  return withSide(side, () => {
+    if (sideData[side].bRes.length === 0) return 1;
+    const { levels } = compWLS();
+    return dB2G(-levels[elIdx]);
+  });
+}
+
+// Get the effective frequency for electrode i on a given side
+function lrEffFreq(side, elIdx) {
+  return withSide(side, () => effFreq(elIdx));
+}
+
+// Get the electrode display number for a given side
+function lrDEN(side, elIdx) {
+  return withSide(side, () => dEN(elIdx));
+}
+
+// Play the current LR comparison sequence
+async function lrPlayCurrent() {
+  if (lrCurrentEl === null) return;
+  if (lrIsPlay) { lrStopPlay(); await new Promise(r => setTimeout(r, 60)); }
+
+  const el = lrCurrentEl;
+  const slOff = parseFloat(document.getElementById('lrSl').value); // positive = slider side louder
+  const vol = lrGVol();
+  const dur = lrGDur();
+  const pau = lrGPau();
+
+  const rightNEl = sideData['right'].nEl;
+  const rightEl = el < rightNEl ? el : rightNEl - 1;
+  const hzL = lrEffFreq('left', el);
+  const hzR = lrEffFreq('right', rightEl);
+  const corrL = lrCorrGain('left', el);
+  const corrR = lrCorrGain('right', rightEl);
+
+  // Apply slider offset depending on mode
+  let volL, volR;
+  if (lrSliderMode === 'right') {
+    volL = vol * corrL;
+    volR = vol * corrR * dB2G(slOff);
+  } else if (lrSliderMode === 'left') {
+    volL = vol * corrL * dB2G(slOff);
+    volR = vol * corrR;
+  } else { // 'both': positive = R up / L down
+    volL = vol * corrL * dB2G(-slOff / 2);
+    volR = vol * corrR * dB2G(slOff / 2);
+  }
+
+  const firstSide  = lrFlipped ? 'right' : 'left';
+  const secondSide = lrFlipped ? 'left'  : 'right';
+  const firstHz    = lrFlipped ? hzR : hzL;
+  const secondHz   = lrFlipped ? hzL : hzR;
+  const firstVol   = lrFlipped ? volR : volL;
+  const secondVol  = lrFlipped ? volL : volR;
+  const firstPan   = lrFlipped ? 1 : -1;
+  const secondPan  = lrFlipped ? -1 : 1;
+
+  lrSetSideActive(firstSide);
+  lrIsPlay = true;
+
+  await lrPlayTone(firstHz, firstVol, dur, firstPan);
+  if (!lrIsPlay) return;
+  lrSetSideActive(null);
+  await new Promise(r => lrPlayTO = setTimeout(r, pau));
+  if (!lrIsPlay) return;
+  lrSetSideActive(secondSide);
+  await lrPlayTone(secondHz, secondVol, dur, secondPan);
+  lrSetSideActive(null);
+  lrIsPlay = false;
+}
+
+function lrStopPlay() {
+  if (curOsc) { try { curOsc.stop(); } catch(e) {} curOsc = null; }
+  if (lrPlayTO) { clearTimeout(lrPlayTO); lrPlayTO = null; }
+  lrIsPlay = false;
+  lrSetSideActive(null);
+}
+
+function lrSetSideActive(side) {
+  const l = document.getElementById('lrIndL');
+  const r = document.getElementById('lrIndR');
+  if (!l || !r) return;
+  const activeStyle = 'background:var(--accent-light);border-color:var(--accent);color:var(--accent)';
+  const inactiveStyle = 'background:transparent;border-color:var(--border);color:var(--text)';
+  l.style.cssText = l.style.cssText.replace(/background:[^;]+;border-color:[^;]+;color:[^;]+/, '');
+  r.style.cssText = r.style.cssText.replace(/background:[^;]+;border-color:[^;]+;color:[^;]+/, '');
+  if (side === 'left') { l.style.background='var(--accent-light)'; l.style.borderColor='var(--accent)'; l.style.color='var(--accent)'; }
+  else if (side === 'right') { r.style.background='var(--accent-light)'; r.style.borderColor='var(--accent)'; r.style.color='var(--accent)'; }
+}
+
+function lrUpdSliderMode(mode) {
+  lrSliderMode = mode;
+  document.querySelectorAll('.lrSlModeBtn').forEach(b => {
+    const on = b.dataset.mode === mode;
+    b.style.background = on ? 'var(--accent)' : '';
+    b.style.color = on ? '#fff' : '';
+    b.style.borderColor = on ? 'var(--accent)' : '';
+  });
+  const hints = {
+    right: 'Rechts lauter → positiv · Links lauter → negativ · ◄► ±0.5 dB · Shift ±0.1 dB',
+    left:  'Links lauter → positiv · Rechts lauter → negativ · ◄► ±0.5 dB · Shift ±0.1 dB',
+    both:  'Balance: Rechts an/ab ↔ positiv/negativ · ◄► ±0.5 dB · Shift ±0.1 dB'
+  };
+  const h = document.getElementById('lrSlHint');
+  if (h) h.textContent = hints[mode] || '';
+}
+
+function lrBuildSequence() {
+  // Use left side as reference for electrode count
+  const leftNEl = sideData['left'].nEl;
+  const rightNEl = sideData['right'].nEl;
+  const count = Math.min(leftNEl, rightNEl);
+  // Only use electrodes that are active on both sides
+  const available = [];
+  for (let i = 0; i < count; i++) {
+    const leftOk = sideData['left'].elExDur[i] === null && sideData['left'].elSt[i] !== 'mute';
+    const rightOk = sideData['right'].elExDur[i] === null && sideData['right'].elSt[i] !== 'mute';
+    if (leftOk && rightOk) available.push(i);
+  }
+  const mode = document.getElementById('lrOrderMode').value;
+  if (mode === 'ascending') {
+    lrSeq = [...available];
+  } else if (mode === 'descending') {
+    lrSeq = [...available].reverse();
+  } else {
+    // shuffle
+    const arr = [...available];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    lrSeq = arr;
+  }
+  lrSeqIdx = 0;
+}
+
+function lrDetermineFlip() {
+  const mode = document.getElementById('lrSideMode').value;
+  if (mode === 'lr') return false;
+  if (mode === 'rl') return true;
+  return Math.random() < 0.5;
+}
+
+function lrShowPair() {
+  if (lrSeqIdx >= lrSeq.length) {
+    lrFinish();
+    return;
+  }
+  const el = lrSeq[lrSeqIdx];
+  lrCurrentEl = el;
+  lrFlipped = lrDetermineFlip();
+
+  // Slider: load existing result if any
+  const existing = lrResults[el];
+  const sl = document.getElementById('lrSl');
+  sl.value = existing !== undefined ? existing : 0;
+  document.getElementById('lrSlV').textContent = (sl.value >= 0 ? '+' : '') + parseFloat(sl.value).toFixed(1) + ' dB';
+  const ph = document.getElementById('lrPrevHint');
+  if (existing !== undefined) {
+    ph.textContent = 'Vorheriger Wert: ' + (existing >= 0 ? '+' : '') + existing.toFixed(1) + ' dB';
+    ph.style.display = '';
+  } else {
+    ph.style.display = 'none';
+  }
+
+  // Update progress
+  document.getElementById('lrProgLbl').textContent =
+    'Elektrode ' + (lrSeqIdx + 1) + ' von ' + lrSeq.length;
+
+  // Electrode label — show left side numbering
+  const leftLabel = withSide('left', () => 'E' + dEN(el));
+  const rightEl = el < sideData['right'].nEl ? el : sideData['right'].nEl - 1;
+  const rightLabel = withSide('right', () => 'E' + dEN(el));
+  document.getElementById('lrElLabel').textContent = leftLabel + ' / ' + rightLabel;
+
+  const hzL = lrEffFreq('left', el);
+  const hzR = lrEffFreq('right', rightEl);
+  document.getElementById('lrFreqLabel').textContent =
+    'Links: ' + Math.round(hzL) + ' Hz  ·  Rechts: ' + Math.round(hzR) + ' Hz';
+
+  document.getElementById('lrUndoBtn').disabled = lrUndoStack.length === 0;
+
+  lrPlayCurrent();
+}
+
+function lrConfirm() {
+  if (lrCurrentEl === null) return;
+  const el = lrCurrentEl;
+  const val = parseFloat(document.getElementById('lrSl').value);
+  // Save undo
+  lrUndoStack.push({ el, prev: lrResults[el] });
+  lrResults[el] = val;
+  lrSeqIdx++;
+  lrRenderResults();
+  lrApplyMedianToBalance();
+  lrShowPair();
+}
+
+function lrUndo() {
+  if (!lrUndoStack.length) return;
+  const { el, prev } = lrUndoStack.pop();
+  if (prev === undefined) delete lrResults[el];
+  else lrResults[el] = prev;
+  lrSeqIdx = Math.max(0, lrSeqIdx - 1);
+  lrRenderResults();
+  lrApplyMedianToBalance();
+  lrShowPair();
+}
+
+function lrFinish() {
+  lrStopPlay();
+  lrRunning = false;
+  document.getElementById('lrTestArea').style.display = 'none';
+  document.getElementById('lrStartBtn').disabled = false;
+  document.getElementById('lrStopBtn').disabled = true;
+  lrRenderResults();
+  lrApplyMedianToBalance();
+}
+
+function lrStop() {
+  lrStopPlay();
+  lrRunning = false;
+  document.getElementById('lrTestArea').style.display = 'none';
+  document.getElementById('lrStartBtn').disabled = false;
+  document.getElementById('lrStopBtn').disabled = true;
+  lrRenderResults();
+}
+
+function lrApplyMedianToBalance() {
+  const vals = Object.values(lrResults).filter(v => isFinite(v));
+  if (!vals.length) return;
+  vals.sort((a, b) => a - b);
+  const med = vals.length % 2 === 0
+    ? (vals[vals.length / 2 - 1] + vals[vals.length / 2]) / 2
+    : vals[Math.floor(vals.length / 2)];
+  // Positive lrResult = right louder = right needs to be quieter = negative balance offset
+  const balOffset = Math.max(-60, Math.min(60, parseFloat((-med).toFixed(1))));
+
+  // Prominente Median-Anzeige
+  const mvEl = document.getElementById('lrMedianValue');
+  const mhEl = document.getElementById('lrMedianHint');
+  if (mvEl) {
+    mvEl.textContent = (balOffset >= 0 ? '+' : '') + balOffset.toFixed(1) + ' dB';
+    mvEl.style.color = Math.abs(balOffset) < 0.5 ? 'var(--success)' : 'var(--accent)';
+    const parent = mvEl.closest('[style*="border"]');
+    if (parent) parent.style.borderColor = Math.abs(balOffset) < 0.5 ? 'var(--success)' : 'var(--accent)';
+    if (parent) parent.style.background = Math.abs(balOffset) < 0.5 ? '#dcfce7' : 'var(--accent-light)';
+  }
+  if (mhEl) {
+    if (Math.abs(balOffset) < 0.5) mhEl.textContent = 'Seiten nahezu gleich laut';
+    else if (balOffset > 0) mhEl.textContent = 'Links anheben oder Rechts absenken';
+    else mhEl.textContent = 'Rechts anheben oder Links absenken';
+  }
+
+  const balEl = document.getElementById('balBalance');
+  if (balEl) {
+    balEl.value = balOffset;
+    balEl.dispatchEvent(new Event('input'));
+  }
+}
+
+function lrRenderResults() {
+  const keys = Object.keys(lrResults).map(Number);
+  if (!keys.length) {
+    document.getElementById('lrResultsCard').style.display = 'none';
+    return;
+  }
+  document.getElementById('lrResultsCard').style.display = '';
+
+  // Table
+  const th = document.getElementById('lrResTH');
+  const tb = document.getElementById('lrResTB');
+  th.innerHTML = '<th>Elektrode</th><th>Hz Links</th><th>Hz Rechts</th><th>Offset (dB)</th><th>Bedeutung</th>';
+  tb.innerHTML = '';
+
+  // Get all compared electrodes in order
+  const count = Math.min(sideData['left'].nEl, sideData['right'].nEl);
+  for (let i = 0; i < count; i++) {
+    const v = lrResults[i];
+    if (v === undefined) continue;
+    const rightEl = i < sideData['right'].nEl ? i : sideData['right'].nEl - 1;
+    const hzL = lrEffFreq('left', i);
+    const hzR = lrEffFreq('right', rightEl);
+    const leftLabel = withSide('left', () => 'E' + dEN(i));
+    const rightLabel = withSide('right', () => 'E' + dEN(rightEl));
+    const meaning = v > 0.1 ? 'Rechts lauter' : v < -0.1 ? 'Links lauter' : 'Gleich';
+    const color = v > 0.1 ? '#dc2626' : v < -0.1 ? '#2563eb' : '#666';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-weight:600">${leftLabel} / ${rightLabel}</td>` +
+      `<td>${Math.round(hzL)}</td><td>${Math.round(hzR)}</td>` +
+      `<td style="color:${color}">${v >= 0 ? '+' : ''}${v.toFixed(1)}</td>` +
+      `<td style="font-size:.82em;color:${color}">${meaning}</td>`;
+    tb.appendChild(tr);
+  }
+
+  lrDrawChart();
+}
+
+function lrDrawChart() {
+  const cv = document.getElementById('lrResChart');
+  if (!cv) return;
+  const wp = cv.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const W = wp.clientWidth, H = wp.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const count = Math.min(sideData['left'].nEl, sideData['right'].nEl);
+  const elIndices = [];
+  for (let i = 0; i < count; i++) {
+    if (lrResults[i] !== undefined) elIndices.push(i);
+  }
+  if (!elIndices.length) return;
+
+  const vals = elIndices.map(i => lrResults[i]);
+  const absMax = Math.max(Math.ceil(Math.max(...vals.map(Math.abs), 2)), 3);
+
+  const pad = { top: 20, right: 16, bottom: 44, left: 52 };
+  const pW = W - pad.left - pad.right;
+  const pH = H - pad.top - pad.bottom;
+  const tX = j => pad.left + j * (pW / (elIndices.length - 1 || 1));
+  const tY = v => pad.top + (absMax - v) * (pH / (2 * absMax));
+  const zY = tY(0);
+
+  // Grid
+  ctx.strokeStyle = '#e5e5e5'; ctx.lineWidth = 1;
+  for (let s = -absMax; s <= absMax; s += Math.ceil(absMax / 3)) {
+    const y = tY(s);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#999'; ctx.font = '9px Consolas,monospace'; ctx.textAlign = 'right';
+    ctx.fillText((s >= 0 ? '+' : '') + s.toFixed(0), pad.left - 6, y + 3);
+  }
+  // Zero line
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(pad.left, zY); ctx.lineTo(W - pad.right, zY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Bars
+  const bW = Math.min(pW / elIndices.length * 0.6, 28);
+  elIndices.forEach((el, j) => {
+    const v = vals[j];
+    const x = tX(j) - bW / 2;
+    const bH = Math.abs(v) / absMax * (pH / 2);
+    const y = v >= 0 ? zY - bH : zY;
+    ctx.fillStyle = v > 0.1 ? '#dc2626' : v < -0.1 ? '#2563eb' : '#9ca3af';
+    ctx.fillRect(x, Math.min(zY, y), bW, bH || 1);
+
+    // Label
+    const rightEl = el < sideData['right'].nEl ? el : sideData['right'].nEl - 1;
+    const leftLabel = withSide('left', () => 'E' + dEN(el));
+    ctx.fillStyle = '#555'; ctx.font = '9px Segoe UI,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(leftLabel, tX(j), H - pad.bottom + 12);
+    const hzL = lrEffFreq('left', el);
+    ctx.font = '7px Consolas,monospace'; ctx.fillStyle = '#999';
+    ctx.fillText(Math.round(hzL), tX(j), H - pad.bottom + 23);
+  });
+
+  // Line
+  ctx.strokeStyle = '#2563eb44'; ctx.lineWidth = 2; ctx.beginPath();
+  let first = true;
+  elIndices.forEach((el, j) => {
+    if (first) { ctx.moveTo(tX(j), tY(vals[j])); first = false; }
+    else ctx.lineTo(tX(j), tY(vals[j]));
+  });
+  ctx.stroke();
+
+  // Axis label
+  ctx.save(); ctx.translate(12, pad.top + pH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#666'; ctx.font = '9px Segoe UI,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('dB (R−L)', 0, 0); ctx.restore();
+}
+
+function lrCheckData() {
+  const hasLeft = sideData['left'].bRes.length > 0;
+  const hasRight = sideData['right'].bRes.length > 0;
+  const nd = document.getElementById('lrNoData');
+  if (nd) nd.style.display = (hasLeft && hasRight) ? 'none' : '';
+}
+
+// ---- Event listeners ----
+document.addEventListener('DOMContentLoaded', () => {
+  // Called after main DOMContentLoaded — use a small delay to let main init run first
+  setTimeout(() => {
+    lrCheckData();
+
+    document.getElementById('lrStartBtn').addEventListener('click', () => {
+      lrBuildSequence();
+      if (!lrSeq.length) { alert('Keine gemeinsamen aktiven Elektroden gefunden.'); return; }
+      lrRunning = true;
+      lrUndoStack = [];
+      document.getElementById('lrTestArea').style.display = '';
+      document.getElementById('lrStartBtn').disabled = true;
+      document.getElementById('lrStopBtn').disabled = false;
+      lrShowPair();
+    });
+
+    document.getElementById('lrStopBtn').addEventListener('click', lrStop);
+
+    // Slider mode buttons
+    document.querySelectorAll('.lrSlModeBtn').forEach(b => {
+      b.addEventListener('click', () => { lrUpdSliderMode(b.dataset.mode); });
+    });
+    lrUpdSliderMode('right'); // set initial state
+    document.getElementById('lrReplayBtn').addEventListener('click', lrPlayCurrent);
+    document.getElementById('lrConfBtn').addEventListener('click', lrConfirm);
+    document.getElementById('lrUndoBtn').addEventListener('click', lrUndo);
+    document.getElementById('lrClearBtn').addEventListener('click', () => {
+      if (!confirm('LR-Vergleichsergebnisse löschen?')) return;
+      lrResults = {};
+      document.getElementById('lrResultsCard').style.display = 'none';
+      const balEl = document.getElementById('balBalance');
+      if (balEl) { balEl.value = 0; document.getElementById('balValue').textContent = '0.0 dB'; }
+    });
+
+    document.getElementById('lrSwapBtn').addEventListener('click', () => {
+      lrFlipped = !lrFlipped;
+      lrPlayCurrent();
+    });
+
+    document.getElementById('lrSl').addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      document.getElementById('lrSlV').textContent = (v >= 0 ? '+' : '') + v.toFixed(1) + ' dB';
+    });
+
+    // Keyboard in balance tab
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('panel-balance').classList.contains('active')) return;
+      if (!lrRunning) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      const step = e.shiftKey ? 0.1 : 0.5;
+      const sl = document.getElementById('lrSl');
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        sl.value = Math.max(-60, parseFloat(sl.value) - step).toFixed(1);
+        document.getElementById('lrSlV').textContent = (parseFloat(sl.value) >= 0 ? '+' : '') + parseFloat(sl.value).toFixed(1) + ' dB';
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        sl.value = Math.min(60, parseFloat(sl.value) + step).toFixed(1);
+        document.getElementById('lrSlV').textContent = (parseFloat(sl.value) >= 0 ? '+' : '') + parseFloat(sl.value).toFixed(1) + ' dB';
+      }
+      if (e.key === ' ') { e.preventDefault(); lrPlayCurrent(); }
+      if (e.key === 'Enter') { e.preventDefault(); lrConfirm(); }
+    });
+
+    // Re-check when switching to balance tab
+    const origSwitchTab = window.switchTab;
+  }, 100);
+});
+
+// Hook into balance tab activation
+document.querySelector('.tab[data-tab="balance"]')?.addEventListener('click', () => {
+  setTimeout(() => { lrCheckData(); lrDrawChart(); }, 0);
+});
 </script>
 </body>
 </html>
